@@ -18,15 +18,6 @@ class view_wolves_wolves extends game_view {
     }
 
   	function build_page($viewArgs): void {
-        $land_names = [
-            T_GRASS => 'grass',
-            T_ROCK => 'rock',
-            T_TUNDRA => 'tundra',
-            T_DESERT => 'desert',
-            T_FOREST => 'forest',
-            T_WATER => 'water',
-        ];
-
         $tile_order = [
             T_DESERT,
             T_TUNDRA,
@@ -42,7 +33,7 @@ class view_wolves_wolves extends game_view {
                 'Y' => $hex['y'],
                 'CX' => $hex['x'] * 89,
                 'CY' => $hex['y'] * 103 - $hex['x'] * 51,
-                'TYPE' => $land_names[$hex['terrain']]
+                'TYPE' => $this->game->terrainNames[$hex['terrain']]
             ]);
         }
 
@@ -55,7 +46,7 @@ class view_wolves_wolves extends game_view {
             $order_index = (($i - $tile_value) % 6 + 6) % 6;
             $this->page->insert_block('tile', [
                 'INDEX' => $i,
-                'TYPE' => $land_names[$tile_order[$order_index]]
+                'TYPE' => $this->game->terrainNames[$tile_order[$order_index]]
             ]);
         }
   	}

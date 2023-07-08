@@ -165,7 +165,7 @@ class Wolves extends Table {
         $location = L_BOARD;
         $query = "SELECT id, owner, x, y FROM pieces WHERE location = $location";
         $result['pieces'] = self::getCollectionFromDb($query);
-  
+
         return $result;
     }
 
@@ -213,6 +213,28 @@ class Wolves extends Table {
         return self::getCollectionFromDb($query);
     }
 
+    function flipTiles(int $playerId, array $tile_indices): int {
+        $query = "SELECT `0`, `1`, `2`, `3`, `4` FROM player_tiles WHERE player_id = $playerId";
+        $tiles = self::getObjectFromDB($query);
+        $terrain = -1;
+        $sets = [];
+
+        foreach ($tile_indices as $tile_index) {
+            $nextTerrain = ($tile_index + $tiles[strval($tile_index)]) % TILE_TERRAIN_TYPES;
+            if ($terrain >= 0 && $nextTerrain !== $terrain) {
+                throw new BgaUserException(_('All tiles must have identical terrain'));
+            }
+            $sets[] = "`$tile_index` = 1 - `$tile_index`";
+            $terrain = $nextTerrain;
+        }
+
+        $update = implode(", ", $sets);
+        $query = "UPDATE player_tiles SET $update WHERE player_id = $playerId";
+        self::DbQuery($query);
+
+        return $terrain;
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
@@ -235,7 +257,7 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         $this->notifyAllPlayers('draft', clienttranslate('${player_name} placed initial 🐺.'), [
-            'player_name' => $this->getActivePlayerName(),
+            'player_name' => self::getActivePlayerName(),
             'player_id' => $player_id,
             'x' => $x,
             'y' => $y
@@ -246,8 +268,31 @@ class Wolves extends Table {
 
     function selectAction(int $action, array $tiles): void {
         self::checkAction('selectAction');
+        if (!array_key_exists($action, ACTION_COSTS)) {
+            throw new BgaUserException(_('Invalid action selected'));
+        }
+
+        $cost = ACTION_COSTS[$action];
+        if (count($tiles) != $cost) {
+            throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
+        }
+
+        $terrain = $this->flipTiles(self::getActivePlayerId(), $tiles);
+        $playerId = self::getActivePlayerId();
+
+        $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
+            'player_name' => self::getActivePlayerName(),
+            'player_id' => $playerId,
+            'action_name' => $this->actionNames[$action],
+            'terrain_name' => $this->terrainNames[$terrain],
+            'new_tiles' => $this->getPlayerTiles($playerId)
+        ]);
 
         $this->gamestate->nextState('selectAction');
+    }
+
+    function testSelectAction(): void {
+        $this->selectAction(A_MOVE, [2]);
     }
 
     function moveWolf(int $wolf_id, int $x, int $y): void {

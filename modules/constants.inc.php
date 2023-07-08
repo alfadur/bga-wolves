@@ -14,10 +14,10 @@ const A_DEN = 2;
 const A_LAIR = 3;
 const A_DOMINATE = 4;
 
-const T_GRASS = 0;
-const T_ROCK = 1;
-const T_TUNDRA = 2;
-const T_DESERT = 3;
+const T_DESERT = 0;
+const T_TUNDRA = 1;
+const T_GRASS = 2;
+const T_ROCK = 3;
 const T_FOREST = 4;
 const T_WATER = 5;
 
@@ -116,3 +116,13 @@ const REGION_PALETTES = [
 const REGION_LONE_WOLVES = [
     [-1, -2], [-1, 1]
 ];
+
+const ACTION_COSTS = [
+    A_MOVE => 1,
+    A_HOWL => 2,
+    A_DEN => 2,
+    A_LAIR => 2,
+    A_DOMINATE => 3
+];
+
+const TILE_TERRAIN_TYPES = 5;

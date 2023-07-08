@@ -9,3 +9,19 @@
  * -----
  */
 
+$this->terrainNames = [
+    T_GRASS => 'grass',
+    T_ROCK => 'rock',
+    T_TUNDRA => 'tundra',
+    T_DESERT => 'desert',
+    T_FOREST => 'forest',
+    T_WATER => 'water',
+];
+
+$this->actionNames = [
+    A_MOVE => 'move',
+    A_HOWL => 'howl',
+    A_DEN => 'place den',
+    A_LAIR => 'place lair',
+    A_DOMINATE => 'dominate'
+];
