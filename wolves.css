@@ -1,0 +1,57 @@
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * Wolves implementation : © <Your name here> <Your email address here>
+ *
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ */
+
+#wolves-land {
+    position: relative;
+    width: 100%;
+    height: 1024px;
+    overflow: scroll;
+}
+
+.wolves-hex {
+    position: absolute;
+    width: 119px;
+    height: 103px;
+    clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
+}
+
+.wolves-hex:hover {
+    background-color: black;
+}
+
+.wolves-hex-grass {
+    background-color: lightgreen;
+}
+
+.wolves-hex-rock {
+    background-color: dimgray;
+}
+
+.wolves-hex-tundra {
+    background-color: ghostwhite;
+}
+
+.wolves-hex-desert {
+    background-color: sandybrown;
+}
+
+.wolves-hex-forest {
+    background-color: darkgreen;
+}
+
+.wolves-hex-water, .wolves-hex-water:hover {
+    background-color: blue;
+}
+
+.wolves-hex-item {
+    margin: 25px 25px;
+    width: 50px;
+    height: 50px;
+}
