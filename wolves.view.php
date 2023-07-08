@@ -42,7 +42,7 @@ class view_wolves_wolves extends game_view {
         $player_tiles = $this->game->getPlayerTiles($current_player_id);
         $this->page->begin_block("wolves_wolves", 'tile');
         for($i=0; $i < 5; $i++){
-            $tile_value = $player_tiles[0][$i];
+            $tile_value = $player_tiles[$i];
             $order_index = (($i - $tile_value) % 6 + 6) % 6;
             $this->page->insert_block('tile', [
                 'INDEX' => $i,

@@ -195,7 +195,7 @@ class Wolves extends Table {
     }
 
     function getPlayerTiles(int $player_id): array {
-        return self::getObjectListFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
+        return self::getObjectFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
     }
 
     function getPiecesInRange(int $x, int $y, int $range, int $terrain, int $kind): array {
@@ -214,8 +214,7 @@ class Wolves extends Table {
     }
 
     function flipTiles(int $playerId, array $tile_indices): int {
-        $query = "SELECT `0`, `1`, `2`, `3`, `4` FROM player_tiles WHERE player_id = $playerId";
-        $tiles = self::getObjectFromDB($query);
+        $tiles = $this->getPlayerTiles($playerId);
         $terrain = -1;
         $sets = [];
 
