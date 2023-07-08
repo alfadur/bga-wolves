@@ -69,6 +69,15 @@ class Wolves extends Table {
         //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
+        //Initialize player tiles
+        $values = [];
+        foreach($players as $player_id => $player){
+            $values[] = "('$player_id', '0', '0', '0', '0', '0')";
+        }
+        $args = implode(',', $values);
+        $query = "INSERT INTO player_tiles (player_id, `0`, `1`, `2`, `3`, `4`) VALUES $args";
+        self::DbQuery($query);
+
         $this->generateLand(count($players));
         $this->generatePieces($players);
 
@@ -183,6 +192,10 @@ class Wolves extends Table {
 
     function getLand(): array {
         return self::getObjectListFromDB('SELECT * FROM land');
+    }
+
+    function getPlayerTiles(int $player_id): array {
+        return self::getObjectListFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
     }
 
     function getPiecesInRange(int $x, int $y, int $range, int $terrain, int $kind): array {

@@ -27,6 +27,14 @@ class view_wolves_wolves extends game_view {
             T_WATER => 'water',
         ];
 
+        $tile_order = [
+            T_DESERT,
+            T_TUNDRA,
+            T_GRASS,
+            T_ROCK,
+            T_FOREST
+        ];
+
         $this->page->begin_block('wolves_wolves', 'hex');
         foreach ($this->game->getLand() as $hex) {
             $this->page->insert_block('hex', [
@@ -35,6 +43,19 @@ class view_wolves_wolves extends game_view {
                 'CX' => $hex['x'] * 89,
                 'CY' => $hex['y'] * 103 - $hex['x'] * 51,
                 'TYPE' => $land_names[$hex['terrain']]
+            ]);
+        }
+
+        global $g_user;
+        $current_player_id = $g_user->get_id();
+        $player_tiles = $this->game->getPlayerTiles($current_player_id);
+        $this->page->begin_block("wolves_wolves", 'tile');
+        for($i=0; $i < 5; $i++){
+            $tile_value = $player_tiles[0][$i];
+            $order_index = (($i - $tile_value) % 6 + 6) % 6;
+            $this->page->insert_block('tile', [
+                'INDEX' => $i,
+                'TYPE' => $land_names[$tile_order[$order_index]]
             ]);
         }
   	}
