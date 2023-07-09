@@ -255,6 +255,10 @@ class Wolves extends Table {
         return $terrain;
     }
 
+    function getPossibleHexes(int $playerId, int $action, int $terrain): array {
+        //TODO: Implement this method
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 

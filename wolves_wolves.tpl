@@ -5,10 +5,17 @@
 <!-- END hex -->
 </div>
 <div id="player-board">
-    <div id="player-tiles" >
+    <div id="player-tiles">
         <!-- BEGIN tile -->
             <span id="player-tile-{INDEX}" style="margin-inline:0.5em;" class="player-tile" terrain="{TYPE}"></span>
         <!-- END tile -->
+    </div>
+    <div id="action-buttons">
+        <button class="action-button">Move</button>
+        <button class="action-button">Howl</button>
+        <button class="action-button">Dominate</button>
+        <button class="action-button">Den</button>
+        <button class="action-button">Lair</button>
     </div>
 </div>
 <script type="text/javascript">
