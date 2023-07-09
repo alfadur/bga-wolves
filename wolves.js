@@ -78,6 +78,16 @@ function (dojo, declare) {
                 }
             });
 
+            document.querySelectorAll(".action-button").forEach(button => {
+                const match = button.id.match(/(.+)-button/);
+                const action = match[1];
+                dojo.connect(button, "onclick", e => {
+                    dojo.stopEvent(e);
+                    console.log(`Activating action ${action}`)
+                    this.onSelectAction(action);
+                })
+            })
+
             // Setup game notifications to handle (see "setupNotifications" method below)
             this.setupNotifications();
 
@@ -151,6 +161,14 @@ function (dojo, declare) {
             {            
                 switch( stateName )
                 {
+
+                case "client_selectTiles":
+                    if(this.isCurrentPlayerActive()){
+                        if(!$("button_cancel")){
+                            this.addActionButton('button_cancel', _('Cancel'), "onCancel");
+                        }
+                    }
+                    break;
 /*               
                  Example:
  
@@ -176,6 +194,11 @@ function (dojo, declare) {
             script.
         
         */
+
+        cancelLocalStateEffects: function(){
+            this.clientStateArgs = {};
+            this.restoreServerGameState();
+        },
 
 
         ///////////////////////////////////////////////////
@@ -205,6 +228,27 @@ function (dojo, declare) {
             }, this, () => {
                 console.log("draftPlace completed")
             });
+        },
+
+        onSelectAction: function(action) {
+            console.log(`Submitting action (${action})`);
+
+            if(!this.checkAction("selectAction")){
+                return;
+            }
+            this.clientStateArgs = {};
+            this.clientStateArgs.action = action;
+            this.clientStateArgs.selectedTiles = [];
+            this.clientStateArgs.num = action === "dominate" ? 3 : 2;
+            this.setClientState("client_selectTiles", {
+                descriptionmyturn: _(`\${you} must select ${this.clientStateArgs.num} matching tiles`)
+            });
+        },
+
+        onCancel: function(event) {
+            dojo.stopEvent(event);
+            console.log("cancelled");
+            this.cancelLocalStateEffects()
         },
 
         ///////////////////////////////////////////////////

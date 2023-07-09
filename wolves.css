@@ -27,7 +27,6 @@
     width: 100%;
     height: 230px;
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
 }
 
@@ -41,7 +40,7 @@
 .player-tile {
     --color: black;
     height: 100%;
-    width: calc(100% / 6);
+    width: calc(100% / 7);
     position: relative;
     background-color: var(--color);
 }

@@ -49,5 +49,9 @@ class view_wolves_wolves extends game_view {
                 'TYPE' => $this->game->terrainNames[$tile_order[$order_index]]
             ]);
         }
+        $this->page->insert_block('tile', [
+            'INDEX' => 5,
+            'TYPE' => $this->game->terrainNames[$tile_order[$player_tiles[5]]]
+        ]);
   	}
 }

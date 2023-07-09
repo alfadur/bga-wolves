@@ -205,7 +205,10 @@ class Wolves extends Table {
     }
 
     function getPlayerTiles(int $player_id): array {
-        return self::getObjectFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
+        $tiles = self::getObjectFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
+        $home_terrain = self::getUniqueValueFromDB("SELECT `home_terrain` FROM `player_status` WHERE player_id=$player_id");
+        $tiles[] = $home_terrain;
+        return $tiles;
     }
 
     function getPiecesInRange(int $x, int $y, int $range, int $terrain, int $kind): array {

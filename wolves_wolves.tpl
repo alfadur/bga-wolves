@@ -11,11 +11,11 @@
         <!-- END tile -->
     </div>
     <div id="action-buttons">
-        <button class="action-button">Move</button>
-        <button class="action-button">Howl</button>
-        <button class="action-button">Dominate</button>
-        <button class="action-button">Den</button>
-        <button class="action-button">Lair</button>
+        <button id="move-button" class="action-button">Move</button>
+        <button id="howl-button" class="action-button">Howl</button>
+        <button id="dominate-button" class="action-button">Dominate</button>
+        <button id="den-button" class="action-button">Den</button>
+        <button id="lair-button" class="action-button">Lair</button>
     </div>
 </div>
 <script type="text/javascript">
