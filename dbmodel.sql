@@ -25,6 +25,17 @@ CREATE TABLE IF NOT EXISTS pieces(
     FOREIGN KEY (`x`, `y`) REFERENCES `land`(`x`, `y`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
+CREATE TABLE IF NOT EXISTS `player_status`(
+    `player_id` INT UNSIGNED NOT NULL,
+    `home_terrain` TINYINT NOT NULL,
+    `pack_spread` TINYINT NOT NULL DEFAULT 2,
+    `wolf_speed` TINYINT NOT NULL DEFAULT 3,
+    `howl_range` TINYINT NOT NULL DEFAULT 2,
+    `selected_terrain` TINYINT NULL,
+    `remaining_moves` TINYINT NULL,
+    PRIMARY KEY (`player_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `player_tiles`( 
     `player_id` INT UNSIGNED NOT NULL, 
     `0` TINYINT UNSIGNED NOT NULL DEFAULT 0, 

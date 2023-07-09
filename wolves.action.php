@@ -48,6 +48,14 @@ class action_wolves extends APP_GameAction {
         $this->game->selectAction($action, $tiles);
         self::ajaxResponse();
     }
+
+    function howl(): void {
+        self::setAjaxMode();
+        $x = self::getArg('x', AT_int, true);
+        $y = self::getArg('y', AT_int, true);
+        $this->game->howl($x, $y);
+        self::ajaxResponse();
+    }
 }
   
 

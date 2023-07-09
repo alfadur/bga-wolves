@@ -4,8 +4,8 @@
 const ST_GAME_START = 1;
 const ST_DRAFT_RESOLUTION = 2;
 const ST_DRAFT_WOLVES = 3;
-const ST_SELECT_ACTION = 4;
-const ST_DISPATCH_ACTION = 5;
+const ST_ACTION_SELECTION = 4;
+const ST_HOWL_SELECTION = 5;
 const ST_GAME_END = 99;
 
 const A_MOVE = 0;
@@ -126,3 +126,4 @@ const ACTION_COSTS = [
 ];
 
 const TILE_TERRAIN_TYPES = 5;
+

@@ -71,11 +71,21 @@ class Wolves extends Table {
 
         //Initialize player tiles
         $values = [];
-        foreach($players as $player_id => $player){
+        foreach ($players as $player_id => $player){
             $values[] = "('$player_id', '0', '0', '0', '0', '0')";
         }
         $args = implode(',', $values);
         $query = "INSERT INTO player_tiles (player_id, `0`, `1`, `2`, `3`, `4`) VALUES $args";
+        self::DbQuery($query);
+
+        $terrain = 0;
+        $values = [];
+        foreach ($players as $playerId => $player){
+            $values[] = "($playerId, $terrain)";
+            ++$terrain;
+        }
+        $args = implode(',', $values);
+        $query = "INSERT INTO player_status (player_id, home_terrain) VALUES $args";
         self::DbQuery($query);
 
         $this->generateLand(count($players));
@@ -199,31 +209,42 @@ class Wolves extends Table {
     }
 
     function getPiecesInRange(int $x, int $y, int $range, int $terrain, int $kind): array {
-        [$xMin, $xMax] = [$x - $range, $x + range];
-        [$yMin, $yMax] = [$y - $range, $y + range];
+        [$xMin, $xMax] = [$x - $range, $x + $range];
+        [$yMin, $yMax] = [$y - $range, $y + $range];
         $query = <<<EOF
-            SELECT x, y FROM pieces
+            SELECT pieces.x, pieces.y FROM pieces
             JOIN land ON pieces.x = land.x AND pieces.y = land.y
-            WHERE x >= $xMin AND x <= $xMax
-                AND y >= $yMin AND y <= $yMax
+            WHERE land.x >= $xMin AND land.x <= $xMax
+                AND land.y >= $yMin AND land.y <= $yMax
                 AND terrain = $terrain
                 AND kind = $kind
-                AND (ABS(x - $x) + ABS(y - $y) + ABS(x + y - $x - $y)) / 2 <= $range
+                AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x + land.y - $x - $y)) / 2 <= $range
             EOF;
         return self::getCollectionFromDb($query);
     }
 
-    function flipTiles(int $playerId, array $tile_indices): int {
+    function getValidHowlTargets(int $playerId): array {
+        $kind = P_ALPHA;
+        $location = L_BOARD;
+        $alphas = self::getObjectListFromDB("SELECT x, y FROM pieces WHERE owner = $playerId AND kind = $kind AND location = $location");
+
+        ['howl_range' => $range, 'selected_terrain' => $terrain]  =
+            self::getObjectFromDB("SELECT howl_range, selected_terrain FROM player_status WHERE player_id = $playerId");
+        $hexArrays = array_map(fn($wolf) => $this->getPiecesInRange($wolf['x'], $wolf['y'], $range, $terrain, P_LONE), $alphas);
+        return array_unique(array_merge(...$hexArrays));
+    }
+
+    function flipTiles(int $playerId, array $tileIndices): int {
         $tiles = $this->getPlayerTiles($playerId);
         $terrain = -1;
         $sets = [];
 
-        foreach ($tile_indices as $tile_index) {
-            $nextTerrain = ($tile_index + $tiles[strval($tile_index)]) % TILE_TERRAIN_TYPES;
+        foreach ($tileIndices as $tileIndex) {
+            $nextTerrain = ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES;
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
-            $sets[] = "`$tile_index` = 1 - `$tile_index`";
+            $sets[] = "`$tileIndex` = 1 - `$tileIndex`";
             $terrain = $nextTerrain;
         }
 
@@ -265,18 +286,18 @@ class Wolves extends Table {
         $this->gamestate->nextState('draftPlace');
     }
 
-    function selectAction(int $action, array $tiles): void {
+    function selectAction(int $action, array $tiles, ?bool $forceTerrain = null): void {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
             throw new BgaUserException(_('Invalid action selected'));
         }
 
         $cost = ACTION_COSTS[$action];
-        if (count($tiles) != $cost) {
+        if ($forceTerrain === null && count($tiles) != $cost) {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
-        $terrain = $this->flipTiles(self::getActivePlayerId(), $tiles);
+        $terrain = $forceTerrain ?? $this->flipTiles(self::getActivePlayerId(), $tiles);
         $playerId = self::getActivePlayerId();
 
         $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
@@ -287,15 +308,34 @@ class Wolves extends Table {
             'new_tiles' => $this->getPlayerTiles($playerId)
         ]);
 
-        $this->gamestate->nextState('selectAction');
+        $query = "UPDATE player_status SET selected_terrain = $terrain, remaining_moves = pack_spread WHERE player_id = $playerId";
+        self::DbQuery($query);
+
+        $this->gamestate->nextState($this->actionNames[$action] . "Select");
     }
 
-    function testSelectAction(): void {
+    function testMove(): void {
         $this->selectAction(A_MOVE, [2]);
     }
 
-    function moveWolf(int $wolf_id, int $x, int $y): void {
-        self::checkAction('moveWolf');
+    function testHowl(): void {
+        $this->selectAction(A_HOWL, [], T_TUNDRA);
+    }
+
+    function move(int $wolf_id, int $x, int $y): void {
+        self::checkAction('move');
+    }
+
+    function howl(int $x, int $y): void {
+        self::checkAction('howl');
+        $playerId = self::getActivePlayerId();
+        $targets = $this->getValidHowlTargets($playerId);
+        if (!in_array(['x' => $x, 'y' => $y], $targets)) {
+            throw new BgaUserException(_('Invalid howl target'));
+        }
+
+        $this->activeNextPlayer();
+        $this->gamestate->nextState('howl');
     }
 
     function placeDen(int $attribute, int $x, int $y): void {
@@ -303,11 +343,11 @@ class Wolves extends Table {
     }
 
     function placeLair(int $attribute, int $x, int $y): void {
-
+        self::checkAction('placeLair');
     }
 
-    function dominate(int $attribute, int $x, int $y): void {
-
+    function dominate(int $piece_id): void {
+        self::checkAction('dominate');
     }
 
     /*
@@ -347,22 +387,11 @@ class Wolves extends Table {
         game state.
     */
 
-    /*
-    
-    Example for game state "MyGameState":
-    
-    function argMyGameState()
-    {
-        // Get some values from the current game situation in database...
-    
-        // return values:
-        return array(
-            'variable1' => $value1,
-            'variable2' => $value2,
-            ...
-        );
-    }    
-    */
+    function argHowlSelection(): array {
+        return [
+            'validTargets' => $this->getValidHowlTargets(self::getActivePlayerId())
+        ];
+    }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
@@ -384,11 +413,6 @@ class Wolves extends Table {
         }
 
         $this->gamestate->nextState($draftCompleted ? 'draftEnd' : 'draftContinue');
-    }
-
-    function stDispatchAction(): void {
-        $this->activeNextPlayer();
-        $this->gamestate->nextState('');
     }
 
 //////////////////////////////////////////////////////////////////////////////

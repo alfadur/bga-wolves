@@ -65,7 +65,7 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stDraftResolution',
         'updateGameProgression' => true,
-        'transitions' => ['draftContinue' => ST_DRAFT_WOLVES, 'draftEnd' => ST_SELECT_ACTION]
+        'transitions' => ['draftContinue' => ST_DRAFT_WOLVES, 'draftEnd' => ST_ACTION_SELECTION]
     ],
 
     ST_DRAFT_WOLVES => [
@@ -77,23 +77,25 @@ $machinestates = [
         'transitions' => ['draftPlace' => ST_DRAFT_RESOLUTION]
     ],
 
-    ST_SELECT_ACTION => [
-        'name' => 'selectAction',
+    ST_ACTION_SELECTION => [
+        'name' => 'actionSelection',
         'description' => clienttranslate('${actplayer} must select a 🐺ing action'),
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺ing action'),
         'type' => 'activeplayer',
         'possibleactions' => ['selectAction'],
         'transitions' => [
-            'selectAction' => ST_DISPATCH_ACTION
+            'howlSelect' => ST_HOWL_SELECTION,
         ]
     ],
 
-    ST_DISPATCH_ACTION => [
-        'name' => 'dispatchAction',
-        'description' => '',
-        'type' => 'game',
-        'action' => 'stDispatchAction',
-        'transitions' => ['' => ST_SELECT_ACTION]
+    ST_HOWL_SELECTION => [
+        'name' => 'howlSelection',
+        'description' => clienttranslate('${actplayer} must select a howl target'),
+        'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
+        'type' => 'activeplayer',
+        'args' => 'argHowlSelection',
+        'availableactions' => ['howl'],
+        'transitions' => ['howl' => ST_ACTION_SELECTION]
     ],
 
     // Final state.
