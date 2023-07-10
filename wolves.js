@@ -182,19 +182,17 @@ function (dojo, declare) {
                     case "actionSelection":
                         if(this.isCurrentPlayerActive()){
                             const buttons = {
-                                button_move: "🐾 Move",
-                                button_howl: "🌕 Howl",
-                                button_den: "🕳 Den",
-                                button_lair: "🪨 Lair",
-                                button_dominate: "🐺 Dominate"
+                                move: "🐾 Move",
+                                howl: "🌕 Howl",
+                                den: "🕳 Den",
+                                lair: "🪨 Lair",
+                                dominate: "🐺 Dominate"
                             }
 
-                            Object.keys(buttons).forEach(button_name => {
-                                const match = button_name.match(/button_(.+)/);
-                                const action = match[1];
-                                if(!$(button_name)){
-                                    this.addActionButton(button_name, _(buttons[button_name]), () => {
-                                        this.onSelectAction(action);
+                            Object.keys(buttons).forEach(name => {
+                                if(!$(`button_${name}`)){
+                                    this.addActionButton(`button_${name}`, _(buttons[name]), () => {
+                                        this.onSelectAction(name);
                                     });
                                 }
                             })

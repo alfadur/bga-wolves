@@ -28,11 +28,13 @@ CREATE TABLE IF NOT EXISTS pieces(
 CREATE TABLE IF NOT EXISTS `player_status`(
     `player_id` INT UNSIGNED NOT NULL,
     `home_terrain` TINYINT NOT NULL,
-    `pack_spread` TINYINT NOT NULL DEFAULT 2,
-    `wolf_speed` TINYINT NOT NULL DEFAULT 3,
-    `howl_range` TINYINT NOT NULL DEFAULT 2,
-    `selected_terrain` TINYINT NULL,
-    `remaining_moves` TINYINT NULL,
+    `deployed_howl_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `deployed_pack_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `deployed_wolf_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `deployed_lairs` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `deployed_wolves` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `terrain_tokens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `turn_tokens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (`player_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -45,3 +47,28 @@ CREATE TABLE IF NOT EXISTS `player_tiles`(
     `4` TINYINT UNSIGNED NOT NULL DEFAULT 0, 
     PRIMARY KEY (`player_id`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `moonlight_board`(
+    `id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `kind` TINYINT UNSIGNED NOT NULL,
+    `player_id` INT UNSIGNED,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE IF NOT EXISTS `score_token`(
+    `player_id` INT NOT NULL,
+    `type` TINYINT NOT NULL,
+    PRIMARY KEY (`player_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+
+CREATE TABLE IF NOT EXISTS `turn_log`(
+    `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `turn_id` INT UNSIGNED NOT NULL,
+    `prev_move_id` INT UNSIGNED NOT NULL,
+    `next_move_id` INT UNSIGNED NOT NULL,
+    `action_info` JSON NOT NULL,
+    PRIMARY KEY (`id`),
+    INDEX `turn_id` (`turn_id`),
+    FOREIGN KEY (`prev_move_id`) REFERENCES `turn_log`(`id`),
+    FOREIGN KEY (`next_move_id`) REFERENCES `turn_log`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
