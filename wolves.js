@@ -204,7 +204,7 @@ function (dojo, declare) {
                     case "client_selectTiles":
                         if(this.isCurrentPlayerActive()){
                             if(!$("button_cancel")){
-                                this.addActionButton('button_cancel', _('Cancel'), "onCancel");
+                                this.addActionButton('button_cancel', _('Cancel'), "onCancel", null, null, "red");
                             }
                         }
                         break;
