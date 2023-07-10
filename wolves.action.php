@@ -44,8 +44,9 @@ class action_wolves extends APP_GameAction {
     function selectAction(): void {
         self::setAjaxMode();
         $action = self::getArg('action_id', AT_int, true);
+        $bonusTokens = self::getArg('terrain_tokens', AT_int, false) ?? 0;
         $tiles = explode(',', self::getArg('tiles', AT_numberlist, true));
-        $this->game->selectAction($action, $tiles);
+        $this->game->selectAction($action, $bonusTokens, $tiles);
         self::ajaxResponse();
     }
 

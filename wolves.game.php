@@ -300,19 +300,24 @@ class Wolves extends Table {
         $this->gamestate->nextState('draftPlace');
     }
 
-    function selectAction(int $action, array $tiles, ?int $forceTerrain = null): void {
+    function selectAction(int $action, array $tiles, int $bonusTerrain, ?int $forceTerrain = null): void {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
             throw new BgaUserException(_('Invalid action selected'));
         }
 
+        $playerId = self::getActivePlayerId();
+
+        if ($bonusTerrain > self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId")) {
+            throw new BgaUserException(_('Not enough bonus terrain tokens'));
+        }
+
         $cost = ACTION_COSTS[$action];
-        if ($forceTerrain === null && count($tiles) != $cost) {
+        if ($forceTerrain === null && count($tiles) + $bonusTerrain != $cost) {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
         $terrain = $forceTerrain ?? $this->flipTiles(self::getActivePlayerId(), $tiles);
-        $playerId = self::getActivePlayerId();
 
         $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
             'player_name' => self::getActivePlayerName(),
@@ -322,18 +327,19 @@ class Wolves extends Table {
             'new_tiles' => $this->getPlayerTiles($playerId)
         ]);
 
-        $query = "UPDATE player_status SET selected_terrain = $terrain, remaining_moves = pack_spread WHERE player_id = $playerId";
+        $bonusUpdate = $bonusTerrain ? ", terrain_tokens = terrain_tokens - $bonusTerrain " : '';
+        $query = "UPDATE player_status SET selected_terrain = $terrain, remaining_moves = pack_spread $bonusUpdate WHERE player_id = $playerId";
         self::DbQuery($query);
 
         $this->gamestate->nextState($this->actionNames[$action] . "Select");
     }
 
     function testMove(): void {
-        $this->selectAction(A_MOVE, [2]);
+        $this->selectAction(A_MOVE, [2], 0);
     }
 
     function testHowl(): void {
-        $this->selectAction(A_HOWL, [], T_TUNDRA);
+        $this->selectAction(A_HOWL, [], 0, T_TUNDRA);
     }
 
     function move(int $wolf_id, int $x, int $y): void {
