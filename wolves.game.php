@@ -241,8 +241,12 @@ class Wolves extends Table {
         $tiles = $this->getPlayerTiles($playerId);
         $terrain = -1;
         $sets = [];
+        print_r($tileIndices);
 
         foreach ($tileIndices as $tileIndex) {
+            if($tileIndex == 5){
+                continue;
+            }
             $nextTerrain = ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES;
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));

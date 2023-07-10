@@ -15,6 +15,7 @@
  *
  */
 
+const action_names = ['move', 'howl', 'den', 'lair', 'dominate'] 
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -85,6 +86,15 @@ function (dojo, declare) {
                     dojo.stopEvent(e);
                     console.log(`Activating action ${action}`)
                     this.onSelectAction(action);
+                })
+            });
+
+            document.querySelectorAll(".player-tile").forEach(tile => {
+                const match = tile.id.match(/player-tile-(\d+)/);
+                const index = match[1];
+                dojo.connect(tile, 'onclick', e => {
+                    dojo.stopEvent(e);
+                    this.onSelectTile(index);
                 })
             })
 
@@ -231,18 +241,47 @@ function (dojo, declare) {
         },
 
         onSelectAction: function(action) {
-            console.log(`Submitting action (${action})`);
-
+            
             if(!this.checkAction("selectAction")){
                 return;
             }
+
+            console.log(`Submitting action (${action})`);
             this.clientStateArgs = {};
-            this.clientStateArgs.action = action;
-            this.clientStateArgs.selectedTiles = [];
-            this.clientStateArgs.num = action === "dominate" ? 3 : 2;
+            this.clientStateArgs.action_id = action_names.indexOf(action);
+            this.clientStateArgs.tiles = [];
             this.setClientState("client_selectTiles", {
-                descriptionmyturn: _(`\${you} must select ${this.clientStateArgs.num} matching tiles`)
+                descriptionmyturn: _(`\${you} must select ${action_names[this.clientStateArgs.action_id] === "dominate" ? 3 : 2} matching tiles`)
             });
+        },
+
+        onSelectTile: function(tile) {
+
+            console.log("tile click");
+            console.log(JSON.stringify(this.clientStateArgs))
+            if(this.clientStateArgs.action_id === undefined){
+                return;
+            }
+            console.log(`Clicked tile (${tile})`);
+            if(this.clientStateArgs.tiles.includes(tile)){
+                this.clientStateArgs.tiles.splice(this.clientStateArgs.tiles.indexOf(tile), 1);
+            }
+            else{
+                this.clientStateArgs.tiles.push(tile);
+            }
+
+            const requiredTiles = action_names[this.clientStateArgs.action_id] === "dominate" ? 3 : 2;
+            
+            if(this.clientStateArgs.tiles.length === requiredTiles){
+                console.log(this.clientStateArgs);
+                this.ajaxcall("/wolves/wolves/selectAction.html", this.clientStateArgs);
+                this.clientStateArgs = {};
+            }
+            else{
+                this.setClientState("client_selectTiles", {
+                    descriptionmyturn: _(`\${you} must select ${requiredTiles - this.clientStateArgs.tiles.length} matching tiles`)
+                })
+            }
         },
 
         onCancel: function(event) {
