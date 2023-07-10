@@ -244,10 +244,10 @@ class Wolves extends Table {
         print_r($tileIndices);
 
         foreach ($tileIndices as $tileIndex) {
-            if($tileIndex == 5){
+            if($tileIndex === "5"){
                 continue;
             }
-            $nextTerrain = ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES;
+            $nextTerrain = ($tileIndex + $tiles[$tileIndex]) % TILE_TERRAIN_TYPES;
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
@@ -297,7 +297,7 @@ class Wolves extends Table {
         $this->gamestate->nextState('draftPlace');
     }
 
-    function selectAction(int $action, array $tiles, ?bool $forceTerrain = null): void {
+    function selectAction(int $action, array $tiles, ?int $forceTerrain = null): void {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
             throw new BgaUserException(_('Invalid action selected'));
