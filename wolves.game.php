@@ -244,15 +244,18 @@ class Wolves extends Table {
         print_r($tileIndices);
 
         foreach ($tileIndices as $tileIndex) {
-            if($tileIndex === "5"){
-                continue;
-            }
-            $nextTerrain = ($tileIndex + $tiles[$tileIndex]) % TILE_TERRAIN_TYPES;
+            $nextTerrain = $tileIndex < TILE_TERRAIN_TYPES ?
+                ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES :
+                self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
+
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
-            $sets[] = "`$tileIndex` = 1 - `$tileIndex`";
             $terrain = $nextTerrain;
+
+            if ($tileIndex < TILE_TERRAIN_TYPES) {
+                $sets[] = "`$tileIndex` = 1 - `$tileIndex`";
+            }
         }
 
         $update = implode(", ", $sets);
