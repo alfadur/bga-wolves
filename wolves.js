@@ -86,15 +86,15 @@ function (dojo, declare) {
                 }
             });
 
-            document.querySelectorAll(".action-button").forEach(button => {
-                const match = button.id.match(/(.+)-button/);
-                const action = match[1];
-                dojo.connect(button, "onclick", e => {
-                    dojo.stopEvent(e);
-                    console.log(`Activating action ${action}`)
-                    this.onSelectAction(action);
-                })
-            });
+            // document.querySelectorAll(".action-button").forEach(button => {
+            //     const match = button.id.match(/(.+)-button/);
+            //     const action = match[1];
+            //     dojo.connect(button, "onclick", e => {
+            //         dojo.stopEvent(e);
+            //         console.log(`Activating action ${action}`)
+            //         this.onSelectAction(action);
+            //     })
+            // });
 
             document.querySelectorAll(".player-tile").forEach(tile => {
                 const match = tile.id.match(/player-tile-(\d+)/);
@@ -178,14 +178,36 @@ function (dojo, declare) {
             {            
                 switch( stateName )
                 {
+                
+                    case "actionSelection":
+                        if(this.isCurrentPlayerActive()){
+                            const buttons = {
+                                button_move: "🐾 Move",
+                                button_howl: "🌕 Howl",
+                                button_den: "🕳 Den",
+                                button_lair: "🪨 Lair",
+                                button_dominate: "🐺 Dominate"
+                            }
 
-                case "client_selectTiles":
-                    if(this.isCurrentPlayerActive()){
-                        if(!$("button_cancel")){
-                            this.addActionButton('button_cancel', _('Cancel'), "onCancel");
+                            Object.keys(buttons).forEach(button_name => {
+                                const match = button_name.match(/button_(.+)/);
+                                const action = match[1];
+                                if(!$(button_name)){
+                                    this.addActionButton(button_name, _(buttons[button_name]), () => {
+                                        this.onSelectAction(action);
+                                    });
+                                }
+                            })
                         }
-                    }
-                    break;
+                        break;
+
+                    case "client_selectTiles":
+                        if(this.isCurrentPlayerActive()){
+                            if(!$("button_cancel")){
+                                this.addActionButton('button_cancel', _('Cancel'), "onCancel");
+                            }
+                        }
+                        break;
 /*               
                  Example:
  
