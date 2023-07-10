@@ -16,6 +16,13 @@
  */
 
 const action_names = ['move', 'howl', 'den', 'lair', 'dominate'] 
+const action_costs = {
+    'move': 1,
+    'howl': 2,
+    'den': 2,
+    'lair': 2,
+    'dominate': 3
+}
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -251,7 +258,7 @@ function (dojo, declare) {
             this.clientStateArgs.action_id = action_names.indexOf(action);
             this.clientStateArgs.tiles = [];
             this.setClientState("client_selectTiles", {
-                descriptionmyturn: _(`\${you} must select ${action_names[this.clientStateArgs.action_id] === "dominate" ? 3 : 2} matching tiles`)
+                descriptionmyturn: _(`\${you} must select ${action_costs[action_names[this.clientStateArgs.action_id]]} matching tiles`)
             });
         },
 
@@ -270,11 +277,16 @@ function (dojo, declare) {
                 this.clientStateArgs.tiles.push(tile);
             }
 
-            const requiredTiles = action_names[this.clientStateArgs.action_id] === "dominate" ? 3 : 2;
+            const requiredTiles = action_costs[action_names[this.clientStateArgs.action_id]];
             
             if(this.clientStateArgs.tiles.length === requiredTiles){
                 console.log(this.clientStateArgs);
-                this.ajaxcall("/wolves/wolves/selectAction.html", this.clientStateArgs);
+                this.ajaxcall("/wolves/wolves/selectAction.html", {
+                    ...this.clientStateArgs,
+                    lock: true,
+                    tiles: this.clientStateArgs.tiles.join(',')
+
+                });
                 this.clientStateArgs = {};
             }
             else{
