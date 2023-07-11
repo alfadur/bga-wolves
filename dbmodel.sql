@@ -16,11 +16,10 @@ CREATE TABLE IF NOT EXISTS `land`(
 
 CREATE TABLE IF NOT EXISTS pieces(
     `id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `owner` INT NULL COMMENT 'Owner player ID',
+    `owner` INT UNSIGNED NULL COMMENT 'Owner player ID',
     `kind` TINYINT NOT NULL COMMENT 'P_* value',
-    `location` TINYINT NOT NULL COMMENT 'L_* value',
-    `x` TINYINT NULL,
-    `y` TINYINT NULL,
+    `x` TINYINT NOT NULL,
+    `y` TINYINT NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`x`, `y`) REFERENCES `land`(`x`, `y`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
