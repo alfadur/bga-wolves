@@ -24,8 +24,16 @@ class Wolves extends Table {
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
         
+        $this->GAMESTATELABELS = ['']
         self::initGameStateLabels([
-            'calendar' => self::CALENDAR_PROGRESS
+            'calendar' => self::CALENDAR_PROGRESS,
+            'chosen_terrain' => 10,
+            'actions_remaining' => 11,
+            'moves_remaining' => 12,
+            'moved_wolf_1' => 13,
+            'moved_wolf_2' => 14,
+            'moved_wolf_3' => 15,
+            'moved_wolf_4' => 16
         ]);
     }
 
@@ -92,6 +100,12 @@ class Wolves extends Table {
         $this->generatePieces($players);
 
         self::setGameStateInitialValue('calendar', 0);
+        self::setGameStateInitialValue('chosen_terrain', -1);
+        self::setGameStateInitialValue('actions_remaining', -1);
+        self::setGameStateInitialValue('moves_remaining', -1);
+        for($i = 1; $i<=4; $i++){
+            self::setGameStateInitialValue("moved_wolf_$i", -1);
+        }
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -235,6 +249,100 @@ class Wolves extends Table {
             self::getObjectFromDB("SELECT howl_range, selected_terrain FROM player_status WHERE player_id = $playerId");
         $hexArrays = array_map(fn($wolf) => $this->getPiecesInRange($wolf['x'], $wolf['y'], $range, $terrain, P_LONE), $alphas);
         return array_unique(array_merge(...$hexArrays));
+    }
+
+    function getValidLandInRange(int $x, int $y, int $kind, int $player_id, int $range, int $terrain): array {
+        [$xMin, $xMax] = [$x - $range, $x + $range];
+        [$yMin, $yMax] = [$y - $range, $y + $range];
+        $query = <<<EOF
+            SELECT l.*
+            FROM land l
+            LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
+            WHERE l.x >= $xMin AND l.x <= $xMax
+                AND l.y >= $yMin AND l.y <= $yMax
+                AND l.terrain = $terrain
+                AND (ABS(l.x - $x) + ABS(l.y - $y)) <= $range
+                AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
+                AND ($kind != $P_LONE OR (p.kind != $P_LONE OR p.owner = $player_id))
+                AND (p.kind NOT IN ($P_LAIR, $P_ALPHA) OR p.owner = $player_id)
+            EOF;
+        return self::getCollectionFromDB($query);
+    }
+
+    function getValidMoves(int $x, int $y, int $kind, int $player_id, int $terrain, int $range): array {
+
+        [$xMin, $xMax] = [$x - $range, $x + $range];
+        [$yMin, $yMax] = [$y - $range, $y + $range];
+        // Create a queue to store the tiles to visit
+        $queue = new SplQueue();
+
+        // Initialize a visited array to keep track of visited tiles
+        $visited = [];
+
+        $valid = [];
+        
+        // Add the source tile to the queue
+        $queue->enqueue([$x, $y, 0]);
+
+        $objects = self::getObjectListFromDB("SELECT x,y,terrain FROM land WHERE x >= $xMin AND x <= $xMax
+        AND y >= $yMin AND y <= $yMax");
+
+        $validLands = $this->getValidLandInRange($x, $y, $kind, $player_id, $range, $terrain);
+
+        $terrainArray = [];
+        foreach ($objects as $object) {
+            $x = $object["x"];
+            $y = $object["y"];
+            $terrain = $object["terrain"];
+
+            if (!isset($terrainArray[$x])) {
+                $terrainArray[$x] = [];
+            }
+
+            $terrainArray[$x][$y] = $terrain;
+        }
+
+        $validLandArray = [];
+        foreach($validLands as $validLand){
+            $x = $validLand["x"];
+            $y = $validLand["y"];
+
+            if(!isset($validLandArray[$x])){
+                $validlandArray[$x] = [];
+            }
+
+            $validLandArray[$x][$y] = true;
+        }
+
+        while(!$queue->isEmpty()){
+            [$currentX, $currentY, $moves] = $queue->dequeue();
+            if(!isset($visited[$currentX])){
+                $visited[$currentX] = [];
+            }
+            if ($moves <= $range && $terrainArray[$currentX][$currentY] != T_WATER && !isset($visited[$currentX][$currentY])) {
+
+                if($moves > 0 && isset($validLand[$currentX]) && isset($validLand[$currentX][$currentY])){
+                    $valid[] = [$currentX, $currentY];
+                }
+
+                // Enqueue neighboring tiles for exploration (up, down, left, right)
+                $queue->enqueue([$currentX, $currentY - 1, $moves + 1]); // Up
+                $queue->enqueue([$currentX, $currentY + 1, $moves + 1]); // Down
+                $queue->enqueue([$currentX - 1, $currentY, $moves + 1]); // Left
+                $queue->enqueue([$currentX + 1, $currentY, $moves + 1]); // Right
+                
+            }
+            // Mark the current tile as visited
+            $visited[$currentX][$currentY] = true;
+        }
+        return valid;
+    }
+
+    function getValidMoveTargets(int $playerId): array {
+        $pieces = self::getObjectListFromDB("SELECT id, kind, x, y FROM pieces WHERE owner=$playerId");
+        $wolves = array_filter($pieces, fn($piece) => $piece['kind'] == P_ALPHA || $piece['kind'] == P_LONE);
+        $max_moves = 2; //TODO: Update with actual player value
+        return array_map(fn($wolf) => [$wolf => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue('current_terrain'), $max_moves)], $wolves);
     }
 
     function flipTiles(int $playerId, array $tileIndices): int {
@@ -411,6 +519,12 @@ class Wolves extends Table {
         return [
             'validTargets' => $this->getValidHowlTargets(self::getActivePlayerId())
         ];
+    }
+
+    function argMoveSelection(): array {
+        return [
+            'validTargets' => $this->getValidMoveTargets(self::getActivePlayerId())
+        ]
     }
 
 //////////////////////////////////////////////////////////////////////////////
