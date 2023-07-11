@@ -217,11 +217,11 @@ class Wolves extends Table {
         $query = <<<EOF
             SELECT pieces.x, pieces.y FROM pieces
             JOIN land ON pieces.x = land.x AND pieces.y = land.y
-            WHERE land.x >= $xMin AND land.x <= $xMax
-                AND land.y >= $yMin AND land.y <= $yMax
+            WHERE land.x BETWEEN $xMin AND $xMax
+                AND land.y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
                 AND kind = $kind
-                AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x + land.y - $x - $y)) / 2 <= $range
+                AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
             EOF;
         return self::getCollectionFromDb($query);
     }
@@ -246,7 +246,7 @@ class Wolves extends Table {
             WHERE l.x >= $xMin AND l.x <= $xMax
                 AND l.y >= $yMin AND l.y <= $yMax
                 AND l.terrain = $terrain
-                AND (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x + l.y - $x - $y)) / 2 <= $range
+                AND (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - l.y - $x + $y)) / 2 <= $range
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                 AND ($kind != $P_LONE OR (p.kind != $P_LONE OR p.owner = $player_id))
                 AND (p.kind NOT IN ($P_LAIR, $P_ALPHA) OR p.owner = $player_id)
