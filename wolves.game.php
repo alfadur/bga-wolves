@@ -246,7 +246,7 @@ class Wolves extends Table {
             WHERE l.x >= $xMin AND l.x <= $xMax
                 AND l.y >= $yMin AND l.y <= $yMax
                 AND l.terrain = $terrain
-                AND (ABS(l.x - $x) + ABS(l.y - $y)) <= $range
+                AND (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x + l.y - $x - $y)) / 2 <= $range
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                 AND ($kind != $P_LONE OR (p.kind != $P_LONE OR p.owner = $player_id))
                 AND (p.kind NOT IN ($P_LAIR, $P_ALPHA) OR p.owner = $player_id)
