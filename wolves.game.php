@@ -310,7 +310,7 @@ class Wolves extends Table {
                     $valid[] = [$currentX, $currentY];
                 }
 
-                // Enqueue neighboring tiles for exploration (up, down, left, right)
+                // Enqueue neighboring tiles for exploration
                 $queue->enqueue([$currentX - 1, $currentY - 1, $moves + 1]); // Bottom left
                 $queue->enqueue([$currentX, $currentY - 1, $moves + 1]); //Bottom
                 $queue->enqueue([$currentX + 1, $currentY, $moves + 1]); // Right
