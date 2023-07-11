@@ -251,7 +251,7 @@ class Wolves extends Table {
                 AND ($kind != $P_LONE OR (p.kind != $P_LONE OR p.owner = $player_id))
                 AND (p.kind NOT IN ($P_LAIR, $P_ALPHA) OR p.owner = $player_id)
             EOF;
-        return self::getCollectionFromDB($query);
+        return self::getObjectListFromDB($query);
     }
 
     function getValidMoves(int $x, int $y, int $kind, int $player_id, int $terrain, int $range): array {
@@ -311,10 +311,12 @@ class Wolves extends Table {
                 }
 
                 // Enqueue neighboring tiles for exploration (up, down, left, right)
-                $queue->enqueue([$currentX, $currentY - 1, $moves + 1]); // Up
-                $queue->enqueue([$currentX, $currentY + 1, $moves + 1]); // Down
-                $queue->enqueue([$currentX - 1, $currentY, $moves + 1]); // Left
+                $queue->enqueue([$currentX - 1, $currentY - 1, $moves + 1]); // Bottom left
+                $queue->enqueue([$currentX, $currentY - 1, $moves + 1]); //Bottom
                 $queue->enqueue([$currentX + 1, $currentY, $moves + 1]); // Right
+                $queue->enqueue([$currentX + 1, $currentY + 1, $moves + 1]); // Top right
+                $queue->enqueue([$currentX, $currentY + 1, $moves + 1]); // Top
+                $queue->enqueue([$currentX - 1, $currentY, $moves + 1]); // Left
                 
             }
             // Mark the current tile as visited
