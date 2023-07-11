@@ -125,20 +125,7 @@ class Wolves extends Table {
 
     protected function generatePieces(array $players): void {
         $values = [];
-        $wolves = [[P_ALPHA, L_PLAYER], [P_PACK, L_PLAYER]];
-
-        foreach ($players as $player_id => $player) {
-            foreach ($wolves as [$kind, $location]) {
-                $values[] = "($player_id, $kind, $location)";
-            }
-        }
-
-        $args = implode(', ', $values);
-        self::DbQuery("INSERT INTO pieces (owner, kind, location) VALUES $args");
-
-        $values = [];
         $kind = P_LONE;
-        $location = L_BOARD;
 
         foreach (BOARD_SETUP[count($players)] as $tile) {
             if (!array_key_exists('chasm', $tile)) {
@@ -147,13 +134,13 @@ class Wolves extends Table {
                 foreach (REGION_LONE_WOLVES as [$x, $y]) {
                     $x = $center[0] + $x * $scale;
                     $y = $center[1] + $y * $scale;
-                    $values[] = "($x, $y, $kind, $location)";
+                    $values[] = "($x, $y, $kind)";
                 }
             }
         }
 
         $args = implode(', ', $values);
-        self::DbQuery("INSERT INTO pieces (x, y, kind, location) VALUES $args");
+        self::DbQuery("INSERT INTO pieces (x, y, kind) VALUES $args");
     }
 
     /*
@@ -172,8 +159,7 @@ class Wolves extends Table {
         $query = 'SELECT player_id id, player_score score, player_color color FROM player';
         $result['players'] = self::getCollectionFromDb($query);
 
-        $location = L_BOARD;
-        $query = "SELECT id, owner, x, y FROM pieces WHERE location = $location";
+        $query = "SELECT id, owner, kind, x, y FROM pieces";
         $result['pieces'] = self::getCollectionFromDb($query);
 
         return $result;
@@ -228,8 +214,7 @@ class Wolves extends Table {
 
     function getValidHowlTargets(int $playerId): array {
         $kind = P_ALPHA;
-        $location = L_BOARD;
-        $alphas = self::getObjectListFromDB("SELECT x, y FROM pieces WHERE owner = $playerId AND kind = $kind AND location = $location");
+        $alphas = self::getObjectListFromDB("SELECT x, y FROM pieces WHERE owner = $playerId AND kind = $kind");
 
         ['howl_range' => $range, 'selected_terrain' => $terrain]  =
             self::getObjectFromDB("SELECT howl_range, selected_terrain FROM player_status WHERE player_id = $playerId");
@@ -286,8 +271,9 @@ class Wolves extends Table {
             throw new BgaUserException(_("This place is already occupied"));
         }
 
-        $location = L_BOARD;
-        $query = "UPDATE pieces SET location = $location, x = $x, y = $y WHERE owner = $player_id";
+        $values = array_map(fn($piece) => "($player_id, $x, $y, $piece)", [P_ALPHA, P_PACK]);
+        $args = implode(", ", $values);
+        $query = "INSERT INTO pieces (x, y, owner, kind) VALUES $args";
         self::DbQuery($query);
 
         $this->notifyAllPlayers('draft', clienttranslate('${player_name} placed initial 🐺.'), [
@@ -422,10 +408,9 @@ class Wolves extends Table {
         The action method of state X is called everytime the current game state is set to X.    */
 
     function stDraftResolution(): void {
-        $location = L_BOARD;
 
         $wolvesDrafted = self::getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM pieces WHERE location = $location AND owner IS NOT NULL");
+            "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL");
         $draftCompleted = $wolvesDrafted >= 2 * self::getPlayersNumber();
 
         if ($wolvesDrafted > 0 && !$draftCompleted) {

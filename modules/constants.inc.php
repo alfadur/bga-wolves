@@ -28,10 +28,6 @@ const P_LAIR = 3;
 const P_LONE = 4;
 const P_PREY = 5;
 
-const L_PLAYER = 0;
-const L_BOARD = 1;
-const L_CALENDAR = 2;
-
 const BOARD_SETUP = [
     2 => [
         ['center' => [8, 9]],
