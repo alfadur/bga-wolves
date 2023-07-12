@@ -276,7 +276,7 @@ class Wolves extends Table {
 
         [$xMin, $xMax] = [$x - $range, $x + $range];
         [$yMin, $yMax] = [$y - $range, $y + $range];
-        print("Processing wolf at ($x, $y). xMax=$xMax, xMin=$xMin, yMax=$yMax, yMin=$yMin");
+        //print("Processing wolf at ($x, $y). xMax=$xMax, xMin=$xMin, yMax=$yMax, yMin=$yMin");
         // Create a queue to store the tiles to visit
         $queue = new SplQueue();
 
@@ -349,12 +349,11 @@ class Wolves extends Table {
             // Mark the current tile as visited
             $visited[$currentX][$currentY] = true;
         }
-        print_r($valid);
+        //print_r($valid);
         return $valid;
     }
 
     function getValidMoveTargets(int $playerId): array {
-        print("Here :)");
         $pieces = self::getObjectListFromDB("SELECT id, kind, x, y FROM pieces WHERE owner=$playerId");
         $wolves = array_filter($pieces, fn($piece) => $piece['kind'] == P_ALPHA || $piece['kind'] == P_LONE);
         $max_moves = 2; //TODO: Update with actual player value
