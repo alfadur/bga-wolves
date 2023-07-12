@@ -211,29 +211,48 @@ class Wolves extends Table {
         return $tiles;
     }
 
-    function getPiecesInRange(int $x, int $y, int $range, int $terrain, int $kind): array {
+    function getPiecesInRange(int $x, int $y, int $range, int $terrain, $kinds, ?int $sourcePlayerId = null): array {
         [$xMin, $xMax] = [$x - $range, $x + $range];
         [$yMin, $yMax] = [$y - $range, $y + $range];
+        $playerCheck = $sourcePlayerId === null ? '' : <<<EOF
+                AND pieces.owner IS NOT NULL
+                AND pieces.owner <> $sourcePlayerId
+            GROUP BY x, y, owner
+            HAVING COUNT(*) = 1
+            EOF;
+        $kindCheck = is_int($kinds) ? "kind = $kinds" : 'kind IN (' . implode(', ', $kinds) . ')';
+
         $query = <<<EOF
             SELECT pieces.x, pieces.y FROM pieces
             JOIN land ON pieces.x = land.x AND pieces.y = land.y
             WHERE land.x BETWEEN $xMin AND $xMax
                 AND land.y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
-                AND kind = $kind
+                AND $kindCheck
                 AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
+            $playerCheck
             EOF;
-        return self::getCollectionFromDb($query);
+        return self::getObjectListFromDb($query);
     }
 
-    function getValidHowlTargets(int $playerId): array {
+    function getValidConversionTargets(int $playerId, $kinds, bool $usePlayer): array {
         $kind = P_ALPHA;
         $alphas = self::getObjectListFromDB("SELECT x, y FROM pieces WHERE owner = $playerId AND kind = $kind");
 
         ['howl_range' => $range, 'selected_terrain' => $terrain]  =
             self::getObjectFromDB("SELECT howl_range, selected_terrain FROM player_status WHERE player_id = $playerId");
-        $hexArrays = array_map(fn($wolf) => $this->getPiecesInRange($wolf['x'], $wolf['y'], $range, $terrain, P_LONE), $alphas);
+        $hexArrays = array_map(fn($wolf) =>
+                $this->getPiecesInRange($wolf['x'], $wolf['y'], $range, $terrain, $kinds, $usePlayer ? $playerId : null),
+            $alphas);
         return array_unique(array_merge(...$hexArrays));
+    }
+
+    function getValidHowlTargets(int $playerId): array {
+        return $this->getValidConversionTargets($playerId, P_LONE, false);
+    }
+
+    function getValidDominateTargets(int $playerId): array {
+        return $this->getValidConversionTargets($playerId, [P_PACK, P_DEN], true);
     }
 
     function getValidLandInRange(int $x, int $y, int $kind, int $player_id, int $range, int $terrain): array {
