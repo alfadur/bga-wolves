@@ -330,13 +330,9 @@ class Wolves extends Table {
                 }
 
                 // Enqueue neighboring tiles for exploration
-                $queue->enqueue([$currentX - 1, $currentY - 1, $moves + 1]); // Bottom left
-                $queue->enqueue([$currentX, $currentY - 1, $moves + 1]); //Bottom
-                $queue->enqueue([$currentX + 1, $currentY, $moves + 1]); // Right
-                $queue->enqueue([$currentX + 1, $currentY + 1, $moves + 1]); // Top right
-                $queue->enqueue([$currentX, $currentY + 1, $moves + 1]); // Top
-                $queue->enqueue([$currentX - 1, $currentY, $moves + 1]); // Left
-                
+                foreach (HEX_DIRECTIONS as [$dx, $dy]) {
+                    $queue->enqueue([$currentX + $dx, $currentY + $dy, $moves + 1]);
+                }
             }
             // Mark the current tile as visited
             $visited[$currentX][$currentY] = true;
