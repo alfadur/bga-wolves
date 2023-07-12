@@ -222,8 +222,7 @@ class Wolves extends Table {
         $kindCheck = is_int($kinds) ? "kind = $kinds" : 'kind IN (' . implode(', ', $kinds) . ')';
 
         $query = <<<EOF
-            SELECT pieces.x, pieces.y FROM pieces
-            JOIN land ON pieces.x = land.x AND pieces.y = land.y
+            SELECT pieces.x, pieces.y FROM pieces NATURAL JOIN land
             WHERE land.x BETWEEN $xMin AND $xMax
                 AND land.y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
@@ -257,17 +256,18 @@ class Wolves extends Table {
     function getValidLandInRange(int $x, int $y, int $kind, int $player_id, int $range, int $terrain): array {
         [$xMin, $xMax] = [$x - $range, $x + $range];
         [$yMin, $yMax] = [$y - $range, $y + $range];
+        $pack = P_PACK;
+        $kinds = implode(", ", [P_ALPHA, P_LAIR, P_LONE, P_PREY]);
         $query = <<<EOF
             SELECT l.*
-            FROM land l
-            LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-            WHERE l.x >= $xMin AND l.x <= $xMax
-                AND l.y >= $yMin AND l.y <= $yMax
+            FROM land l NATURAL LEFT JOIN pieces p
+            WHERE l.x BETWEEN $xMin AND $xMax
+                AND l.y BETWEEN $yMin AND $yMax
                 AND l.terrain = $terrain
                 AND (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - l.y - $x + $y)) / 2 <= $range
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
-                AND (p.kind IS NULL OR $kind != 1 OR p.kind != 1 OR p.owner = $player_id)
-                AND (p.kind IS NULL OR p.kind NOT IN (0, 3, 4, 5) OR p.owner = $player_id)
+                AND (p.kind IS NULL OR $kind != $pack OR p.kind != $pack OR p.owner = $player_id)
+                AND (p.kind IS NULL OR p.kind NOT IN ($kinds) OR p.owner = $player_id)
             EOF;
         return self::getObjectListFromDB($query);
     }
@@ -358,6 +358,34 @@ class Wolves extends Table {
         $wolves = array_filter($pieces, fn($piece) => $piece['kind'] == P_ALPHA || $piece['kind'] == P_LONE);
         $max_moves = 2; //TODO: Update with actual player value
         return array_map(fn($wolf) => [$wolf['id'] => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue('chosen_terrain'), $max_moves)], $wolves);
+    }
+
+    function checkPath(int $playerId, array $start, array $moves, int $kind, int $terrain): bool {
+        $checks = [];
+        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+            $start[0] += $dx;
+            $start[1] += $dy;
+            $checks[] = "x = $start[0] AND y = $start[1]";
+        }
+
+        $args = implode(" OR ", $checks);
+        $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args") === count($moves);
+
+        if ($isPathValid) {
+            $pieceConstraint = $kind !== P_ALPHA ? '' : '';
+            $query = <<<EOF
+                SELECT terrain, COUNT(pieces.id) AS count 
+                    FROM land NATURAL LEFT JOIN pieces
+                    WHERE land.x = $start[0] AND land.y = $start[1] 
+                        AND terrain = $terrain
+                        AND owner <> $playerId 
+                        $pieceConstraint
+                EOF;
+            $data = self::getObjectFromDB($query);
+            return $terrain === $data['terrain'] && $data['count'] === 0;
+        }
+
+        return false;
     }
 
     function flipTiles(int $playerId, array $tileIndices): int {
