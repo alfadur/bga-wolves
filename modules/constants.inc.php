@@ -123,3 +123,6 @@ const ACTION_COSTS = [
 
 const TILE_TERRAIN_TYPES = 5;
 
+const HEX_DIRECTIONS = [
+    [0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]
+];
