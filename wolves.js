@@ -121,6 +121,7 @@ function (dojo, declare) {
         onEnteringState: function( stateName, args )
         {
             console.log( 'Entering state: '+stateName );
+            console.log(`Got args: ${JSON.stringify(args)}`)
             
             switch( stateName )
             {
@@ -299,11 +300,13 @@ function (dojo, declare) {
 
             const requiredTiles = action_costs[action_names[this.clientStateArgs.action_id]];
             
+            console.log(this.clientStateArgs.tiles.join(','));
             if(this.clientStateArgs.tiles.length === requiredTiles){
                 console.log(this.clientStateArgs);
                 this.ajaxcall("/wolves/wolves/selectAction.html", {
-                    ...this.clientStateArgs,
                     lock: true,
+                    action_id: this.clientStateArgs.action_id,
+                    terrain_tokens: 0, //TODO: Implement this
                     tiles: this.clientStateArgs.tiles.join(',')
 
                 });

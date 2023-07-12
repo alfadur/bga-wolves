@@ -85,6 +85,7 @@ $machinestates = [
         'possibleactions' => ['selectAction'],
         'transitions' => [
             'howlSelect' => ST_HOWL_SELECTION,
+            'moveSelect' => ST_MOVE_SELECTION
         ]
     ],
 
