@@ -26,13 +26,11 @@ class Wolves extends Table {
         
         self::initGameStateLabels([
             'calendar' => self::CALENDAR_PROGRESS,
-            'chosen_terrain' => 10,
-            'actions_remaining' => 11,
-            'moves_remaining' => 12,
-            'moved_wolf_1' => 13,
-            'moved_wolf_2' => 14,
-            'moved_wolf_3' => 15,
-            'moved_wolf_4' => 16
+            G_SELECTED_TERRAIN => 10,
+            G_ACTIONS_REMAINING => 11,
+            G_MOVES_REMAINING => 12,
+            G_MOVED_WOLVES => 13,
+            G_DISPLACEMENT_WOLF => 14
         ]);
     }
 
@@ -99,12 +97,11 @@ class Wolves extends Table {
         $this->generatePieces($players);
 
         self::setGameStateInitialValue('calendar', 0);
-        self::setGameStateInitialValue('chosen_terrain', -1);
-        self::setGameStateInitialValue('actions_remaining', -1);
-        self::setGameStateInitialValue('moves_remaining', -1);
-        for($i = 1; $i<=4; $i++){
-            self::setGameStateInitialValue("moved_wolf_$i", -1);
-        }
+        self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
+        self::setGameStateInitialValue(G_ACTIONS_REMAINING, -1);
+        self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
+        self::setGameStateInitialValue(G_MOVED_WOLVES, -1);
+        self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -272,8 +269,11 @@ class Wolves extends Table {
         return self::getObjectListFromDB($query);
     }
 
-    function getValidMoves(int $x, int $y, int $kind, int $player_id, int $terrain, int $range): array {
+    function getValidMoves(int $x, int $y, int $kind, int $player_id, int $terrain, int $range, int $piece_id): array {
 
+        if(in_array($piece_id, array_map(fn($wolf) => $wolf['id'], $this->getMovedWolves()))){
+            return [];
+        }
         [$xMin, $xMax] = [$x - $range, $x + $range];
         [$yMin, $yMax] = [$y - $range, $y + $range];
         //print("Processing wolf at ($x, $y). xMax=$xMax, xMin=$xMin, yMax=$yMax, yMin=$yMin");
@@ -357,7 +357,7 @@ class Wolves extends Table {
         $pieces = self::getObjectListFromDB("SELECT id, kind, x, y FROM pieces WHERE owner=$playerId");
         $wolves = array_filter($pieces, fn($piece) => $piece['kind'] == P_ALPHA || $piece['kind'] == P_LONE);
         $max_moves = 2; //TODO: Update with actual player value
-        return array_map(fn($wolf) => [$wolf['id'] => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue('chosen_terrain'), $max_moves)], $wolves);
+        return array_map(fn($wolf) => [$wolf['id'] => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue(G_SELECTED_TERRAIN), $max_moves, $wolf['id'])], $wolves);
     }
 
     function checkPath(int $playerId, array $start, array $moves, int $kind, int $terrain): bool {
@@ -386,6 +386,28 @@ class Wolves extends Table {
         }
 
         return false;
+    }
+
+    function addMovedWolf(int $wolfId){
+        $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
+        $moved_wolves = $moved_wolves << 8;
+        $moved_wolves |= ($wolfId & 0xff);
+        $this->setGameStateValue(G_MOVED_WOLVES, $moved_wolves);
+    }
+
+    function getMovedWolves(): array {
+        $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
+        $wolf_ids = [];
+        for($i = 0; $i<4; $i++){
+            $wolf_id = ($moved_wolves >> (8 * $i)) & 0xff;
+            if($wolf_id === 0xff){
+                continue;
+            }
+            $wolf_ids[] = $wolf_id;
+        }
+
+        return array_map(fn($id) => self::getObjectFromDB("SELECT * FROM pieces WHERE id=$id"), $wolf_ids);
+
     }
 
     function flipTiles(int $playerId, array $tileIndices): int {
@@ -485,9 +507,18 @@ class Wolves extends Table {
         }
 
 
-        $this->setGameStateValue('chosen_terrain', $terrain);
+        $this->setGameStateValue(G_SELECTED_TERRAIN, $terrain);
 
-        $this->gamestate->nextState($this->actionNames[$action] . "Select");
+        $actionName = $this->actionNames[$action]
+        switch($actionName){
+            case 'move':
+                $this->setGameStateValue(G_MOVED_WOLVES, -1);
+                break;
+            default:
+                break;
+        }
+
+        $this->gamestate->nextState( $actionName . "Select");
     }
 
     function testMove(): void {
@@ -498,8 +529,39 @@ class Wolves extends Table {
         $this->selectAction(A_HOWL, [], 0, T_TUNDRA);
     }
 
-    function move(int $wolf_id, int $x, int $y): void {
+    function move(int $wolfId, $kind, $targetX, $targetY): void {
         self::checkAction('move');
+
+        $playerId = self::getActivePlayerId();
+        $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
+        $max_moves = 2; //TODO: Update with actual player value
+        $query = "SELECT * FROM pieces WHERE id=$wolfId";
+        $wolf = self::getObjectFromDB($query);
+        if($wolf['owner'] != $playerId){
+            throw new BgaUserException(_('This is not your wolf!'));
+        }
+        $validTargets = $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $max_moves, $wolfId);
+        if(!(isset($validTargets[$targetX]) && isset($validTargets[$targetX][$targetY]))){
+            throw new BgaUserException(_('Invalid move target'));
+        }
+
+        $query = "UPDATE pieces SET x=$targetX, y=$targetY WHERE id=$wolfId";
+        self::DbQuery($query);
+
+        $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
+        $potential_wolves = self::getObjectListFromDB($query);
+
+
+        $this->addMovedWolf($wolf['id']);
+        $this->incGameStateValue(G_MOVES_REMAINING, -1);
+        if(count($potential_wolves) > 0){
+            $pack_wolf = $potential_wolves[0];
+            $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
+            $this->gamestate->nextState(T_DISPLACE);
+        }
+        else{
+            $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? T_MOVE : T_END_MOVE);
+        }  
     }
 
     function howl(int $x, int $y): void {
@@ -511,7 +573,7 @@ class Wolves extends Table {
         }
 
         $this->activeNextPlayer();
-        $this->gamestate->nextState('howl');
+        $this->gamestate->nextState(T_HOWL);
     }
 
     function placeDen(int $attribute, int $x, int $y): void {
@@ -593,7 +655,7 @@ class Wolves extends Table {
             $this->activeNextPlayer();
         }
 
-        $this->gamestate->nextState($draftCompleted ? 'draftEnd' : 'draftContinue');
+        $this->gamestate->nextState($draftCompleted ? T_DRAFT_END : T_DRAFT_CONTINUE);
     }
 
 //////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@ const ST_MOVE_SELECTION = 6;
 const ST_DEN_SELECTION = 7;
 const ST_LAIR_SELECTION = 8;
 const ST_DOMINATE_SELECTION = 9;
+const ST_MOVE_DISPLACE = 10;
 const ST_GAME_END = 99;
 
 const A_MOVE = 0;
@@ -31,6 +32,25 @@ const P_DEN = 2;
 const P_LAIR = 3;
 const P_LONE = 4;
 const P_PREY = 5;
+
+const G_SELECTED_TERRAIN = 'selected_terrain';
+const G_ACTIONS_REMAINING = 'actions_remaining';
+const G_MOVES_REMAINING = 'moves_remaining';
+const G_MOVED_WOLVES = 'moved_wolves';
+const G_DISPLACEMENT_WOLF = 'displacement_wolf';
+
+const T_DRAFT_CONTINUE = 'draftContinue';
+const T_DRAFT_END = 'draftEnd';
+const T_DRAFT_PLACE = 'draftPlace';
+const T_HOWL_SELECT = 'howlSelect';
+const T_MOVE_SELECT = 'moveSelect';
+const T_HOWL = 'howl';
+const T_MOVE = 'move';
+const T_DISPLACE = 'displace';
+const T_END_MOVE = 'endMove';
+const T_DEN = 'den';
+const T_LAIR = 'lair';
+const T_DOMINATE = 'dominate';
 
 const BOARD_SETUP = [
     2 => [

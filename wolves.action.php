@@ -61,6 +61,17 @@ class action_wolves extends APP_GameAction {
         $this->game->howl($x, $y);
         self::ajaxResponse();
     }
+
+    function move(): void {
+        self::setAjaxMode();
+        $wolfX = self::getArg('wolfX', AT_int, true);
+        $wolfY = self::getArg('wolfY', AT_int, true);
+        $kind = self::getArg('kind', AT_int, true);
+        $targetX = self::getArg('targetX', AT_int, true);
+        $targetY = self::getArg('targetY', AT_int, true);
+        $this->game->move($wolfX, $wolfY, $kind, $targetX, $targetY);
+        self::ajaxResponse();
+    }
 }
   
 

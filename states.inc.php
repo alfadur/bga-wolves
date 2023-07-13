@@ -65,7 +65,7 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stDraftResolution',
         'updateGameProgression' => true,
-        'transitions' => ['draftContinue' => ST_DRAFT_WOLVES, 'draftEnd' => ST_ACTION_SELECTION]
+        'transitions' => [T_DRAFT_CONTINUE => ST_DRAFT_WOLVES, T_DRAFT_END => ST_ACTION_SELECTION]
     ],
 
     ST_DRAFT_WOLVES => [
@@ -74,7 +74,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must place 🐺'),
         'type' => 'activeplayer',
         'possibleactions' => ['draftPlace'],
-        'transitions' => ['draftPlace' => ST_DRAFT_RESOLUTION]
+        'transitions' => [T_DRAFT_PLACE => ST_DRAFT_RESOLUTION]
     ],
 
     ST_ACTION_SELECTION => [
@@ -84,8 +84,8 @@ $machinestates = [
         'type' => 'activeplayer',
         'possibleactions' => ['selectAction'],
         'transitions' => [
-            'howlSelect' => ST_HOWL_SELECTION,
-            'moveSelect' => ST_MOVE_SELECTION
+            T_HOWL_SELECT => ST_HOWL_SELECTION,
+            T_MOVE_SELECT => ST_MOVE_SELECTION
         ]
     ],
 
@@ -96,7 +96,7 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argHowlSelection',
         'availableactions' => ['howl'],
-        'transitions' => ['howl' => ST_ACTION_SELECTION]
+        'transitions' => [T_HOWL => ST_ACTION_SELECTION]
     ],
 
     ST_MOVE_SELECTION => [
@@ -106,7 +106,17 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argMoveSelection',
         'availableactions' => ['move'],
-        'transitions' => ['move' => ST_MOVE_SELECTION, 'endMove' => ST_ACTION_SELECTION]
+        'transitions' => [T_MOVE => ST_MOVE_SELECTION, T_DISPLACE => ST_MOVE_DISPLACE, T_END_MOVE => ST_ACTION_SELECTION]
+    ],
+
+    ST_MOVE_DISPLACE => [
+        'name' => 'displaceWolf',
+        'description' => clienttranslate('${actplayer} must displace ${displacedPlayer}\'s 🐺'),
+        'descriptionmyturn' => clienttranslate('${you} must displace ${displacedPlayer}\'s 🐺').
+        'type' => 'activeplayer',
+        'args' => 'argDisplaceSelection',
+        'availableactions' => ['displace'],
+        'transitions' => [T_MOVE => ST_MOVE_SELECTION, T_END_MOVE => ST_ACTION_SELECTION]
     ],
 
     ST_DEN_SELECTION => [
@@ -116,7 +126,7 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argDenSelection',
         'availableactions' => ['den'],
-        'transitions' => ['den' => ST_ACTION_SELECTION]
+        'transitions' => [T_DEN => ST_ACTION_SELECTION]
 
     ],
 
@@ -127,7 +137,7 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argLairSelection',
         'availableactions' => ['lair'],
-        'transitions' => ['lair' => ST_ACTION_SELECTION]
+        'transitions' => [T_LAIR => ST_ACTION_SELECTION]
     ],
 
     ST_DOMINATE_SELECTION => [
@@ -137,7 +147,7 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argDominateSelection',
         'availableactions' => ['dominate'],
-        'transitions' => ['dominate' => ST_ACTION_SELECTION]
+        'transitions' => [T_DOMINATE => ST_ACTION_SELECTION]
     ],
 
     // Final state.
