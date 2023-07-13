@@ -215,6 +215,7 @@ class Wolves extends Table {
                 AND pieces.owner <> $sourcePlayerId
             GROUP BY x, y, owner
             HAVING COUNT(*) = 1
+            ORDER BY NULL
             EOF;
         $kindCheck = is_int($kinds) ? "kind = $kinds" : 'kind IN (' . implode(', ', $kinds) . ')';
 
@@ -387,6 +388,27 @@ class Wolves extends Table {
 
         return false;
     }
+
+    function checkDisplacement(int $playerId, array $start, array $moves) {
+        if (count($moves) === 1) {
+            [$dx, $dy] = HEX_DIRECTIONS[$moves[0]];
+            $start[0] += $dx;
+            $start[1] += $dy;
+            $query = <<<EOF
+                SELECT COUNT(*) FROM pieces NATURAL JOIN land
+                WHERE x = $start[0] AND y = $start[1]
+                GROUP BY owner
+                HAVING owner = $playerId AND COUNT(*) > 1
+                    OR owner <> $playerId AND COUNT(*) > 0
+                ORDER BY NULL
+                EOF;
+            return self::getUniqueValueFromDB($query) === null;
+        } else {
+            //TODO do the search
+            return false;
+        }
+    }
+
 
     function addMovedWolf(int $wolfId){
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
