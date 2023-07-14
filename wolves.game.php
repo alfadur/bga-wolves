@@ -373,17 +373,24 @@ class Wolves extends Table {
         $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args") === count($moves);
 
         if ($isPathValid) {
-            $pieceConstraint = $kind !== P_ALPHA ? '' : '';
+            if ($kind === P_ALPHA) {
+                $kinds = implode(", ", [P_PACK, P_DEN]);
+                $alphaConstraint = "owner <> $playerId AND kind IN ($kinds) AND COUNT(*) = 1";
+            } else {
+                $alphaConstraint = 'FALSE';
+            }
+
             $query = <<<EOF
-                SELECT terrain, COUNT(pieces.id) AS count 
-                    FROM land NATURAL LEFT JOIN pieces
-                    WHERE land.x = $start[0] AND land.y = $start[1] 
-                        AND terrain = $terrain
-                        AND owner <> $playerId 
-                        $pieceConstraint
+                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
+                WHERE x = $start[0] AND y = $start[1]
+                    AND terrain = $terrain
+                GROUP BY owner
+                HAVING pieces.id == NULL
+                    OR owner = $playerId AND COUNT(*) = 1
+                    OR $alphaConstraint
+                ORDER BY NULL
                 EOF;
-            $data = self::getObjectFromDB($query);
-            return $terrain === $data['terrain'] && $data['count'] === 0;
+            return self::getUniqueValueFromDB($query) !== null;
         }
 
         return false;
@@ -395,14 +402,14 @@ class Wolves extends Table {
             $start[0] += $dx;
             $start[1] += $dy;
             $query = <<<EOF
-                SELECT COUNT(*) FROM pieces NATURAL JOIN land
+                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
                 WHERE x = $start[0] AND y = $start[1]
                 GROUP BY owner
-                HAVING owner = $playerId AND COUNT(*) > 1
-                    OR owner <> $playerId AND COUNT(*) > 0
+                HAVING pieces.id == NULL
+                    OR owner = $playerId AND COUNT(*) = 1
                 ORDER BY NULL
                 EOF;
-            return self::getUniqueValueFromDB($query) === null;
+            return self::getUniqueValueFromDB($query) !== null;
         } else {
             //TODO do the search
             return false;
