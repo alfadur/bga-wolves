@@ -464,6 +464,22 @@ class Wolves extends Table {
         //TODO: Implement this method
     }
 
+    function canDisplaceWolf(int $x, int $y, $playerId): boolean {
+        $query = <<<EOF
+                    SELECT land.terrain as terrain, COUNT(SELECT * FROM pieces WHERE x=$x AND y=$y) as pieces_count, GROUP_CONCAT(pieces.kind) as kinds, GROUP_CONCAT(pieces.owner) as owners
+                    FROM land
+                    LEFT JOIN pieces ON pieces.x = land.x AND pieces.y = land.y
+                    GROUP BY land.x, land.y
+                    HAVING land.x=$x AND land.y=$y
+                    EOF;
+        $validityCheck = self::getObjectFromDB($query);
+        return $validityCheck['terrain'] != T_WATER 
+        && $validityCheck['pieces_count'] < 2 
+        && ($validityCheck['pieces_count'] == 0 
+            || $validityCheck['kinds'][0] == P_DEN 
+            || $validityCheck['owners'][0] == $playerId);
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
@@ -584,6 +600,20 @@ class Wolves extends Table {
         else{
             $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? T_MOVE : T_END_MOVE);
         }  
+    }
+
+    function displace(int $x, int $y): void {
+
+        self::checkAction('displace');
+        $playerId = self::getActivePlayerId();
+        $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
+        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
+        $range = 1 //TODO: Implement logic to not get soft locked
+        //AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
+        if(!canPlaceWolf($x, $y, $playerId) && (abs($x - $wolf['x']) + abs($y - $wolf['y']) + abs($wolf['x'] - $wolf['y'] - $x +$y)) / 2.0 > $range){
+            throw new BgaUserException(_('Invalid Move Location'));
+        }
+
     }
 
     function howl(int $x, int $y): void {
