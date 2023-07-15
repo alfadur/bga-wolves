@@ -386,10 +386,15 @@ class Wolves extends Table {
         return $isPathValid && $this->canStop($playerId, $kind, $start[0], $start[1]);
     }
 
-    function checkDisplacement(int $playerId, array $start, array $moves) {
+    function checkDisplacement(int $playerId, array $start, array $moves): bool {
         if (count($moves) === 1) {
             [$dx, $dy] = HEX_DIRECTIONS[$moves[0]];
-            return $this->canStop($playerId, P_PACK, $start[0] += $dx, $start[1] += $dy);
+            $start[0] += $dx;
+            $start[1] += $dy;
+            $water = T_WATER;
+            $query = "SELECT COUNT(*) FROM land WHERE x = $start[0] AND y = $start[1] AND terrain <> $water";
+            $isPassable = self::getUniqueValueFromDB($query) == 1;
+            return $isPassable && $this->canStop($playerId, P_PACK, $start[0], $start[1]);
         } else {
             //TODO do the search
             return false;
@@ -590,14 +595,15 @@ class Wolves extends Table {
     }
 
     function displace(int $x, int $y): void {
-
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $range = 1 //TODO: Implement logic to not get soft locked
+        $range = 1; //TODO: Implement logic to not get soft locked
         //AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
-        if(!canPlaceWolf($x, $y, $playerId) && (abs($x - $wolf['x']) + abs($y - $wolf['y']) + abs($wolf['x'] - $wolf['y'] - $x +$y)) / 2.0 > $range){
+        $step = array_search([$x - $wolf['x'], $y - $wolf['y']], HEX_DIRECTIONS);
+        if(!$this->checkDisplacement($playerId, [$wolf['x'], $wolf['y']], [$step]) )
+        {
             throw new BgaUserException(_('Invalid Move Location'));
         }
 
