@@ -361,6 +361,17 @@ class Wolves extends Table {
         return array_map(fn($wolf) => [$wolf['id'] => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue(G_SELECTED_TERRAIN), $max_moves, $wolf['id'])], $wolves);
     }
 
+    function canStop($playerId, $kind, $x, $y): bool {
+        $alphaConstraint = $kind !== P_ALPHA ? '' :
+            'AND kind NOT IN (' . P_PACK . ', ' . P_DEN . ')';
+        $query = <<<EOF
+                SELECT COUNT(*) FROM pieces
+                WHERE x = $x AND y = $y
+                HAVING COUNT(*) > 1 OR COUNT(owner <> $playerId $alphaConstraint) = 1
+                EOF;
+        return self::getUniqueValueFromDB($query) === null;
+    }
+
     function checkPath(int $playerId, array $start, array $moves, int $kind, int $terrain): bool {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
@@ -370,46 +381,15 @@ class Wolves extends Table {
         }
 
         $args = implode(" OR ", $checks);
-        $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args") === count($moves);
+        $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args AND terrain = $terrain") === count($moves);
 
-        if ($isPathValid) {
-            if ($kind === P_ALPHA) {
-                $kinds = implode(", ", [P_PACK, P_DEN]);
-                $alphaConstraint = "owner <> $playerId AND kind IN ($kinds) AND COUNT(*) = 1";
-            } else {
-                $alphaConstraint = 'FALSE';
-            }
-
-            $query = <<<EOF
-                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
-                WHERE x = $start[0] AND y = $start[1]
-                    AND terrain = $terrain
-                GROUP BY owner
-                HAVING pieces.id == NULL
-                    OR owner = $playerId AND COUNT(*) = 1
-                    OR $alphaConstraint
-                ORDER BY NULL
-                EOF;
-            return self::getUniqueValueFromDB($query) !== null;
-        }
-
-        return false;
+        return $isPathValid && $this->canStop($playerId, $kind, $start[0], $start[1]);
     }
 
     function checkDisplacement(int $playerId, array $start, array $moves) {
         if (count($moves) === 1) {
             [$dx, $dy] = HEX_DIRECTIONS[$moves[0]];
-            $start[0] += $dx;
-            $start[1] += $dy;
-            $query = <<<EOF
-                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
-                WHERE x = $start[0] AND y = $start[1]
-                GROUP BY owner
-                HAVING pieces.id == NULL
-                    OR owner = $playerId AND COUNT(*) = 1
-                ORDER BY NULL
-                EOF;
-            return self::getUniqueValueFromDB($query) !== null;
+            return $this->canStop($playerId, P_PACK, $start[0] += $dx, $start[1] += $dy);
         } else {
             //TODO do the search
             return false;
