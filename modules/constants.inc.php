@@ -33,6 +33,11 @@ const P_LAIR = 3;
 const P_LONE = 4;
 const P_PREY = 5;
 
+const M_NONE = 0;
+const M_QUARTER = 1;
+const M_HALF = 2;
+const M_FULL = 3;
+
 const G_SELECTED_TERRAIN = 'selected_terrain';
 const G_ACTIONS_REMAINING = 'actions_remaining';
 const G_MOVES_REMAINING = 'moves_remaining';

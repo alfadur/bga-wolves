@@ -110,26 +110,33 @@ class Wolves extends Table {
     }
 
     protected function generateLand(int $player_count): void {
-        $values = [];
+        $region_values = [];
+        $land_values = [];
         $region_hexes = array_map(null, HEX_COORDS, REGION_HEXES);
-        $region_palettes = REGION_PALETTES;
+        $region_palettes = array_map(null, range(1, count(REGION_PALETTES)), REGION_PALETTES);
         shuffle($region_palettes);
 
+        $region_id = 1;
         foreach (BOARD_SETUP[$player_count] as $tile) {
             $center = $tile['center'];
-            [$palette, $hexes] = array_key_exists('chasm', $tile) ?
-                [CHASM_PALLETTE, array_map(null, HEX_COORDS, CHASM_HEXES)] :
+            [[$tile_index, $palette], $hexes] = array_key_exists('chasm', $tile) ?
+                [[0, CHASM_PALLETTE], array_map(null, HEX_COORDS, CHASM_HEXES)] :
                 [array_shift($region_palettes), $region_hexes];
-            $scale = array_key_exists('rotate', $tile) ? -1 : 1;
+            $rotate = (int)array_key_exists('rotate', $tile);
+            $scale = $rotate ? -1 : 1;
+            $region_values[] = "($tile_index, $center[0], $center[1], $rotate)";
             foreach ($hexes as [$coord, $palette_index]) {
                 $x = $center[0] + $coord[0] * $scale;
                 $y = $center[1] + $coord[1] * $scale;
                 $type = $palette[$palette_index];
-                $values[] = "($x, $y, $type)";
+                $land_values[] = "($x, $y, $type, $region_id)";
             }
+            ++$region_id;
         }
 
-        $args = implode(', ', $values);
+        $args = implode(', ', $region_values);
+        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated) VALUES $args");
+        $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
     }
 
@@ -168,6 +175,9 @@ class Wolves extends Table {
         // Get information about players
         $query = 'SELECT player_id id, player_score score, player_color color FROM player';
         $result['players'] = self::getCollectionFromDb($query);
+
+        $query = 'SELECT tile_number, center_x, center_y, rotated FROM regions';
+        $result['regions'] = self::getObjectListFromDb($query);
 
         $query = "SELECT id, owner, kind, x, y FROM pieces";
         $result['pieces'] = self::getCollectionFromDb($query);
@@ -633,33 +643,6 @@ class Wolves extends Table {
         self::checkAction('dominate');
     }
 
-    /*
-    
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' ); 
-        
-        $player_id = self::getActivePlayerId();
-        
-        // Add your game logic to play a card there 
-        ...
-        
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-          
-    }
-    
-    */
-
-    
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
