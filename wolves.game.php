@@ -305,12 +305,18 @@ class Wolves extends Table {
             $start[1] += $dy;
             $water = T_WATER;
             $query = "SELECT COUNT(*) FROM land WHERE x = $start[0] AND y = $start[1] AND terrain <> $water";
-            $isPassable = self::getUniqueValueFromDB($query) == 1;
-            return $isPassable && $this->canStop($playerId, P_PACK, $start[0], $start[1]);
+            if (self::getUniqueValueFromDB($query)) {
+                $query = <<<EOF
+                    SELECT COUNT(*) FROM pieces
+                    WHERE x = $x AND y = $y
+                    HAVING COUNT(*) > 1 OR COUNT(owner <> $playerId) = 1
+                    EOF;
+                return self::getUniqueValueFromDB($query) === null;
+            }
         } else {
             //TODO do the search
-            return false;
         }
+        return false;
     }
 
 
