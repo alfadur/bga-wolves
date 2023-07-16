@@ -280,11 +280,14 @@ class Wolves extends Table {
         return self::getObjectListFromDB($query);
     }
 
-    function noCheck($x, $y){
-
+    function validityCheck($x, $y){
+        $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
+        if($hex == NULL){
+            throw new BgaUserException(_("Invalid path!"));
+        }
     }
 
-    function checkPath(array $start, array $moves, $finalCheck, $pathCheck = "noCheck"): bool {
+    function checkPath(array $start, array $moves, $finalCheck, $pathCheck = "validityCheck"): bool {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
             $start[0] += $dx;
