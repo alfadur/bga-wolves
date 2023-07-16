@@ -94,7 +94,6 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must select a howl target'),
         'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
         'type' => 'activeplayer',
-        'args' => 'argHowlSelection',
         'availableactions' => ['howl'],
         'transitions' => [T_HOWL => ST_ACTION_SELECTION]
     ],
@@ -104,7 +103,6 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must move ${numMoves} 🐺'),
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
         'type' => 'activeplayer',
-        'args' => 'argMoveSelection',
         'availableactions' => ['move'],
         'transitions' => [T_MOVE => ST_MOVE_SELECTION, T_DISPLACE => ST_MOVE_DISPLACE, T_END_MOVE => ST_ACTION_SELECTION]
     ],
@@ -124,7 +122,6 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must place a den'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
         'type' => 'activeplayer',
-        'args' => 'argDenSelection',
         'availableactions' => ['den'],
         'transitions' => [T_DEN => ST_ACTION_SELECTION]
 
@@ -135,7 +132,6 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must upgrade a den to a lair'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
-        'args' => 'argLairSelection',
         'availableactions' => ['lair'],
         'transitions' => [T_LAIR => ST_ACTION_SELECTION]
     ],
@@ -145,7 +141,6 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must dominate one enemy piece'),
         'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
         'type' => 'activeplayer',
-        'args' => 'argDominateSelection',
         'availableactions' => ['dominate'],
         'transitions' => [T_DOMINATE => ST_ACTION_SELECTION]
     ],
