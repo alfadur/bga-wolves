@@ -513,7 +513,7 @@ class Wolves extends Table {
                     break;
             }
         };
-        $this->checkPath([$wolf['x'], $wolf['y']], $finalCheck, $pathCheck);
+        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
 
         $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
         $potential_wolves = self::getObjectListFromDB($query);
