@@ -546,6 +546,29 @@ class Wolves extends Table {
         }  
     }
 
+    function getMaxDisplacement(int $x, int $y, int $playerId): int {
+        $args = [];
+        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+            $diffX = $x + $dx;
+            $diffY = $y + $dy;
+            $args[] = "(l.x=$diffX AND l.y=$diffY)";
+        }
+        $rows = implode(' OR ', $args);
+        $query = <<<EOF
+                    SELECT l.*
+                    FROM land l
+                    WHERE (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2 
+                        AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y AND (owner IS NULL OR owner <> $playerId)) = 0
+                        AND (
+                    EOF . $rows . ")";
+        $firstCircle = self::getObjectListFromDB($query);
+        if(count($firstCircle) > 0){
+            return 1;
+        }
+
+
+    }
+
     function displace(int $x, int $y): void {
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
