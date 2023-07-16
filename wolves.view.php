@@ -26,6 +26,17 @@ class view_wolves_wolves extends game_view {
             T_FOREST
         ];
 
+        $this->page->begin_block('wolves_wolves', 'region');
+        foreach ($this->game->getRegions() as $region) {
+            $this->page->insert_block('region', [
+                'ID' => $region['region_id'],
+                'N' => $region['tile_number'],
+                'CX' => $region['center_x'] * 89 - 268,
+                'CY' => $region['center_y'] * 103 - $region['center_x'] * 51 - 154,
+                'ROTATE' => $region['rotated'] ? 'wolves-region-rotated' : ''
+            ]);
+        }
+
         $this->page->begin_block('wolves_wolves', 'hex');
         foreach ($this->game->getLand() as $hex) {
             $this->page->insert_block('hex', [

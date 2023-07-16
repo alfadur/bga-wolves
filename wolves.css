@@ -52,24 +52,39 @@
 }
 
 
-.player-tile[terrain="rock"] {
+.player-tile[data-terrain="rock"] {
     --color: dimgray;
 }
 
-.player-tile[terrain="grass"] {
+.player-tile[data-terrain="grass"] {
     --color: lightgreen;
 }
 
-.player-tile[terrain="tundra"] {
+.player-tile[data-terrain="tundra"] {
     --color: ghostwhite;
 }
 
-.player-tile[terrain="desert"] {
+.player-tile[data-terrain="desert"] {
     --color: sandybrown;
 }
 
-.player-tile[terrain="forest"] {
+.player-tile[data-terrain="forest"] {
     --color: darkgreen;
+}
+
+.wolves-region {
+    position: absolute;
+    width: 440px;
+    height: 412px;
+    clip-path: polygon(
+            18.75% 25%, 25% 12.25%, 37.25% 12.25%, 43.75% 0, 56.25% 0, 62.5% 12.25%, 75% 12.25%, 81.25% 0,
+            93.75% 0, 100% 12.5%, 93.75% 25%, 100% 37.5%, 93.75% 50%, 100% 62.5%, 93.75% 75%,
+            81.25% 75%, 75% 87.5%, 62.5% 87.5%, 56.25% 100%, 43.75% 100%, 37.25% 87.5%, 25% 87.5%, 18.75% 100%,
+            6.25% 100%, 0 87.5%, 6.25% 75%, 0 62.5%, 6.25% 50%, 0 37.5%, 6.25% 25%);
+}
+
+.wolves-region-rotated {
+    transform: rotate(180deg);
 }
 
 .wolves-hex {

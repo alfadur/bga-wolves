@@ -206,6 +206,10 @@ class Wolves extends Table {
 //////////// Utility functions
 ////////////    
 
+    function getRegions(): array {
+        return self::getObjectListFromDB('SELECT * FROM regions');
+    }
+
     function getLand(): array {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
