@@ -501,7 +501,11 @@ class Wolves extends Table {
             } 
         };
 
-        $finalCheck = function($x, $y) use ($isAlpha, $playerId) {
+        $finalCheck = function($x, $y) use ($isAlpha, $playerId, $terrain_type) {
+            $finalHex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
+            if($finalHex['terrain'] != $terrain_type){
+                throw new BgaUserException(_('Invalid terrain for destination!'));
+            }
             $finalPieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x AND y=$y");
             switch(count($finalPieces)){
                 case 0:
