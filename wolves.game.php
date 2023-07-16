@@ -517,7 +517,7 @@ class Wolves extends Table {
                     }
                     break;
                 default:    
-                    throw new BgaUserException(_('Invalid move location'));
+                    throw new BgaUserException(_('Hex is full!'));
             }
         };
         $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
