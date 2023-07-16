@@ -15,6 +15,9 @@
  *
  */
 
+const hexDirections = [[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
+    .map(([x, y]) => ({x, y}));
+
 const action_names = ['move', 'howl', 'den', 'lair', 'dominate'] 
 const action_costs = {
     'move': 1,
@@ -23,6 +26,56 @@ const action_costs = {
     'lair': 2,
     'dominate': 3
 }
+
+class Queue {
+    values = [];
+    offset = 0;
+
+    isEmpty() { return this.offset === this.values.length; }
+    enqueue(value) { this.values.push(value); }
+    dequeue() { return this.isEmpty() ? undefined : this.values[this.offset++]; }
+}
+
+function hexAdd(hex1, hex2) {
+    return {
+        x: hex1.x + hex2.x,
+        y: hex1.y + hex2.y
+    };
+}
+function hexDistance(from, to) {
+    return Math.round(Math.abs(to.x - from.x) + Math.abs(to.y - from.y) + Math.abs(to.x - to.y - from.x + from.y)) / 2;
+}
+
+function collectPaths(from, range) {
+    const queue = new Queue();
+    const visited = new Set();
+
+    queue.enqueue({hex: from, path: []});
+    visited.add(JSON.stringify(from));
+
+    while (!queue.isEmpty()) {
+        const {hex, path} = queue.dequeue();
+
+        if (path.length < range) {
+            hexDirections.forEach((direction, index) => {
+                const newHex = hexAdd(hex, direction);
+                const value = JSON.stringify(newHex);
+
+                if (!visited.has(value)) {
+                    const node = document.getElementById(`wolves-hex-${newHex.x}-${newHex.y}`);
+
+                    if (node && !node.classList.contains("wolves-hex-water")) {
+                        queue.enqueue({hex: newHex, path: [...path, index]});
+                        visited.add(value);
+                    }
+                }
+            });
+        }
+    }
+
+    return queue.values.slice(1);
+}
+
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -179,7 +232,6 @@ function (dojo, declare) {
             {            
                 switch( stateName )
                 {
-                
                     case "actionSelection":
                         if(this.isCurrentPlayerActive()){
                             const buttons = {

@@ -7,11 +7,29 @@
 -- See http://en.boardgamearena.com/#!doc/Studio for more information.
 -- -----
 
+CREATE TABLE IF NOT EXISTS `regions`(
+    `region_id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `tile_number` TINYINT NOT NULL,
+    `center_x` TINYINT NOT NULL,
+    `center_y` TINYINT NOT NULL,
+    `rotated` TINYINT NOT NULL,
+    PRIMARY KEY (`region_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
+
+CREATE TABLE IF NOT EXISTS `scoring`(
+    `region_id` TINYINT UNSIGNED NOT NULL,
+    `moon` TINYINT NOT NULL COMMENT 'M_* value',
+    PRIMARY KEY (`region_id`, `moon`),
+    FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`)
+)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `land`(
     `x` TINYINT NOT NULL,
     `y` TINYINT NOT NULL,
     `terrain` TINYINT NOT NULL COMMENT 'T_* value',
-    PRIMARY KEY (`x`, `y`)
+    `region_id` TINYINT UNSIGNED NOT NULL,
+    PRIMARY KEY (`x`, `y`),
+    FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS pieces(

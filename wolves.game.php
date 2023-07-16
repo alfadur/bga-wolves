@@ -110,26 +110,33 @@ class Wolves extends Table {
     }
 
     protected function generateLand(int $player_count): void {
-        $values = [];
+        $region_values = [];
+        $land_values = [];
         $region_hexes = array_map(null, HEX_COORDS, REGION_HEXES);
-        $region_palettes = REGION_PALETTES;
+        $region_palettes = array_map(null, range(1, count(REGION_PALETTES)), REGION_PALETTES);
         shuffle($region_palettes);
 
+        $region_id = 1;
         foreach (BOARD_SETUP[$player_count] as $tile) {
             $center = $tile['center'];
-            [$palette, $hexes] = array_key_exists('chasm', $tile) ?
-                [CHASM_PALLETTE, array_map(null, HEX_COORDS, CHASM_HEXES)] :
+            [[$tile_index, $palette], $hexes] = array_key_exists('chasm', $tile) ?
+                [[0, CHASM_PALLETTE], array_map(null, HEX_COORDS, CHASM_HEXES)] :
                 [array_shift($region_palettes), $region_hexes];
-            $scale = array_key_exists('rotate', $tile) ? -1 : 1;
+            $rotate = (int)array_key_exists('rotate', $tile);
+            $scale = $rotate ? -1 : 1;
+            $region_values[] = "($tile_index, $center[0], $center[1], $rotate)";
             foreach ($hexes as [$coord, $palette_index]) {
                 $x = $center[0] + $coord[0] * $scale;
                 $y = $center[1] + $coord[1] * $scale;
                 $type = $palette[$palette_index];
-                $values[] = "($x, $y, $type)";
+                $land_values[] = "($x, $y, $type, $region_id)";
             }
+            ++$region_id;
         }
 
-        $args = implode(', ', $values);
+        $args = implode(', ', $region_values);
+        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated) VALUES $args");
+        $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
     }
 
@@ -168,6 +175,9 @@ class Wolves extends Table {
         // Get information about players
         $query = 'SELECT player_id id, player_score score, player_color color FROM player';
         $result['players'] = self::getCollectionFromDb($query);
+
+        $query = 'SELECT tile_number, center_x, center_y, rotated FROM regions';
+        $result['regions'] = self::getObjectListFromDb($query);
 
         $query = "SELECT id, owner, kind, x, y FROM pieces";
         $result['pieces'] = self::getCollectionFromDb($query);
@@ -361,6 +371,17 @@ class Wolves extends Table {
         return array_map(fn($wolf) => [$wolf['id'] => $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $this->getGameStateValue(G_SELECTED_TERRAIN), $max_moves, $wolf['id'])], $wolves);
     }
 
+    function canStop($playerId, $kind, $x, $y): bool {
+        $alphaConstraint = $kind !== P_ALPHA ? '' :
+            'AND kind NOT IN (' . P_PACK . ', ' . P_DEN . ')';
+        $query = <<<EOF
+                SELECT COUNT(*) FROM pieces
+                WHERE x = $x AND y = $y
+                HAVING COUNT(*) > 1 OR COUNT(owner <> $playerId $alphaConstraint) = 1
+                EOF;
+        return self::getUniqueValueFromDB($query) === null;
+    }
+
     function checkPath(int $playerId, array $start, array $moves, int $kind, int $terrain): bool {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
@@ -370,46 +391,20 @@ class Wolves extends Table {
         }
 
         $args = implode(" OR ", $checks);
-        $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args") === count($moves);
+        $isPathValid = self::getUniqueValueFromDB("SELECT COUNT(*) FROM land WHERE $args AND terrain = $terrain") === count($moves);
 
-        if ($isPathValid) {
-            if ($kind === P_ALPHA) {
-                $kinds = implode(", ", [P_PACK, P_DEN]);
-                $alphaConstraint = "owner <> $playerId AND kind IN ($kinds) AND COUNT(*) = 1";
-            } else {
-                $alphaConstraint = 'FALSE';
-            }
-
-            $query = <<<EOF
-                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
-                WHERE x = $start[0] AND y = $start[1]
-                    AND terrain = $terrain
-                GROUP BY owner
-                HAVING pieces.id == NULL
-                    OR owner = $playerId AND COUNT(*) = 1
-                    OR $alphaConstraint
-                ORDER BY NULL
-                EOF;
-            return self::getUniqueValueFromDB($query) !== null;
-        }
-
-        return false;
+        return $isPathValid && $this->canStop($playerId, $kind, $start[0], $start[1]);
     }
 
-    function checkDisplacement(int $playerId, array $start, array $moves) {
+    function checkDisplacement(int $playerId, array $start, array $moves): bool {
         if (count($moves) === 1) {
             [$dx, $dy] = HEX_DIRECTIONS[$moves[0]];
             $start[0] += $dx;
             $start[1] += $dy;
-            $query = <<<EOF
-                SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
-                WHERE x = $start[0] AND y = $start[1]
-                GROUP BY owner
-                HAVING pieces.id == NULL
-                    OR owner = $playerId AND COUNT(*) = 1
-                ORDER BY NULL
-                EOF;
-            return self::getUniqueValueFromDB($query) !== null;
+            $water = T_WATER;
+            $query = "SELECT COUNT(*) FROM land WHERE x = $start[0] AND y = $start[1] AND terrain <> $water";
+            $isPassable = self::getUniqueValueFromDB($query) == 1;
+            return $isPassable && $this->canStop($playerId, P_PACK, $start[0], $start[1]);
         } else {
             //TODO do the search
             return false;
@@ -639,14 +634,15 @@ class Wolves extends Table {
     }
 
     function displace(int $x, int $y): void {
-
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $range = 1 //TODO: Implement logic to not get soft locked
+        $range = 1; //TODO: Implement logic to not get soft locked
         //AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
-        if(!canPlaceWolf($x, $y, $playerId) && (abs($x - $wolf['x']) + abs($y - $wolf['y']) + abs($wolf['x'] - $wolf['y'] - $x +$y)) / 2.0 > $range){
+        $step = array_search([$x - $wolf['x'], $y - $wolf['y']], HEX_DIRECTIONS);
+        if(!$this->checkDisplacement($playerId, [$wolf['x'], $wolf['y']], [$step]) )
+        {
             throw new BgaUserException(_('Invalid Move Location'));
         }
 
@@ -676,33 +672,6 @@ class Wolves extends Table {
         self::checkAction('dominate');
     }
 
-    /*
-    
-    Example:
-
-    function playCard( $card_id )
-    {
-        // Check that this is the player's turn and that it is a "possible action" at this game state (see states.inc.php)
-        self::checkAction( 'playCard' ); 
-        
-        $player_id = self::getActivePlayerId();
-        
-        // Add your game logic to play a card there 
-        ...
-        
-        // Notify all players about the card played
-        self::notifyAllPlayers( "cardPlayed", clienttranslate( '${player_name} plays ${card_name}' ), array(
-            'player_id' => $player_id,
-            'player_name' => self::getActivePlayerName(),
-            'card_name' => $card_name,
-            'card_id' => $card_id
-        ) );
-          
-    }
-    
-    */
-
-    
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
