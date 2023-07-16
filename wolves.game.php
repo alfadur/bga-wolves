@@ -572,6 +572,10 @@ class Wolves extends Table {
     function move(int $wolfId, int $kind, array $path): void {
         self::checkAction('move');
 
+        if(in_array($wolfId, $this->getMovedWolves())){
+            throw new BgaUserException(_('This wolf has already been moved this turn!'));
+        }
+
         $playerId = self::getActivePlayerId();
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $query = "SELECT * FROM pieces WHERE id=$wolfId";
