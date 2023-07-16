@@ -552,9 +552,17 @@ class Wolves extends Table {
 
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
         $args = [];
+        $visited = [];
+        $visited[$x] = [];
+        $queue = new SplQueue();
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
             $diffX = $x + $dx;
             $diffY = $y + $dy;
+            if(!isset($visited[$diffX])){
+                $visited[$diffX] = [];
+            }
+            $visited[$diffX][$diffY] = true;
+            $queue->enqueue([$x, $y, 1]);
             $args[] = "(l.x=$diffX AND l.y=$diffY)";
         }
         $rows = implode(' OR ', $args);
@@ -570,6 +578,31 @@ class Wolves extends Table {
             return 1;
         }
 
+        while(!$queue->isEmpty()){
+            [$currX, $currY, $dist] = $queue->dequeue();
+
+            $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$currX AND y=$currY");
+            $terrain = self::getUniqueValueFromDB("SELECT terrain FROM land WHERE x=$currX AND y=$currY");
+            if($terrain == NULL){
+                continue;
+            }
+            if($terrain != T_WATER && ($info['owners'] == NULL || (count($info['owners']) < 2 && $info['owners'][0] != $playerId))){
+                return $dist
+            }
+
+            foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]){
+                $newX = $currX + $dx;
+                $newY = $currY + $dy;
+                if(!isset($visited[$newX])){
+                    $visited[$newX] = [];
+                }
+                if(!isset($visited[$newX][$newY])){
+                    $visited[$newX][$newY] = true;
+                    $queue->enqueue([$newX, $newY, $dist + 1]);
+                }
+            }
+        }
+        return
 
     }
 
