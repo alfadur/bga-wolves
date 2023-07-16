@@ -574,28 +574,57 @@ class Wolves extends Table {
         $this->selectAction(A_HOWL, [], 0, T_TUNDRA);
     }
 
-    function move(int $wolfId, $kind, $targetX, $targetY): void {
+    function move(int $wolfId, int $kind, array $path): void {
         self::checkAction('move');
 
         $playerId = self::getActivePlayerId();
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
-        $max_moves = 2; //TODO: Update with actual player value
         $query = "SELECT * FROM pieces WHERE id=$wolfId";
         $wolf = self::getObjectFromDB($query);
-        if($wolf['owner'] != $playerId){
-            throw new BgaUserException(_('This is not your wolf!'));
-        }
-        $validTargets = $this->getValidMoves($wolf['x'], $wolf['y'], $wolf['kind'], $playerId, $max_moves, $wolfId);
-        if(!(isset($validTargets[$targetX]) && isset($validTargets[$targetX][$targetY]))){
-            throw new BgaUserException(_('Invalid move target'));
+        $isAlpha = $wolf['kind'] == P_ALPHA;
+        if($wolf == NULL || $wolf['owner'] != $playerId || $wolf['kind'] > P_PACK){
+            throw new BgaUserException(_('The wolf you selected is not valid!'));
         }
 
-        $query = "UPDATE pieces SET x=$targetX, y=$targetY WHERE id=$wolfId";
-        self::DbQuery($query);
+        //Verify move is valid
+
+        $max_distance = 2 //TODO: Update with actual value
+        if(count($path) > $max_distance){
+            throw new BgaUserException(_('The selected tile is out of range'));
+        }
+
+        $x = $wolf['x'];
+        $y = $wolf['y'];
+        foreach($path as $index){
+            $move = HEX_DIRECTIONS[$index];
+            $x += $move[0];
+            $y += $move[1];
+
+            $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
+            if($hex == NULL || $hex['terrain'] == T_WATER){
+                throw new BgaUserException(_('Cannot find a clear path to the given tile'));
+            } 
+        }
+
+        $finalPieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x AND y=$y");
+        switch(count($finalPieces)){
+            case 1:
+                $piece = $finalPieces[0];
+                if(!($piece['owner'] == $playerId || ($isAlpha && $piece['kind'] == P_PACK) || $piece['kind'] == P_DEN)){
+                    throw new BgaUserException(_('Invalid move location'));
+                }
+                break;
+            case 2:
+                throw new BgaUserException(_('Invalid move location'));
+            default:
+                break;
+        }
 
         $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
         $potential_wolves = self::getObjectListFromDB($query);
 
+        $query = "UPDATE pieces SET x=$targetX, y=$targetY WHERE id=$wolfId";
+        self::DbQuery($query);
 
         $this->addMovedWolf($wolf['id']);
         $this->incGameStateValue(G_MOVES_REMAINING, -1);
