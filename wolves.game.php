@@ -501,16 +501,16 @@ class Wolves extends Table {
         $finalCheck = function($x, $y) use ($isAlpha, $playerId) {
             $finalPieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x AND y=$y");
             switch(count($finalPieces)){
+                case 0:
+                    break;
                 case 1:
                     $piece = $finalPieces[0];
-                    if(!($piece['owner'] == $playerId || ($isAlpha && $piece['kind'] == P_PACK) || $piece['kind'] == P_DEN)){
+                    if($piece['owner'] == NULL || !($piece['owner'] == $playerId || ($isAlpha && $piece['kind'] == P_PACK) || $piece['kind'] == P_DEN)){
                         throw new BgaUserException(_('Invalid move location'));
                     }
                     break;
-                case 2:
-                    throw new BgaUserException(_('Invalid move location'));
                 default:    
-                    break;
+                    throw new BgaUserException(_('Invalid move location'));
             }
         };
         $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
