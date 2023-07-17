@@ -557,8 +557,8 @@ class Wolves extends Table {
                         FROM land l
                         LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
                         WHERE (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - $x - l.y + $y)) / 2 = $i
-                        AND ((p.owner IS NULL OR p.owner <> $playerId)
-                        OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) = 2)
+                        AND NOT ((p.owner IS NULL OR p.owner <> $playerId)
+                        OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                         GROUP BY l.x, l.y;
                         EOF;
 
