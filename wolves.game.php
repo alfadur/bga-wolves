@@ -660,12 +660,70 @@ class Wolves extends Table {
 
         $this->gamestate->nextState(T_DEN);
 
-
-
     }
 
-    function placeLair(int $attribute, int $x, int $y): void {
-        self::checkAction('placeLair');
+    function placeLair(int $wolfId, array $path): void {
+        self::checkAction('lairSelection');
+
+        $playerId = self::getActivePlayerId();
+        $numLairs = self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
+        if($numLairs >= 4){
+            throw new BgaUserException(_('No more lairs!'));
+        }
+        $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
+        if(count($path) > 1){
+            throw new BgaUserException(_('Too far from Alpha Wolf!'));
+        }
+        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
+        if($wolf == NULL || $wolf['kind'] != P_ALPHA || $wolf['owner'] != $playerId){
+            throw new BgaUserException(_('Invalid wolf selected!'));
+        }
+
+        $lairValue = P_LAIR;
+        $denValue = P_DEN;
+        $wolfX = $wolf['x'];
+        $wolfY = $wolf['y'];
+        [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
+        $x = $wolfX + $dx;
+        $y = $wolfY + $dy;
+
+        $args = [];
+        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]){
+            $newX = $x + $dx;
+            $newY = $y + $dy;
+            $args[] = " (l.x=$newX AND l.y=$newY) ";
+        }
+
+        $params = '('.implode(" OR ", $args).')';
+
+        $water = T_WATER;
+        $query = <<<EOF
+                    SELECT l.* 
+                    FROM land l
+                    NATURAL LEFT JOIN pieces p
+                    WHERE (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
+                    AND (p.owner <=> $playerId AND p.kind = $denValue)
+                    AND l.terrain = $terrain_type
+                    AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= 1
+                    AND l.x = $x AND l.y=$y
+                    AND (SELECT COUNT(*) 
+                        FROM land 
+                        WHERE $params
+                        AND terrain=$water) > 0
+                    EOF;
+        $validLand = self::getObjectFromDB($query);
+        if($validLand == NULL){
+            throw new BgaUserException(_('Invalid hex selected!'));
+        }
+        
+        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$denValue");
+        
+        self::DbQuery("UPDATE player_status SET deployed_lairs=$numLairs + 1 WHERE player_id=$playerId");
+
+        //TODO: add moonlight board call & player reward
+
+        $this->gamestate->nextState(T_LAIR);
+
     }
 
     function dominate(int $piece_id): void {
