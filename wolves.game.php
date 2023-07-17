@@ -302,28 +302,6 @@ class Wolves extends Table {
         $finalCheck($start[0], $start[1]);
     }
 
-    function checkDisplacement(int $playerId, array $start, array $moves): bool {
-        if (count($moves) === 1) {
-            [$dx, $dy] = HEX_DIRECTIONS[$moves[0]];
-            $start[0] += $dx;
-            $start[1] += $dy;
-            $water = T_WATER;
-            $query = "SELECT COUNT(*) FROM land WHERE x = $start[0] AND y = $start[1] AND terrain <> $water";
-            if (self::getUniqueValueFromDB($query)) {
-                $query = <<<EOF
-                    SELECT COUNT(*) FROM pieces
-                    WHERE x = $x AND y = $y
-                    HAVING COUNT(*) > 1 OR COUNT(owner <> $playerId) = 1
-                    EOF;
-                return self::getUniqueValueFromDB($query) === null;
-            }
-        } else {
-            //TODO do the search
-        }
-        return false;
-    }
-
-
     function addMovedWolf(int $wolfId){
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $moved_wolves = $moved_wolves << 8;
@@ -539,14 +517,14 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         $this->addMovedWolf($wolf['id']);
-        $this->incGameStateValue(G_MOVES_REMAINING, -1);
+        $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
             $this->gamestate->nextState(T_DISPLACE);
         }
         else{
-            $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? T_MOVE : T_END_MOVE);
+            $this->gamestate->nextState(($newVal > 0) ? T_MOVE : T_END_MOVE);
         }  
     }
 
@@ -569,18 +547,39 @@ class Wolves extends Table {
 
     }
 
-    function displace(int $x, int $y): void {
+    function displace(array $path): void {
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $range = 1; //TODO: Implement logic to not get soft locked
-        //AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
-        $step = array_search([$x - $wolf['x'], $y - $wolf['y']], HEX_DIRECTIONS);
-        if(!$this->checkDisplacement($playerId, [$wolf['x'], $wolf['y']], [$step]) )
-        {
-            throw new BgaUserException(_('Invalid Move Location'));
+        $range = $this->getMaxDisplacement($x, $y, $playerId);
+        $finalCheck = function($x, $y) use ($playerId, $range, $wolf) {
+            $dist = (abs($wolf['x'] - $x) + abs($wolf['y'] - $y) + abs($x - $y - $wolf['x'] + $wolf['y'])) / 2;
+            if($dist > $range){
+                throw new BgaUserException(_('Tile is too far'));
+            }
+
+            $query = <<<EOF
+                        SELECT l.*
+                        FROM land l
+                        LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
+                        WHERE l.terrain <> 5
+                        AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
+                        AND (p.kind IS NULL OR p.owner = $playerId)
+                        AND l.x = $x AND l.y = $y
+                        EOF;
+
+            $land = self::getObjectFromDB($query);
+            if($land == NULL){
+                throw new BgaUserException(_('Cannot move wolf to this tile'));
+            }
+
         }
+        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
+
+        self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
+
+        $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? T_MOVE : T_END_MOVE);
 
     }
 

@@ -72,9 +72,8 @@ class action_wolves extends APP_GameAction {
 
     function displace(): void {
         self::setAjaxMode();
-        $x = self::getArg('x', AT_int, true);
-        $y = self::getArg('y', AT_int, true);
-        $this->game->displace($x, $y);
+        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $this->game->displace($path);
         self::ajaxResponse();
     }
 }
