@@ -557,7 +557,7 @@ class Wolves extends Table {
                         LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
                         AND l.terrain <> 5
                         AND SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
-                        AND (p.owner IS NOT NULL AND p.owner = $playerId)
+                        AND (p.kind IS NULL OR p.owner = $playerId)
                         GROUP BY l.x, l.y;
                         ORDER BY ABS(l.x - $x) + ABS(l.y - $y)
                         LIMIT 1
