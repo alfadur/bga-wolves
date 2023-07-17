@@ -351,8 +351,26 @@ class Wolves extends Table {
         return $validityCheck['terrain'] != T_WATER 
         && $validityCheck['pieces_count'] < 2 
         && ($validityCheck['pieces_count'] == 0 
-            || $validityCheck['kinds'][0] == P_DEN 
-            || $validityCheck['owners'][0] == $playerId);
+            || $validityCheck['kinds'][0] === P_DEN 
+            || $validityCheck['owners'][0] === $playerId);
+    }
+
+    function getDenAwards(int $playerId, int $denType): int {
+        $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
+        $deployedDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
+        switch(DEN_COLS[$denType]){
+            case 'howl':
+                return HOWL_RANGE_AWARDS[self::getPlayersNumber()][$deployedDens];
+                break;
+            case 'pack':
+                return PACK_SPREAD_AWARDS[self::getPlayersNumber()][$deployedDens];
+                break;
+            case 'speed':
+                return WOLF_SPEED_AWARDS[self::getPlayersNumber()][$deployedDens];
+                break;
+            default:
+                return NULL;
+        }
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -467,8 +485,8 @@ class Wolves extends Table {
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $query = "SELECT * FROM pieces WHERE id=$wolfId";
         $wolf = self::getObjectFromDB($query);
-        $isAlpha = $wolf['kind'] == P_ALPHA;
-        if($wolf == NULL || $wolf['owner'] != $playerId || $wolf['kind'] > P_PACK){
+        $isAlpha = $wolf['kind'] === P_ALPHA;
+        if($wolf === NULL || $wolf['owner'] != $playerId || $wolf['kind'] > P_PACK){
             throw new BgaUserException(_('The wolf you selected is not valid!'));
         }
 
@@ -482,7 +500,7 @@ class Wolves extends Table {
 
         $pathCheck = function($x, $y) {
             $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($hex == NULL || $hex['terrain'] == T_WATER){
+            if($hex === NULL || $hex['terrain'] === T_WATER){
                 throw new BgaUserException(_('Cannot find a clear path to the given tile'));
             } 
         };
@@ -498,7 +516,7 @@ class Wolves extends Table {
                     break;
                 case 1:
                     $piece = $finalPieces[0];
-                    if($piece['owner'] == NULL || !($piece['owner'] == $playerId || ($isAlpha && $piece['kind'] == P_PACK) || $piece['kind'] == P_DEN)){
+                    if($piece['owner'] === NULL || !($piece['owner'] === $playerId || ($isAlpha && $piece['kind'] === P_PACK) || $piece['kind'] === P_DEN)){
                         throw new BgaUserException(_('Invalid move location'));
                     }
                     break;
@@ -540,7 +558,7 @@ class Wolves extends Table {
                         LIMIT 1
                         EOF;
             $dist = self::getUniqueValueFromDB($query);
-            if($dist == NULL){
+            if($dist === NULL){
                 return -1;
             }
             return $dist;
@@ -569,7 +587,7 @@ class Wolves extends Table {
                         EOF;
 
             $land = self::getObjectFromDB($query);
-            if($land == NULL){
+            if($land === NULL){
                 throw new BgaUserException(_('Cannot move wolf to this tile'));
             }
 
@@ -598,7 +616,7 @@ class Wolves extends Table {
             $wolfY = $wolf['y'];
             $query = "SELECT l.* FROM land l NATURAL LEFT JOIN pieces p WHERE l.x=$x AND l.y=$y AND p.kind<=>$lone_val AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= $max_range";
             $validLand = self::getObjectFromDB($query);
-            if($validLand == NULL){
+            if($validLand === NULL){
                 throw new BgaUserException(_('Selected tile is invalid'));
             }
         };
@@ -606,7 +624,7 @@ class Wolves extends Table {
 
         $wolfIndex = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
         
-        self::DbQuery("UPDATE player_status SET deployed_wolves=($wolfIndex + 1) WHERE player_id=$playerId");
+        self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
 
         $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
 
@@ -629,7 +647,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Too far from Alpha Wolf!'));
         }
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf == NULL || $wolf['kind'] != P_ALPHA || $wolf['owner'] != $playerId){
+        if($wolf === NULL || $wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
@@ -658,7 +676,15 @@ class Wolves extends Table {
 
         $deployedDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
-        self::DbQuery("UPDATE player_status SET $denCol=$deployedDens + 1 WHERE player_id=$playerId");
+        $award = $this->getDenAwards($playerId, $denType);
+        $rewardString = "";
+        if($award === AW_TERRAIN){
+            $rewardString = ", terrain_tokens=terrain_tokens + 1";
+        }
+        else if($award === AW_TURN){
+            $rewardString = ", turn_tokens=turn_tokens + 1";
+        }
+        self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
 
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -677,7 +703,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Too far from Alpha Wolf!'));
         }
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf == NULL || $wolf['kind'] != P_ALPHA || $wolf['owner'] != $playerId){
+        if($wolf === NULL || $wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
@@ -713,7 +739,7 @@ class Wolves extends Table {
                         AND terrain=$water) > 0
                     EOF;
         $validLand = self::getObjectFromDB($query);
-        if($validLand == NULL){
+        if($validLand === NULL){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
 
@@ -721,9 +747,11 @@ class Wolves extends Table {
         
         self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$denValue");
         
-        self::DbQuery("UPDATE player_status SET deployed_lairs=$numLairs + 1 WHERE player_id=$playerId");
+        self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
-        //TODO: add moonlight board call & player reward
+        //TODO: add moonlight board call
+
+
 
 
         if(count($pieces) == 1){
@@ -748,17 +776,17 @@ class Wolves extends Table {
         $max_range = HOWL_RANGE[$deployedDens];
 
 
-        if($wolf == NULL || $wolf['owner'] != $playerId || $wolf['kind'] != P_ALPHA){
+        if($wolf === NULL || $wolf['owner'] !== $playerId || $wolf['kind'] !== P_ALPHA){
             throw new BgaUserException(_('Invalid wolf!'));
         }
 
         $target = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$targetId");
-        if($targetWolf == NULL || $target['owner'] == $playerId || !($target['kind'] == P_DEN || $target['kind'] == P_PACK)){
+        if($targetWolf === NULL || $target['owner'] === $playerId || !($target['kind'] === P_DEN || $target['kind'] == P_PACK)){
             throw new BgaUserException(_('Selected target is invalid!'));
         }
 
-        if($target['kind'] == P_DEN){
-            if($denType == NULL || $denType > count(DEN_COLS)){
+        if($target['kind'] === P_DEN){
+            if($denType === NULL || $denType > count(DEN_COLS)){
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
             }
             $denName = 'deployed_'.DEN_COLS[$denType].'_dens';
@@ -778,7 +806,7 @@ class Wolves extends Table {
 
         $finalCheck = function($x, $y) use ($playerId, $wolf, $max_range,, $target){
 
-            if(!($target['x'] == $x && $target['y'] == $y)){
+            if(!($target['x'] === $x && $target['y'] === $y)){
                 throw new BgaUserException(_('Target wolf is not at the end of the given path!'));
             }
             $wolves_max = P_PACK;
@@ -794,7 +822,7 @@ class Wolves extends Table {
                         AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= $max_range"
             EOF;
             $validLand = self::getObjectFromDB($query);
-            if($validLand == NULL){
+            if($validLand === NULL){
                 throw new BgaUserException(_('Selected tile is invalid'));
             }
         };
@@ -802,16 +830,26 @@ class Wolves extends Table {
 
         
 
-        if($target['kind'] == P_DEN){
+        if($target['kind'] === P_DEN){
             $denName = 'deployed_'.DEN_COLS[$denType].'_dens';
             $numDens = self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
-            self::DbQuery("UPDATE player_status SET $denName=$numDens + 1 WHERE player_id$playerId");
             self::DbQuery("UPDATE pieces SET owner=$playerId WHERE id=$targetId");
-            //TODO: Rewards...
+            $deployedDens = self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
+
+            $award = $this->getDenAwards($playerId, $denType);
+            $rewardString = "";
+            if($award === AW_TERRAIN){
+                $rewardString = ", terrain_tokens=terrain_tokens + 1";
+            }
+            else if($award === AW_TURN){
+                $rewardString = ", turn_tokens=turn_tokens + 1";
+            }
+
+            self::DbQuery("UPDATE player_status SET $denName=$denName + 1$rewardString WHERE player_id=$playerId");
         }
         else{
             $wolfIndex = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-            self::DbQuery("UPDATE player_status SET deployed_wolves=($wolfIndex + 1) WHERE player_id=$playerId");
+            self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
             $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
             self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$wolfType WHERE id=$targetId");
         }

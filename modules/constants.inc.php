@@ -172,18 +172,67 @@ const WOLF_DEPLOYMENT = [
     P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK
 ];
 
+const AW_TURN = 0;
+const AW_TERRAIN = 1;
+
+const HOWL_RANGE_AWARDS_2P = [
+    NULL, AW_TURN, NULL, AW_TERRAIN
+];
+
+const HOWL_RANGE_AWARDS_REST = [
+    NULL, AW_TERRAIN, NULL, AW_TURN
+];
+
+const HOWL_RANGE_AWARDS = [
+    2 => HOWL_RANGE_AWARDS_2P,
+    3 => HOWL_RANGE_AWARDS_REST,
+    4 => HOWL_RANGE_AWARDS_REST,
+    5 => HOWL_RANGE_AWARDS_REST
+];
+
 const HOWL_RANGE = [
     2, 3, 3, 4, 4
 ];
 
-const WOLF_SPEED = [
-    3, 4, 4, 5, 5
+const PACK_SPREAD_AWARDS_2P = [
+    NULL, AW_TURN, NULL, AW_TERRAIN
+];
+
+const PACK_SPREAD_AWARDS_REST = [
+    NULL, AW_TURN, NULL, AW_TERRAIN
+];
+
+const PACK_SPREAD_AWARDS = [ 
+    2 => PACK_SPREAD_AWARDS_2P,
+    3 => PACK_SPREAD_AWARDS_REST,
+    4 => PACK_SPREAD_AWARDS_REST,
+    5 => PACK_SPREAD_AWARDS_REST
 ];
 
 const PACK_SPREAD = [
     2, 3, 3, 4, 4
 ];
 
+const WOLF_SPEED_AWARDS_2P = [
+    NULL, AW_TURN, NULL, AW_TERRAIN
+];
+
+const WOLF_SPEED_AWARDS_REST = [
+    NULL, AW_TERRAIN, NULL, AW_TURN
+];
+
+const WOLF_SPEED_AWARDS = [
+    2 => WOLF_SPEED_AWARDS_2P,
+    3 => WOLF_SPEED_AWARDS_REST,
+    4 => WOLF_SPEED_AWARDS_REST,
+    5 => WOLF_SPEED_AWARDS_REST
+];
+
+const WOLF_SPEED = [
+    3, 4, 4, 5, 5
+];
+
 const DEN_COLS = [
     'howl', 'pack', 'speed'
 ];
+
