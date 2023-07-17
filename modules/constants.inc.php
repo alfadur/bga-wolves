@@ -236,3 +236,23 @@ const DEN_COLS = [
     'howl', 'pack', 'speed'
 ];
 
+const CRESCENT_DATES = [
+    2 => 7,
+    3 => 9,
+    4 => 11,
+    5 => 13
+];
+
+const HALF_DATES = [
+    2 => 13,
+    3 => 17,
+    4 => 20,
+    5 => 23
+];
+
+const FULL_DATES = [
+    2 => 18,
+    3 => 22,
+    4 => 26,
+    5 => 30
+];

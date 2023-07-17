@@ -198,9 +198,9 @@ class Wolves extends Table {
         (see states.inc.php)
     */
     function getGameProgression(): int {
-        // TODO: compute and return the game progression
 
-        return 0;
+        $numEntries = self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
+        return intval(($numEntries * 100) / FULL_DATES[self::getPlayersNumber()]);
     }
 
 
