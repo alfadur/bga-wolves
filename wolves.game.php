@@ -457,7 +457,7 @@ class Wolves extends Table {
     }
 
     function move(int $wolfId, array $path): void {
-        self::checkAction('moveSelection');
+        self::checkAction('move');
 
         if(in_array($wolfId, $this->getMovedWolves())){
             throw new BgaUserException(_('This wolf has already been moved this turn!'));
@@ -520,7 +520,7 @@ class Wolves extends Table {
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
-            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_MOVE);
+            $this->setGameStateValue(G_DISPLACEMENT_STATE, ($newVal > 0) ? TR_MOVE : TR_POST_ACTION);
             $this->gamestate->nextState(TR_DISPLACE);
         }
         else{
@@ -548,7 +548,7 @@ class Wolves extends Table {
     }
 
     function displace(array $path): void {
-        self::checkAction('displaceWolf');
+        self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
@@ -578,12 +578,12 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
 
-        $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? $this->getGameStateValue(G_DISPLACEMENT_STATE) : TR_END_MOVE);
+        $this->gamestate->nextState($this->getGameStateValue(G_DISPLACEMENT_STATE));
 
     }
 
     function howl(int $wolfId, array $path): void {
-        self::checkAction('howlSelection');
+        self::checkAction('howl');
         $playerId = self::getActivePlayerId();
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
@@ -612,11 +612,11 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET kind=$wolfType, owner=$playerId WHERE x=$x AND y=$y");
 
-        $this->gamestate->nextState(TR_HOWL);
+        $this->gamestate->nextState(TR_POST_ACTION);
     }
 
     function placeDen(int $wolfId, array $path, int $denType): void {
-        self::checkAction('denSelection');
+        self::checkAction('den');
 
         $playerId = self::getActivePlayerId();
         $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
@@ -660,12 +660,12 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE player_status SET $denCol=$deployedDens + 1 WHERE player_id=$playerId");
 
-        $this->gamestate->nextState(TR_DEN);
+        $this->gamestate->nextState(TR_POST_ACTION);
 
     }
 
     function placeLair(int $wolfId, array $path): void {
-        self::checkAction('lairSelection');
+        self::checkAction('lair');
 
         $playerId = self::getActivePlayerId();
         $numLairs = self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
@@ -729,13 +729,13 @@ class Wolves extends Table {
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
-            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_END_MOVE);
+            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_POST_ACTION);
             $this->setGameStateValue(G_MOVES_REMAINING, 0);
             $this->gamestate->nextState(TR_DISPLACE);
             return;
         }
         
-        $this->gamestate->nextState(TR_LAIR);
+        $this->gamestate->nextState(TR_POST_ACTION);
 
     }
 
@@ -818,8 +818,27 @@ class Wolves extends Table {
 
         //TODO: add moonlight board logic
 
-        $this->gamestate->nextState(TR_DOMINATE);
+        $this->gamestate->nextState(TR_POST_ACTION);
 
+    }
+
+    function extraTurn(){
+        self::checkAction('extraTurn');
+
+        $playerId = self::getActivePlayerId();
+        $turnTokens = self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
+        if($turnTokens == 0){
+            throw new BgaUserException(_('You have no extra turn tokens to play!'));
+        }
+        self::DbQuery("UPDATE player_status SET turn_tokens=$turnTokens - 1 WHERE player_id=$playerId");
+        $this->incGameStateValue(G_MOVES_REMAINING, 1);
+        $this->gamestate->nextState(TR_SELECT_ACTION);
+    }
+
+    function endTurn(){
+        self::checkAction('endTurn');
+        $this->gamestate->nextState(TR_CONFIRM_END);
+        
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -846,11 +865,26 @@ class Wolves extends Table {
             "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL");
         $draftCompleted = $wolvesDrafted >= 2 * self::getPlayersNumber();
 
-        if ($wolvesDrafted > 0 && !$draftCompleted) {
-            $this->activeNextPlayer();
-        }
-
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
+    }
+
+    function stPostAction(): void {
+        $remainingActions = $this->incGameStateValue(G_ACTIONS_REMAINING, -1);
+        $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
+    }
+
+    function stNextTurn(): void {
+        $this->activeNextPlayer();
+        $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
+        $this->gamestate->nextState(TR_START_TURN);
+    }
+
+    function stPreActionSelection(): void {
+        $this->setGameStateValue(G_SELECTED_TERRAIN, -1);
+        $this->setGameStateValue(G_MOVES_REMAINING, -1);
+        $this->setGameStateValue(G_MOVED_WOLVES, -1);
+        $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
+        $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
     }
 
 //////////////////////////////////////////////////////////////////////////////

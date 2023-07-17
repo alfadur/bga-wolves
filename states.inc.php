@@ -65,7 +65,7 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stDraftResolution',
         'updateGameProgression' => true,
-        'transitions' => [TR_DRAFT_CONTINUE => ST_DRAFT_WOLVES, TR_DRAFT_END => ST_ACTION_SELECTION]
+        'transitions' => [TR_DRAFT_CONTINUE => ST_DRAFT_WOLVES, TR_DRAFT_END => ST_NEXT_TURN]
     ],
 
     ST_DRAFT_WOLVES => [
@@ -77,72 +77,102 @@ $machinestates = [
         'transitions' => [TR_DRAFT_PLACE => ST_DRAFT_RESOLUTION]
     ],
 
+    ST_NEXT_TURN => [
+        'name' => 'nextTurn',
+        'description' => clienttranslate('Starting next turn'),
+        'type' => 'game',
+        'action' => 'stNextTurn',
+        'transitions' => [TR_START_TURN => ST_ACTION_SELECTION]
+    ],
+
     ST_ACTION_SELECTION => [
         'name' => 'actionSelection',
-        'description' => clienttranslate('${actplayer} must select a 🐺ing action'),
-        'descriptionmyturn' => clienttranslate('${you} must select a 🐺ing action'),
+        'description' => clienttranslate('${actplayer} must select a 🐺 action'),
+        'descriptionmyturn' => clienttranslate('${you} must select a 🐺 action'),
         'type' => 'activeplayer',
         'possibleactions' => ['selectAction'],
+        'action' => 'stPreActionSelection',
         'transitions' => [
-            TR_HOWL_SELECT => TR_HOWL_SELECTION,
-            TR_MOVE_SELECT => TR_MOVE_SELECTION
+            TR_HOWL_SELECT => ST_HOWL_SELECTION,
+            TR_MOVE_SELECT => ST_MOVE_SELECTION,
+            TR_DEN_SELECT => ST_DEN_SELECTION,
+            TR_LAIR_SELECT => ST_LAIR_SELECTION,
+            TR_DOMINATE_SELECT => ST_DOMINATE_SELECTION
         ]
     ],
 
-    TR_HOWL_SELECTION => [
+    ST_HOWL_SELECTION => [
         'name' => 'howlSelection',
         'description' => clienttranslate('${actplayer} must select a howl target'),
         'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
         'type' => 'activeplayer',
         'availableactions' => ['howl'],
-        'transitions' => [TR_HOWL => ST_ACTION_SELECTION]
+        'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
-    TR_MOVE_SELECTION => [
+    ST_MOVE_SELECTION => [
         'name' => 'moveSelection',
         'description' => clienttranslate('${actplayer} must move ${numMoves} 🐺'),
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
         'type' => 'activeplayer',
         'availableactions' => ['move'],
-        'transitions' => [TR_MOVE => TR_MOVE_SELECTION, TR_DISPLACE => TR_MOVE_DISPLACE, TR_END_MOVE => ST_ACTION_SELECTION]
+        'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_DISPLACE => ST_DISPLACE, TR_END_MOVE => ST_POST_ACTION]
     ],
 
-    TR_MOVE_DISPLACE => [
+    ST_DISPLACE => [
         'name' => 'displaceWolf',
         'description' => clienttranslate('${actplayer} must displace ${displacedPlayer}\'s 🐺'),
         'descriptionmyturn' => clienttranslate('${you} must displace ${displacedPlayer}\'s 🐺').
         'type' => 'activeplayer',
         'args' => 'argDisplaceSelection',
         'availableactions' => ['displace'],
-        'transitions' => [TR_MOVE => TR_MOVE_SELECTION, TR_END_MOVE => ST_ACTION_SELECTION]
+        'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_POST_ACTION => ST_POST_ACTION]
     ],
 
-    TR_DEN_SELECTION => [
+    ST_DEN_SELECTION => [
         'name' => 'denSelection',
         'description' => clienttranslate('${actplayer} must place a den'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
         'type' => 'activeplayer',
         'availableactions' => ['den'],
-        'transitions' => [TR_DEN => ST_ACTION_SELECTION]
-
+        'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
-    TR_LAIR_SELECTION => [
+    ST_LAIR_SELECTION => [
         'name' => 'lairSelection',
         'description' => clienttranslate('${actplayer} must upgrade a den to a lair'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
         'availableactions' => ['lair'],
-        'transitions' => [TR_LAIR => ST_ACTION_SELECTION, TR_DISPLACE => TR_MOVE_DISPLACE]
+        'transitions' => [TR_POST_ACTION => ST_POST_ACTION, TR_DISPLACE => ST_DISPLACE]
     ],
 
-    TR_DOMINATE_SELECTION => [
+    ST_DOMINATE_SELECTION => [
         'name' => 'dominateSelection',
         'description' => clienttranslate('${actplayer} must dominate one enemy piece'),
         'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
         'type' => 'activeplayer',
         'availableactions' => ['dominate'],
-        'transitions' => [TR_DOMINATE => ST_ACTION_SELECTION]
+        'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
+    ],
+
+    ST_POST_ACTION => [
+        'name' => 'postAction',
+        'description' => clienttranslate('Updating...'),
+        'descriptionmyturn' => clienttranslate('Updating...'),
+        'type' => 'game',
+        'action' => 'stPostAction',
+        'updateGameProgression' => true,
+        'transitions' => [TR_SELECT_ACTION => ST_ACTION_SELECTION, TR_CONFIRM_END => ST_CONFIRM_END] 
+    ],
+
+    ST_CONFIRM_END => [
+        'name' => 'confirmEnd',
+        'description' => clienttranslate('${actplayer} must end their turn'),
+        'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tiles, or end your turn'),
+        'type' => 'activeplayer',
+        'availableactions' => ['extraTurn', 'endTurn'],
+        'transitions' => [TR_CONFIRM_END => ST_NEXT_TURN, TR_SELECT_ACTION => ST_ACTION_SELECTION]
     ],
 
     // Final state.
