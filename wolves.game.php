@@ -459,7 +459,7 @@ class Wolves extends Table {
         $this->selectAction(A_HOWL, [], 0, T_TUNDRA);
     }
 
-    function move(int $wolfId, int $kind, array $path): void {
+    function move(int $wolfId, array $path): void {
         self::checkAction('move');
 
         if(in_array($wolfId, $this->getMovedWolves())){

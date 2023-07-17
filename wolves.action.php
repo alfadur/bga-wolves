@@ -66,7 +66,7 @@ class action_wolves extends APP_GameAction {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
         $path = explode(',', self::getArg('path', AT_numberlist, true));
-        $this->game->move($wolfX, $wolfY, $kind, $targetX, $targetY);
+        $this->game->move($wolfId, $path);
         self::ajaxResponse();
     }
 
