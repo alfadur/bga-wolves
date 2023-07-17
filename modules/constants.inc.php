@@ -155,3 +155,19 @@ const TILE_TERRAIN_TYPES = 5;
 const HEX_DIRECTIONS = [
     [0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]
 ];
+
+const WOLF_DEPLOYMENT = [
+    P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK
+];
+
+const HOWL_RANGE = [
+    2, 3, 3, 4, 4
+];
+
+const WOLF_SPEED = [
+    3, 4, 4, 5, 5
+];
+
+const PACK_SPREAD = [
+    2, 3, 3, 4, 4
+];

@@ -245,26 +245,6 @@ class Wolves extends Table {
         return self::getObjectListFromDb($query);
     }
 
-    function getValidConversionTargets(int $playerId, $kinds, bool $usePlayer): array {
-        $kind = P_ALPHA;
-        $alphas = self::getObjectListFromDB("SELECT x, y FROM pieces WHERE owner = $playerId AND kind = $kind");
-
-        ['howl_range' => $range, 'selected_terrain' => $terrain]  =
-            self::getObjectFromDB("SELECT howl_range, selected_terrain FROM player_status WHERE player_id = $playerId");
-        $hexArrays = array_map(fn($wolf) =>
-                $this->getPiecesInRange($wolf['x'], $wolf['y'], $range, $terrain, $kinds, $usePlayer ? $playerId : null),
-            $alphas);
-        return array_unique(array_merge(...$hexArrays));
-    }
-
-    function getValidHowlTargets(int $playerId): array {
-        return $this->getValidConversionTargets($playerId, P_LONE, false);
-    }
-
-    function getValidDominateTargets(int $playerId): array {
-        return $this->getValidConversionTargets($playerId, [P_PACK, P_DEN], true);
-    }
-
     function getValidLandInRange(int $x, int $y, int $kind, int $player_id, int $range, int $terrain): array {
         [$xMin, $xMax] = [$x - $range, $x + $range];
         [$yMin, $yMax] = [$y - $range, $y + $range];
@@ -291,7 +271,7 @@ class Wolves extends Table {
         }
     }
 
-    function checkPath(array $start, array $moves, $finalCheck, $pathCheck = "validityCheck"): bool {
+    function checkPath(array $start, array $moves, $finalCheck, $pathCheck = "validityCheck"): array {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
             $start[0] += $dx;
@@ -300,6 +280,7 @@ class Wolves extends Table {
         }
 
         $finalCheck($start[0], $start[1]);
+        return [$start[0], $start[1]];
     }
 
     function addMovedWolf(int $wolfId){
@@ -443,6 +424,14 @@ class Wolves extends Table {
         switch($actionName){
             case 'move':
                 $this->setGameStateValue(G_MOVED_WOLVES, -1);
+                $deployedDens = self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
+                $this->setGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
+                break;
+            case 'howl':
+                $deployedWolves = self::GetUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
+                if($deployedWolves > count(WOLF_DEPLOYMENT)){
+                    throw new BgaUserException(_('You have no wolves to deploy!'));
+                }
                 break;
             default:
                 break;
@@ -477,7 +466,8 @@ class Wolves extends Table {
 
         //Verify move is valid
 
-        $max_distance = 2 //TODO: Update with actual value
+        $deployedDens = self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
+        $max_distance = WOLF_SPEED[$deployedDens];
         if(count($path) > $max_distance){
             throw new BgaUserException(_('The selected tile is out of range'));
         }
@@ -508,7 +498,8 @@ class Wolves extends Table {
                     throw new BgaUserException(_('Hex is full!'));
             }
         };
-        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
+
+        [$targetX, $targetY] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
 
         $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
         $potential_wolves = self::getObjectListFromDB($query);
@@ -552,7 +543,7 @@ class Wolves extends Table {
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $range = $this->getMaxDisplacement($x, $y, $playerId);
+        $range = $this->getMaxDisplacement($wolf['x'], $wolf['y'], $playerId);
         $finalCheck = function($x, $y) use ($playerId, $range, $wolf) {
             $dist = (abs($wolf['x'] - $x) + abs($wolf['y'] - $y) + abs($x - $y - $wolf['x'] + $wolf['y'])) / 2;
             if($dist > $range){
@@ -575,7 +566,7 @@ class Wolves extends Table {
             }
 
         }
-        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
+        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
 
         self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
 
@@ -583,15 +574,35 @@ class Wolves extends Table {
 
     }
 
-    function howl(int $x, int $y): void {
+    function howl(int $wolfId, array $path): void {
         self::checkAction('howl');
         $playerId = self::getActivePlayerId();
-        $targets = $this->getValidHowlTargets($playerId);
-        if (!in_array(['x' => $x, 'y' => $y], $targets)) {
-            throw new BgaUserException(_('Invalid howl target'));
+        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
+        $deployedDens = self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
+        $max_range = HOWL_RANGE[$deployedDens];
+        if($wolf == NULL || $wolf['kind'] != P_ALPHA){
+            throw new BgaUserException(_('Invalid wolf!'));
         }
+        $finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
+            $lone_val = P_LONE;
+            $wolfX = $wolf['x'];
+            $wolfY = $wolf['y'];
+            $query = "SELECT * FROM pieces WHERE x=$x AND y=$y AND kind=$lone_val AND (ABS(x - $wolfX) + ABS(y - $wolfY) + ABS(x - $y - $wolfX + $wolfY)) / 2 <= $max_range";
+            $loneWolf = self::getObjectFromDB($query);
+            if($loneWolf == NULL){
+                throw new BgaUserException(_('Selected tile is invalid'));
+            }
+        }
+        [$x, $y] = $this->checkPath($path, $finalCheck);
 
-        $this->activeNextPlayer();
+        $wolfIndex = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
+        
+        self::DbQuery("UPDATE player_status SET deployed_wolves=($wolfIndex + 1) WHERE player_id=$playerId");
+
+        $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
+
+        self::DbQuery("UPDATE pieces SET kind=$wolfType, owner=$playerId WHERE x=$x AND y=$y");
+
         $this->gamestate->nextState(T_HOWL);
     }
 

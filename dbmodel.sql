@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS `player_status`(
     `home_terrain` TINYINT NOT NULL,
     `deployed_howl_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `deployed_pack_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
-    `deployed_wolf_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    `deployed_speed_dens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `deployed_lairs` TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `deployed_wolves` TINYINT UNSIGNED NOT NULL DEFAULT 0,
     `terrain_tokens` TINYINT UNSIGNED NOT NULL DEFAULT 0,
