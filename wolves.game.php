@@ -30,7 +30,8 @@ class Wolves extends Table {
             G_ACTIONS_REMAINING => 11,
             G_MOVES_REMAINING => 12,
             G_MOVED_WOLVES => 13,
-            G_DISPLACEMENT_WOLF => 14
+            G_DISPLACEMENT_WOLF => 14,
+            G_DISPLACEMENT_STATE => 15
         ]);
     }
 
@@ -102,6 +103,7 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVED_WOLVES, -1);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
+        self::setGameStateInitialValue(G_DISPLACEMENT_STATE, -1);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -518,10 +520,11 @@ class Wolves extends Table {
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
-            $this->gamestate->nextState(T_DISPLACE);
+            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_MOVE);
+            $this->gamestate->nextState(TR_DISPLACE);
         }
         else{
-            $this->gamestate->nextState(($newVal > 0) ? T_MOVE : T_END_MOVE);
+            $this->gamestate->nextState(($newVal > 0) ? TR_MOVE : TR_END_MOVE);
         }  
     }
 
@@ -555,7 +558,6 @@ class Wolves extends Table {
             if($dist > $range){
                 throw new BgaUserException(_('Tile is too far'));
             }
-
             $query = <<<EOF
                         SELECT l.*
                         FROM land l
@@ -576,7 +578,7 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
 
-        $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? T_MOVE : T_END_MOVE);
+        $this->gamestate->nextState(($this->getGameStateValue(G_MOVES_REMAINING) > 0) ? $this->getGameStateValue(G_DISPLACEMENT_STATE) : TR_END_MOVE);
 
     }
 
@@ -610,7 +612,7 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET kind=$wolfType, owner=$playerId WHERE x=$x AND y=$y");
 
-        $this->gamestate->nextState(T_HOWL);
+        $this->gamestate->nextState(TR_HOWL);
     }
 
     function placeDen(int $wolfId, array $path, int $denType): void {
@@ -658,7 +660,7 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE player_status SET $denCol=$deployedDens + 1 WHERE player_id=$playerId");
 
-        $this->gamestate->nextState(T_DEN);
+        $this->gamestate->nextState(TR_DEN);
 
     }
 
@@ -701,7 +703,6 @@ class Wolves extends Table {
                     SELECT l.* 
                     FROM land l
                     NATURAL LEFT JOIN pieces p
-                    WHERE (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
                     AND (p.owner <=> $playerId AND p.kind = $denValue)
                     AND l.terrain = $terrain_type
                     AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= 1
@@ -715,6 +716,8 @@ class Wolves extends Table {
         if($validLand == NULL){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
+
+        $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind<$denValue AND owner <> $playerId");
         
         self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$denValue");
         
@@ -722,7 +725,17 @@ class Wolves extends Table {
 
         //TODO: add moonlight board call & player reward
 
-        $this->gamestate->nextState(T_LAIR);
+
+        if(count($pieces) == 1){
+            $moveWolf = $pieces[0];
+            $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
+            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_END_MOVE);
+            $this->setGameStateValue(G_MOVES_REMAINING, 0);
+            $this->gamestate->nextState(TR_DISPLACE);
+            return;
+        }
+        
+        $this->gamestate->nextState(TR_LAIR);
 
     }
 
@@ -758,7 +771,7 @@ class Wolves extends Table {
             $this->activeNextPlayer();
         }
 
-        $this->gamestate->nextState($draftCompleted ? T_DRAFT_END : T_DRAFT_CONTINUE);
+        $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
 //////////////////////////////////////////////////////////////////////////////
