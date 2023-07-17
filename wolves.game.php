@@ -551,58 +551,23 @@ class Wolves extends Table {
     }
 
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
-        $args = [];
-        $visited = [];
-        $visited[$x] = [];
-        $queue = new SplQueue();
-        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
-            $diffX = $x + $dx;
-            $diffY = $y + $dy;
-            if(!isset($visited[$diffX])){
-                $visited[$diffX] = [];
-            }
-            $visited[$diffX][$diffY] = true;
-            $queue->enqueue([$x, $y, 1]);
-            $args[] = "(l.x=$diffX AND l.y=$diffY)";
-        }
-        $rows = implode(' OR ', $args);
-        $query = <<<EOF
-                    SELECT l.*
-                    FROM land l
-                    WHERE (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2 
-                        AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y AND (owner IS NULL OR owner <> $playerId)) = 0
-                        AND (
-                    EOF . $rows . ")";
-        $firstCircle = self::getObjectListFromDB($query);
-        if(count($firstCircle) > 0){
-            return 1;
-        }
+        for($int i = 1; $i<=6; $i++){
+            $query = <<<EOF
+                        SELECT l.*
+                        FROM land l
+                        LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
+                        WHERE (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - $x - l.y + $y)) / 2 = $i
+                        AND ((p.owner IS NULL OR p.owner <> $playerId)
+                        OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) = 2)
+                        GROUP BY l.x, l.y;
+                        EOF;
 
-        while(!$queue->isEmpty()){
-            [$currX, $currY, $dist] = $queue->dequeue();
-
-            $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$currX AND y=$currY");
-            $terrain = self::getUniqueValueFromDB("SELECT terrain FROM land WHERE x=$currX AND y=$currY");
-            if($terrain == NULL){
-                continue;
-            }
-            if($terrain != T_WATER && ($info['owners'] == NULL || (count($info['owners']) < 2 && $info['owners'][0] != $playerId))){
-                return $dist
-            }
-
-            foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]){
-                $newX = $currX + $dx;
-                $newY = $currY + $dy;
-                if(!isset($visited[$newX])){
-                    $visited[$newX] = [];
-                }
-                if(!isset($visited[$newX][$newY])){
-                    $visited[$newX][$newY] = true;
-                    $queue->enqueue([$newX, $newY, $dist + 1]);
-                }
+            $locations = self::getObjectListFromDB($query);
+            if(count($locations) > 0){
+                return $i;
             }
         }
-        return
+        return -1;
 
     }
 
