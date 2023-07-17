@@ -551,23 +551,22 @@ class Wolves extends Table {
     }
 
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
-        for($int i = 1; $i<=6; $i++){
             $query = <<<EOF
                         SELECT l.*
                         FROM land l
                         LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-                        WHERE (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - $x - l.y + $y)) / 2 = $i
-                        AND NOT ((p.owner IS NULL OR p.owner <> $playerId)
-                        OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
+                        AND l.terrain <> 5
+                        AND SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
+                        AND (p.owner IS NOT NULL AND p.owner = $playerId)
                         GROUP BY l.x, l.y;
+                        ORDER BY ABS(l.x - $x) + ABS(l.y - $y)
+                        LIMIT 1
                         EOF;
-
-            $locations = self::getObjectListFromDB($query);
-            if(count($locations) > 0){
-                return $i;
+            $tile = self::getObjectFromDB($query);
+            if($tile == NULL){
+                return -1;
             }
-        }
-        return -1;
+            return (abs($tile['x'] - $x) + abs($tile['y'] - $y) + abs($tile['x'] - $tile['y'] - $x + $y)) / 2;
 
     }
 
