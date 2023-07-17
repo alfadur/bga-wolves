@@ -390,16 +390,20 @@ class Wolves extends Table {
             throw new BgaUserException(_("This place is already occupied"));
         }
 
-        $values = array_map(fn($piece) => "($x, $y, $player_id, $piece)", [P_ALPHA, P_PACK]);
+        $kinds = [P_ALPHA, P_PACK];
+        $values = array_map(fn($piece) => "($x, $y, $player_id, $piece)", $kinds);
         $args = implode(", ", $values);
         $query = "INSERT INTO pieces (x, y, owner, kind) VALUES $args";
         self::DbQuery($query);
 
+        $insertId = self::DbGetLastId();
         $this->notifyAllPlayers('draft', clienttranslate('${player_name} placed initial 🐺.'), [
             'player_name' => self::getActivePlayerName(),
             'player_id' => $player_id,
             'x' => $x,
-            'y' => $y
+            'y' => $y,
+            'ids' => [$insertId - 1, $insertId],
+            'kinds' => $kinds
         ]);
 
         $this->gamestate->nextState('draftPlace');
