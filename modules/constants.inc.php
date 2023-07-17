@@ -171,3 +171,7 @@ const WOLF_SPEED = [
 const PACK_SPREAD = [
     2, 3, 3, 4, 4
 ];
+
+const DEN_COLS = [
+    'howl', 'pack', 'speed'
+];
