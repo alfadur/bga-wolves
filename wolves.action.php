@@ -56,9 +56,9 @@ class action_wolves extends APP_GameAction {
 
     function howl(): void {
         self::setAjaxMode();
-        $x = self::getArg('x', AT_int, true);
-        $y = self::getArg('y', AT_int, true);
-        $this->game->howl($x, $y);
+        $wolfId = self::getArg('wolfId', AT_int, true);
+        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $this->game->howl($wolfId, $path);
         self::ajaxResponse();
     }
 
@@ -74,6 +74,33 @@ class action_wolves extends APP_GameAction {
         self::setAjaxMode();
         $path = explode(',', self::getArg('path', AT_numberlist, true));
         $this->game->displace($path);
+        self::ajaxResponse();
+    }
+
+    function den(): void {
+        self::setAjaxMode();
+        $wolfId = self::getArg('wolfId', AT_int, true);
+        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $denType = self::getArg('denType', AT_int, true);
+        $this->game->placeDen($wolfId, $path, $denType);
+        self::ajaxResponse();
+    }
+
+    function lair(): void {
+        self::setAjaxMode();
+        $wolfId = self::getArg('wolfId', AT_int, true);
+        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $this->game->placeLair($wolfId, $path);
+        self::ajaxResponse();
+    }
+
+    function dominate(): void {
+        self::setAjaxMode();
+        $wolfId = self::getArg('wolfId', AT_int, true);
+        $targetId = self::getArg('targetId', AT_int, true);
+        $denType = self::getArg('denType', AT_int, false);
+        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $this->game->dominate($wolfId, $path, $targetId, $denType);
         self::ajaxResponse();
     }
 }
