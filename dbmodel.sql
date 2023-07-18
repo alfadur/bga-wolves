@@ -17,13 +17,6 @@ CREATE TABLE IF NOT EXISTS `regions`(
     PRIMARY KEY (`region_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 
-CREATE TABLE IF NOT EXISTS `scoring`(
-    `region_id` TINYINT UNSIGNED NOT NULL,
-    `moon` TINYINT NOT NULL COMMENT 'M_* value',
-    PRIMARY KEY (`region_id`, `moon`),
-    FOREIGN KEY (`region_id`) REFERENCES `regions`(`region_id`)
-)  ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `land`(
     `x` TINYINT NOT NULL,
     `y` TINYINT NOT NULL,
@@ -39,6 +32,7 @@ CREATE TABLE IF NOT EXISTS pieces(
     `kind` TINYINT NOT NULL COMMENT 'P_* value',
     `x` TINYINT NOT NULL,
     `y` TINYINT NOT NULL,
+    `prey_metadata` TINYINT,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`x`, `y`) REFERENCES `land`(`x`, `y`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

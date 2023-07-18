@@ -937,6 +937,12 @@ class Wolves extends Table {
         game state.
     */
 
+    function argsMove(){
+        return [
+            'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING);
+        ]
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
 ////////////
