@@ -362,7 +362,7 @@ function (dojo, declare) {
                         lock: true,
                         wolfId: this.selectedPiece,
                         path: paths[this.selectedPiece]
-                            .filter(({hex}) => hex.x === x && hex.y === y)[0].path
+                            .filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
                     });
                 }
             } else {
