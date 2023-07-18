@@ -142,7 +142,6 @@
 }
 
 .wolves-hex-item-bottom {
-    margin-top: var(--hex-half-height);
     clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
 }
 
@@ -152,4 +151,8 @@
 
 .wolves-passable {
     border: 2px solid blueviolet;
+}
+
+.wolves-selectable:hover, .wolves-passable:hover {
+    background-color: blueviolet;
 }

@@ -114,11 +114,13 @@ function collectPaths(from, range) {
     return queue.values.slice(1);
 }
 function prepareMoveSelection(playerId, pieces) {
-    const wolves = pieces.filter(p => p.owner === playerId && PieceKind.is_movable(p.kind));
-    wolves.forEach(wolf => {
-        const node = getPieceNode(wolf.id);
-        node.classList.add("wolves-selectable");
-    });
+    for (const pieceId in pieces) {
+        const piece = pieces[pieceId];
+        if (piece.owner === playerId && PieceKind.is_movable(piece.kind)) {
+            const node = getPieceNode(pieceId);
+            node.classList.add("wolves-selectable");
+        }
+    }
 }
 
 let paths = [];
@@ -144,10 +146,11 @@ function addPiece(piece, color, templater) {
     if (node) {
         let locationClass = "";
         if (node.children.length > 0) {
-            node.children[0].classList.add(".wolves-hex-item-top ");
+            node.children[0].classList.add("wolves-hex-item-top");
             locationClass = "wolves-hex-item-bottom";
         }
         return templater(node, "jstpl_hex_content", {
+            id: piece.id,
             x: piece.x,
             y: piece.y,
             color,
@@ -198,12 +201,13 @@ function (dojo, declare) {
                 // TODO: Setting up players boards if needed
             }
 
-            gameData.pieces.forEach(piece => {
+            for (const pieceId in gameData.pieces) {
+                const piece = gameData.pieces[pieceId];
                 const color = typeof piece.owner === "string" ?
-                    gameData[piece.owner].color : "000";
+                    gameData.players[piece.owner].color : "000";
 
                 this.addPiece(piece, color, this.templater);
-            })
+            }
 
             document.querySelectorAll(".wolves-hex").forEach(hex => {
                 if (!hex.classList.contains("wolves-hex-water")) {
