@@ -144,7 +144,7 @@ class Wolves extends Table {
         }
 
         $args = implode(', ', $region_values);
-        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated, moon_phase) VALUES $args");
+        self::DbQuery("INSERT INTO regions (tile_number, center_x, center_y, rotated, moon_phase) VALUES $args");
         $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
     }
