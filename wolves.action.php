@@ -48,8 +48,6 @@ class action_wolves extends APP_GameAction {
 
         $tiles = explode(',', self::getArg('tiles', AT_numberlist, false));
 
-        print_r($tiles);
-
         $this->game->selectAction($action,  $tiles, $bonusTokens);
         self::ajaxResponse();
     }

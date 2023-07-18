@@ -332,7 +332,6 @@ class Wolves extends Table {
         $tiles = $this->getPlayerTiles($playerId);
         $terrain = -1;
         $sets = [];
-        print_r($tileIndices);
 
         foreach ($tileIndices as $tileIndex) {
             $nextTerrain = $tileIndex < TILE_TERRAIN_TYPES ?
@@ -798,9 +797,6 @@ class Wolves extends Table {
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
         //TODO: add moonlight board call
-
-
-
 
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
