@@ -272,8 +272,8 @@ const START_MOON_PHASES = [
         M_CRESCENT,
         M_FULL,
         M_FULL,
-        M_CRES_HALF,
-        M_HALF_FULL
+        M_CRES_QUARTER,
+        M_QUARTER_FULL
     ],
     3 => [
         M_CRESCENT,

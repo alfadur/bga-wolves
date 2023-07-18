@@ -144,7 +144,7 @@ class Wolves extends Table {
         }
 
         $args = implode(', ', $region_values);
-        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated, moon_phase) VALUES $args");
+        self::DbQuery("INSERT INTO regions (tile_number, center_x, center_y, rotated, moon_phase) VALUES $args");
         $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
     }
@@ -484,7 +484,7 @@ class Wolves extends Table {
 
         $this->setGameStateValue(G_SELECTED_TERRAIN, $terrain);
 
-        $actionName = $this->actionNames[$action]
+        $actionName = $this->actionNames[$action];
         switch($actionName){
             case 'move':
                 $this->setGameStateValue(G_MOVED_WOLVES, -1);
@@ -852,7 +852,7 @@ class Wolves extends Table {
 
         
 
-        $finalCheck = function($x, $y) use ($playerId, $wolf, $max_range,, $target){
+        $finalCheck = function($x, $y) use ($playerId, $wolf, $max_range, $target){
 
             if(!($target['x'] === $x && $target['y'] === $y)){
                 throw new BgaUserException(_('Target wolf is not at the end of the given path!'));
@@ -1009,7 +1009,7 @@ class Wolves extends Table {
                     //multiple winners, no second place, and everyone gets half score
                     if(count($winners) > 1){
                         foreach($winners as $winner){
-                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id=$winner");
+                            self::DbQuery("UPDATE player SET score = score + $score / 2 WHERE player_id=$winner");
                         }
                     }
                     //If one winner, maybe second place?
@@ -1019,13 +1019,13 @@ class Wolves extends Table {
                         self::DbQuery("UPDATE player SET score=score+$score WHERE player_id={$presence[0]['owner']}");
                         self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ({$presence[0]['owner']}, $currentPhase)");
 
-                        //Only 2 people in region, second place is guarenteed
+                        //Only 2 people in region, second place is guaranteed
                         if(count($presence) === 2){
-                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id={$presence[1]['owner']}");
+                            self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id={$presence[1]['owner']}");
                         }
                         //Otherwise, there can only be one player who wins second place
                         else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
-                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id={$presence[1]['owner']}");
+                            self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id={$presence[1]['owner']}");
                         }
                     }
                 }

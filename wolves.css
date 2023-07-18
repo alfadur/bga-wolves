@@ -8,6 +8,12 @@
  * -----
  */
 
+:root {
+    --hex-width: 119px;
+    --hex-height: 103px;
+    --hex-half-height: 51px;
+}
+
 #wolves-land {
     position: relative;
     width: 100%;
@@ -89,8 +95,8 @@
 
 .wolves-hex {
     position: absolute;
-    width: 119px;
-    height: 103px;
+    width: var(--hex-width);
+    height: var(--hex-height);
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
 }
 
@@ -123,7 +129,30 @@
 }
 
 .wolves-hex-item {
-    margin: 25px 25px;
-    width: 50px;
-    height: 50px;
+    width: var(--hex-width);
+    height: var(--hex-height);
+}
+
+.wolves-hex-item-top, .wolves-hex-item-bottom {
+    height: var(--hex-half-height) !important;
+}
+
+.wolves-hex-item-top {
+    clip-path: polygon(0 100%, 25% 0, 75% 0, 100% 100%);
+}
+
+.wolves-hex-item-bottom {
+    clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
+}
+
+.wolves-selectable {
+    border: 2px solid blueviolet;
+}
+
+.wolves-passable {
+    border: 2px solid blueviolet;
+}
+
+.wolves-selectable:hover, .wolves-passable:hover {
+    background-color: blueviolet;
 }
