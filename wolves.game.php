@@ -219,6 +219,20 @@ class Wolves extends Table {
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
 
+    function getMoonPhases(int $regionId): array {
+        $phase = self::getUniqueValueFromDB("SELECT moon_phase from regions WHERE region_id=$regionId");
+        $phases = [];
+        if($phase == NULL){
+            return $phases;
+        }
+        for($int i = 0b1; $i<0b1000; $i *= 2){
+            if($phase & $i > 0){
+                $phases[] = $i;
+            }
+        }
+        return $phases;
+    }
+
     function getLand(): array {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
@@ -961,28 +975,9 @@ class Wolves extends Table {
             $this->incGameStateValue(G_MOON_PHASE, 1);
 
             //Determine condition for region
-            $condition = "";
-            switch($currentPhase){
-                case 0:
-                    $crescentPhase = M_CRESCENT;
-                    $additionalPhase = M_CRES_QUARTER;
-                    $condition = "moon_phase=$crescentPhase OR moon_phase=$additionalPhase";
-                    break;
-                case 1:
-                    $quarterPhase = M_QUARTER;
-                    $additionalPhase = M_QUARTER_FULL;
-                    $condition = "moon_phase=$quarterPhase OR moon_phase=$additionalPhase";
-                    break;
-                case 2:
-                    $fullPhase = M_FULL;
-                    $condition = "moon_phase=$fullPhase";
-                    break;
-                default:
-                    $condition = "FALSE";
-                    break;
-            }
+            $phaseBitMask = [M_CRESCENT, M_QUARTER, M_FULL][$currentPhase];
 
-            $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE $condition");
+            $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE moon_phase & $phaseBitMask > 0");
             $score = ($currentPhase * 2) + 4;
             $winners = [];
             foreach($scoringRegions as $region){

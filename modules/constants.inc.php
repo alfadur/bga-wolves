@@ -261,11 +261,11 @@ const PHASES = [
 ];
 
 const M_NONE = 0;
-const M_CRESCENT = 1;
-const M_QUARTER = 2;
-const M_FULL = 3;
-const M_CRES_QUARTER = 4;
-const M_QUARTER_FULL = 5;
+const M_CRESCENT = 0b001;
+const M_QUARTER = 0b010;
+const M_FULL = 0b100;
+const M_CRES_HALF = 0b011;
+const M_QUARTER_FULL = 0b110;
 
 const START_MOON_PHASES = [
     2 => [
