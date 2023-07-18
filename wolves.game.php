@@ -348,9 +348,11 @@ class Wolves extends Table {
             }
         }
 
-        $update = implode(", ", $sets);
-        $query = "UPDATE player_tiles SET $update WHERE player_id = $playerId";
-        self::DbQuery($query);
+        if (count($sets) > 0) {
+            $update = implode(", ", $sets);
+            $query = "UPDATE player_tiles SET $update WHERE player_id = $playerId";
+            self::DbQuery($query);
+        }
 
         return $terrain;
     }
