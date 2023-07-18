@@ -225,7 +225,7 @@ class Wolves extends Table {
         if($phase == NULL){
             return $phases;
         }
-        for($int i = 0b1; $i<0b1000; $i *= 2){
+        for($i = 0b1; $i<0b1000; $i *= 2){
             if($phase & $i > 0){
                 $phases[] = $i;
             }
@@ -950,10 +950,13 @@ class Wolves extends Table {
         The action method of state X is called everytime the current game state is set to X.    */
 
     function stDraftResolution(): void {
-
         $wolvesDrafted = self::getUniqueValueFromDB(
             "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL");
         $draftCompleted = $wolvesDrafted >= 2 * self::getPlayersNumber();
+
+        if ($wolvesDrafted > 0 && !$draftCompleted) {
+            $this->activeNextPlayer();
+        }
 
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
