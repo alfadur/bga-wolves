@@ -924,7 +924,6 @@ class Wolves extends Table {
     function endTurn(){
         self::checkAction('endTurn');
         $this->gamestate->nextState(TR_CONFIRM_END);
-        
     }
 
 //////////////////////////////////////////////////////////////////////////////

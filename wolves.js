@@ -327,6 +327,13 @@ function (dojo, declare) {
                         break;
                     case "clientSelectMoveTarget":
                         break;
+                    case "confirmEnd":
+                        if (this.isCurrentPlayerActive()) {
+                            if (!$("button_end")) {
+                                this.addActionButton("button_end", _("End turn"), "onEndTurn", null, null, 'red');
+                            }
+                        }
+                        break;
                 }
             }
         },        
@@ -442,6 +449,11 @@ function (dojo, declare) {
             dojo.stopEvent(event);
             console.log("cancelled");
             this.cancelLocalStateEffects()
+        },
+
+        onEndTurn(event) {
+            dojo.stopEvent(event);
+            this.ajaxcall("/wolves/wolves/endTurn.html", {lock: true});
         },
 
         ///////////////////////////////////////////////////

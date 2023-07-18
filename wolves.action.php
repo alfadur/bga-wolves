@@ -101,6 +101,12 @@ class action_wolves extends APP_GameAction {
         $this->game->dominate($wolfId, $path, $targetId, $denType);
         self::ajaxResponse();
     }
+
+    function endTurn(){
+        self::setAjaxMode();
+        $this->game->endTurn();
+        self::ajaxResponse();
+    }
 }
   
 
