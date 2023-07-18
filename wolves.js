@@ -24,23 +24,23 @@ const PieceKind = Object.freeze({
     Lone: 4,
     Prey: 5,
 
-    is_movable(kind) {
+    isMovable(kind) {
+        kind = parseInt(kind);
         return kind === this.Pack || kind === this.Alpha;
     }
 });
 
+const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
+    .map(([x, y]) => Object.freeze({x, y})));
 
-const hexDirections = [[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
-    .map(([x, y]) => ({x, y}));
-
-const action_names = ['move', 'howl', 'den', 'lair', 'dominate'] 
-const action_costs = {
-    'move': 1,
-    'howl': 2,
-    'den': 2,
-    'lair': 2,
-    'dominate': 3
-}
+const actioNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
+const actionCosts = Object.freeze({
+    move: 1,
+    howl: 2,
+    den: 2,
+    lair: 2,
+    dominate: 3
+});
 
 class Queue {
     values = [];
@@ -116,7 +116,7 @@ function collectPaths(from, range) {
 function prepareMoveSelection(playerId, pieces) {
     for (const pieceId in pieces) {
         const piece = pieces[pieceId];
-        if (piece.owner === playerId && PieceKind.is_movable(piece.kind)) {
+        if (piece.owner === playerId && PieceKind.isMovable(piece.kind)) {
             const node = getPieceNode(pieceId);
             node.classList.add("wolves-selectable");
         }
@@ -126,12 +126,16 @@ function prepareMoveSelection(playerId, pieces) {
 let paths = [];
 
 function selectWolf(id) {
+    id = parseInt(id);
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
-        if (!paths[id]) {
-            paths[id] = collectPaths();
+        if (!(id in paths)) {
+            paths[id] = collectPaths({
+                x: parseInt(sourceHex.dataset.x),
+                y: parseInt(sourceHex.dataset.y),
+            }, 4);
         }
-        paths[i].forEach(path => {
+        paths[id].forEach(path => {
             const hex = getHexNode(path.hex);
             hex.classList.add("wolves-passable");
         })
@@ -211,9 +215,8 @@ function (dojo, declare) {
 
             document.querySelectorAll(".wolves-hex").forEach(hex => {
                 if (!hex.classList.contains("wolves-hex-water")) {
-                    const match = hex.id.match(/wolves-hex-(\d+)-(\d+)/);
-                    const x = parseInt(match[1]);
-                    const y = parseInt(match[2]);
+                    const x = parseInt(hex.dataset.x);
+                    const y = parseInt(hex.dataset.y);
                     dojo.connect(hex, "onclick", e => {
                         dojo.stopEvent(e);
                         this.onHexClick(x, y)
@@ -348,24 +351,27 @@ function (dojo, declare) {
 
         onHexClick(x, y) {
             console.log(`Click hex(${x}, ${y})`);
-            if (this.checkAction("draftPlace")) {
-                this.ajaxcall("/wolves/wolves/draftPlace.html", {
-                    lock: true,
-                    x: x,
-                    y: y
-                }, this, () => {
-                    console.log("draftPlace completed")
-                });
-            } else if (this.checkAction("moveSelection")) {
-                const hex = getHexNode({x, y});
+            const hex = getHexNode({x, y});
 
-                if (hex.classList.contains("wolves-passable")) {
-                    clearTag("wolves-passable");
+            if (hex.classList.contains("wolves-passable")) {
+                if (this.checkAction("clientMove")) {
                     console.log(`Moving to (${x}, ${y})`);
+
+                    clearTag("wolves-passable");
                     this.ajaxcall("/wolves/wolves/move.html", {
                         lock: true,
-                        path: this.clientStateArgs.action_id
+                        wolfId: this.selectedPiece,
+                        path: paths[this.selectedPiece]
+                            .filter(({hex}) => hex.x === x && hex.y === y)[0].path
                     });
+                }
+            } else {
+                if (this.checkAction("draftPlace")) {
+                    this.ajaxcall("/wolves/wolves/draftPlace.html", {
+                        lock: true,
+                        x: x,
+                        y: y
+                    }, this, () => { console.log("draftPlace completed") });
                 }
             }
         },
@@ -373,11 +379,12 @@ function (dojo, declare) {
         onPieceClick(id) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
-            if (piece.classList.contains("wolves-selectable") && selectWolf(id))
-            {
+            if (piece.classList.contains("wolves-selectable") && selectWolf(id)) {
+                this.selectedPiece = id;
                 this.setClientState("clientSelectMoveTarget", {
-                    descriptionmyturn: _("${you} must select the destination hex")
-                })
+                    descriptionmyturn: _("${you} must select the destination hex"),
+                    possibleactions: ["clientMove"]
+                });
                 return true;
             }
             return false;
@@ -390,11 +397,11 @@ function (dojo, declare) {
 
             console.log(`Submitting action (${action})`);
             this.clientStateArgs = {
-                action_id: action_names.indexOf(action),
+                action_id: actioNames.indexOf(action),
                 tiles: []
             };
             this.setClientState("client_selectTiles", {
-                descriptionmyturn: _(`\${you} must select ${action_costs[action_names[this.clientStateArgs.action_id]]} matching tiles`)
+                descriptionmyturn: _(`\${you} must select ${actionCosts[actioNames[this.clientStateArgs.action_id]]} matching tiles`)
             });
         },
 
@@ -411,7 +418,7 @@ function (dojo, declare) {
                 this.clientStateArgs.tiles.push(tile);
             }
 
-            const requiredTiles = action_costs[action_names[this.clientStateArgs.action_id]];
+            const requiredTiles = actionCosts[actioNames[this.clientStateArgs.action_id]];
             
             console.log(this.clientStateArgs.tiles.join(','));
             if (this.clientStateArgs.tiles.length === requiredTiles) {

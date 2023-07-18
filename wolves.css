@@ -154,5 +154,5 @@
 }
 
 .wolves-selectable:hover, .wolves-passable:hover {
-    background-color: blueviolet;
+    background-color: blueviolet !important;
 }

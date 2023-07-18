@@ -106,7 +106,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must select a howl target'),
         'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
         'type' => 'activeplayer',
-        'availableactions' => ['howl'],
+        'possibleactions' => ['howl'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -116,7 +116,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
         'type' => 'activeplayer',
         'args' => 'argsMove',
-        'availableactions' => ['move'],
+        'possibleactions' => ['move'],
         'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_DISPLACE => ST_DISPLACE, TR_END_MOVE => ST_POST_ACTION]
     ],
 
@@ -126,7 +126,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must displace ${displacedPlayer}\'s 🐺'),
         'type' => 'activeplayer',
         'args' => 'argDisplaceSelection',
-        'availableactions' => ['displace'],
+        'possibleactions' => ['displace'],
         'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -135,7 +135,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must place a den'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
         'type' => 'activeplayer',
-        'availableactions' => ['den'],
+        'possibleactions' => ['den'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -144,7 +144,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must upgrade a den to a lair'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
-        'availableactions' => ['lair'],
+        'possibleactions' => ['lair'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION, TR_DISPLACE => ST_DISPLACE]
     ],
 
@@ -153,7 +153,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must dominate one enemy piece'),
         'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
         'type' => 'activeplayer',
-        'availableactions' => ['dominate'],
+        'possibleactions' => ['dominate'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -172,7 +172,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must end their turn'),
         'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tiles, or end your turn'),
         'type' => 'activeplayer',
-        'availableactions' => ['extraTurn', 'endTurn'],
+        'possibleactions' => ['extraTurn', 'endTurn'],
         'transitions' => [TR_CONFIRM_END => ST_NEXT_TURN, TR_SELECT_ACTION => ST_ACTION_SELECTION]
     ],
 

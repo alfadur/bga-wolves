@@ -4,7 +4,7 @@
     <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
 <!-- END region -->
 <!-- BEGIN hex -->
-    <div id="wolves-hex-{X}-{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px"></div>
+    <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px"></div>
 <!-- END hex -->
 </div>
 <div id="player-board">
