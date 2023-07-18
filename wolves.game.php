@@ -31,7 +31,8 @@ class Wolves extends Table {
             G_MOVES_REMAINING => 12,
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
-            G_DISPLACEMENT_STATE => 15
+            G_DISPLACEMENT_STATE => 15,
+            G_MOON_PHASE => 16
         ]);
     }
 
@@ -104,6 +105,7 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_MOVED_WOLVES, -1);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
         self::setGameStateInitialValue(G_DISPLACEMENT_STATE, -1);
+        self::setGameStateInitialValue(G_MOON_PHASE, 0);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -118,6 +120,9 @@ class Wolves extends Table {
         $region_palettes = array_map(null, range(1, count(REGION_PALETTES)), REGION_PALETTES);
         shuffle($region_palettes);
 
+        $moonPhases = START_MOON_PHASES[$player_count];
+
+        $phase_num = 0;
         $region_id = 1;
         foreach (BOARD_SETUP[$player_count] as $tile) {
             $center = $tile['center'];
@@ -126,18 +131,20 @@ class Wolves extends Table {
                 [array_shift($region_palettes), $region_hexes];
             $rotate = (int)array_key_exists('rotate', $tile);
             $scale = $rotate ? -1 : 1;
-            $region_values[] = "($tile_index, $center[0], $center[1], $rotate)";
+            $phase = array_key_exists('chasm', $tile) ? M_NONE : $moonPhases[$phase_num++];
+            $region_values[] = "($tile_index, $center[0], $center[1], $rotate, $phase)";
             foreach ($hexes as [$coord, $palette_index]) {
                 $x = $center[0] + $coord[0] * $scale;
                 $y = $center[1] + $coord[1] * $scale;
                 $type = $palette[$palette_index];
+                
                 $land_values[] = "($x, $y, $type, $region_id)";
             }
             ++$region_id;
         }
 
         $args = implode(', ', $region_values);
-        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated) VALUES $args");
+        self::DbQuery("INSERT INTO regions (tile_number, canter_x, center_y, rotated, moon_phase) VALUES $args");
         $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
     }
@@ -371,6 +378,25 @@ class Wolves extends Table {
             default:
                 return NULL;
         }
+    }
+
+    function getRegionPresence(int $regionId): array {
+        $lair = P_LAIR;
+        $den = P_DEN;
+        $alpha = P_ALPHA;
+        $pack = P_PACK;
+        //TODO: Ensure this query works
+        $query = <<<EOF
+                    SELECT p.owner as owner, 
+                    ((COUNT(CASE WHEN p.kind=$lair THEN 1 END) * 3) + COUNT(CASE WHEN p.kind=$den OR p.kind=$pack OR p.kind=$alpha THEN 1 END)) as score,
+                    COUNT(CASE WHEN p.kind=$alpha THEN 1 END) as alphas
+                    FROM land l
+                    NATURAL LEFT JOIN pieces p
+                    WHERE l.region_id=$regionId
+                    GROUP BY p.owner
+                    ORDER BY score, alphas
+                    EOF;
+        return self::getObjectListFromDB($query);
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -682,11 +708,15 @@ class Wolves extends Table {
 
         $award = $this->getDenAwards($playerId, $denType);
         $rewardString = "";
-        if($award === AW_TERRAIN){
-            $rewardString = ", terrain_tokens=terrain_tokens + 1";
-        }
-        else if($award === AW_TURN){
-            $rewardString = ", turn_tokens=turn_tokens + 1";
+        switch($award){
+            case AW_TERRAIN:
+                $rewardString = ", terrain_tokens=terrain_tokens + 1";
+                break;
+            case AW_TURN:
+                $rewardString = ", turn_tokens=turn_tokens + 1";
+                break;
+            default:
+                break;
         }
         self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
 
@@ -842,11 +872,15 @@ class Wolves extends Table {
 
             $award = $this->getDenAwards($playerId, $denType);
             $rewardString = "";
-            if($award === AW_TERRAIN){
-                $rewardString = ", terrain_tokens=terrain_tokens + 1";
-            }
-            else if($award === AW_TURN){
-                $rewardString = ", turn_tokens=turn_tokens + 1";
+            switch($award){
+                case AW_TERRAIN:
+                    $rewardString = ", terrain_tokens=terrain_tokens + 1";
+                    break;
+                case AW_TURN:
+                    $rewardString = ", turn_tokens=turn_tokens + 1";
+                    break;
+                default:
+                    break;
             }
 
             self::DbQuery("UPDATE player_status SET $denName=$denName + 1$rewardString WHERE player_id=$playerId");
@@ -916,9 +950,109 @@ class Wolves extends Table {
     }
 
     function stNextTurn(): void {
-        $this->activeNextPlayer();
-        $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
-        $this->gamestate->nextState(TR_START_TURN);
+
+        //Scoring
+        $numPlayers = self::getPlayersNumber();
+        $currentDate = self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
+        $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
+        $phaseDate = PHASES[$currentPhase];
+
+        if($currentDate >= $phaseDate){
+            $this->incGameStateValue(G_MOON_PHASE, 1);
+
+            //Determine condition for region
+            $condition = "";
+            switch($currentPhase){
+                case 0:
+                    $crescentPhase = M_CRESCENT;
+                    $additionalPhase = M_CRES_QUARTER;
+                    $condition = "moon_phase=$crescentPhase OR moon_phase=$additionalPhase";
+                    break;
+                case 1:
+                    $quarterPhase = M_QUARTER;
+                    $additionalPhase = M_QUARTER_FULL;
+                    $condition = "moon_phase=$quarterPhase OR moon_phase=$additionalPhase";
+                    break;
+                case 2:
+                    $fullPhase = M_FULL;
+                    $condition = "moon_phase=$fullPhase";
+                    break;
+                default:
+                    $condition = "FALSE";
+                    break;
+            }
+
+            $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE $condition");
+            $score = ($currentPhase * 2) + 4;
+            $winners = [];
+            foreach($scoringRegions as $region){
+
+                //Gather region presence and sort based off most score, then most alphas
+                $presence = $this->getRegionPresence($region['region_id']);
+
+                //If no one is in the region, no one scores
+                if(count($presence) == 0){
+                    continue;
+                }
+                $cmp = function($a, $b) {
+                    if($a['score'] === $b['score']){
+                        return ($a['alphas'] > $b['alphas']) ? -1 : 1;
+                    }
+                    return ($a['score'] > $b['score']) ? -1 : 1;
+                };
+                usort($presence, $cmp);
+
+                //Determine who won
+
+                //At least 2 people in region
+                if(count($presence) > 1){
+
+                    //Determine how many players won first place
+                    $firstWinner = $presence[0];
+                    $winners = array_filter($presence, fn($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
+
+                    //multiple winners, no second place, and everyone gets half score
+                    if(count($winners) > 1){
+                        foreach($winners as $winner){
+                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id=$winner");
+                        }
+                    }
+                    //If one winner, maybe second place?
+                    else{
+
+                        //Set first player points/score token
+                        self::DbQuery("UPDATE player SET score=score+$score WHERE player_id={$presence[0]['owner']}");
+                        self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ({$presence[0]['owner']}, $currentPhase)");
+
+                        //Only 2 people in region, second place is guarenteed
+                        if(count($presence) === 2){
+                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id={$presence[1]['owner']}");
+                        }
+                        //Otherwise, there can only be one player who wins second place
+                        else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
+                            self::DbQuery("UPDATE player SET score=score+{$score/2} WHERE player_id={$presence[1]['owner']}");
+                        }
+                    }
+                }
+                //Only 1 person with presence in region, so they win first place
+                else{
+                    $winner = $presence[0]['owner'];
+                    self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$winner");
+                    self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
+                }
+                
+            }
+        }
+
+        //Determine if the game should end
+        if($currentPhase == 2){
+            $this->gamestate->nextState(TR_END_GAME);
+        }
+        else{
+            $this->activeNextPlayer();
+            $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
+            $this->gamestate->nextState(TR_START_TURN);
+        }
     }
 
     function stPreActionSelection(): void {

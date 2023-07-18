@@ -82,7 +82,7 @@ $machinestates = [
         'description' => clienttranslate('Starting next turn'),
         'type' => 'game',
         'action' => 'stNextTurn',
-        'transitions' => [TR_START_TURN => ST_ACTION_SELECTION]
+        'transitions' => [TR_START_TURN => ST_ACTION_SELECTION, TR_END_GAME => ST_GAME_END]
     ],
 
     ST_ACTION_SELECTION => [

@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS `regions`(
     `center_x` TINYINT NOT NULL,
     `center_y` TINYINT NOT NULL,
     `rotated` TINYINT NOT NULL,
+    `moon_phase` TINYINT NOT NULL,
     PRIMARY KEY (`region_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;
 

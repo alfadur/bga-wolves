@@ -36,17 +36,13 @@ const P_LAIR = 3;
 const P_LONE = 4;
 const P_PREY = 5;
 
-const M_NONE = 0;
-const M_QUARTER = 1;
-const M_HALF = 2;
-const M_FULL = 3;
-
 const G_SELECTED_TERRAIN = 'selected_terrain';
 const G_ACTIONS_REMAINING = 'actions_remaining';
 const G_MOVES_REMAINING = 'moves_remaining';
 const G_MOVED_WOLVES = 'moved_wolves';
 const G_DISPLACEMENT_WOLF = 'displacement_wolf';
 const G_DISPLACEMENT_STATE = 'displacement_state';
+const G_MOON_PHASE = 'moon_phase';
 
 const TR_DRAFT_CONTINUE = 'draftContinue';
 const TR_DRAFT_END = 'draftEnd';
@@ -255,4 +251,63 @@ const FULL_DATES = [
     3 => 22,
     4 => 26,
     5 => 30
+];
+
+const PHASES = [
+    CRESCENT_DATES,
+    HALF_DATES,
+    FULL_DATES
+];
+
+const M_NONE = 0;
+const M_CRESCENT = 1;
+const M_QUARTER = 2;
+const M_FULL = 3;
+const M_CRES_QUARTER = 4;
+const M_QUARTER_FULL = 5;
+
+const START_MOON_PHASES = [
+    2 => [
+        M_CRESCENT,
+        M_FULL,
+        M_FULL,
+        M_CRES_HALF,
+        M_HALF_FULL
+    ],
+    3 => [
+        M_CRESCENT,
+        M_CRESCENT,
+        M_QUARTER,
+        M_QUARTER,
+        M_FULL,
+        M_FULL
+    ],
+    4 => [
+        M_CRESCENT,
+        M_CRESCENT,
+        M_QUARTER,
+        M_QUARTER,
+        M_QUARTER,
+        M_FULL,
+        M_FULL,
+        M_FULL
+    ],
+    5 => [
+        M_CRESCENT,
+        M_CRESCENT,
+        M_CRESCENT,
+        M_QUARTER,
+        M_QUARTER,
+        M_QUARTER,
+        M_QUARTER,
+        M_FULL,
+        M_FULL,
+        M_FULL
+    ]
+];
+
+const MOON_SCORES = [
+    [4, 2],
+    [6, 3],
+    [8, 4]
 ];
