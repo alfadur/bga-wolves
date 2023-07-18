@@ -64,6 +64,7 @@ const TR_SELECT_ACTION = 'selectAction';
 const TR_CONFIRM_END = 'confirmEnd';
 const TR_NEXT_TURN = 'nextTurn';
 const TR_START_TURN = 'startTurn';
+const TR_END_GAME = 'endGame';
 
 const BOARD_SETUP = [
     2 => [
@@ -307,7 +308,5 @@ const START_MOON_PHASES = [
 ];
 
 const MOON_SCORES = [
-    [4, 2],
-    [6, 3],
-    [8, 4]
+    4, 6, 8
 ];
