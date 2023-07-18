@@ -15,6 +15,21 @@
  *
  */
 
+
+const PieceKind = Object.freeze({
+    Alpha: 0,
+    Pack: 1,
+    Den: 2,
+    Lair: 3,
+    Lone: 4,
+    Prey: 5,
+
+    is_movable(kind) {
+        return kind === this.Pack || kind === this.Alpha;
+    }
+});
+
+
 const hexDirections = [[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
     .map(([x, y]) => ({x, y}));
 
@@ -36,12 +51,35 @@ class Queue {
     dequeue() { return this.isEmpty() ? undefined : this.values[this.offset++]; }
 }
 
+function clearTag(className) {
+    const selector = `.${className}`;
+    document.querySelectorAll(selector).forEach(node => {
+        node.classList.remove(className);
+    });
+}
+
+function getHexNode(hex) {
+    return document.getElementById(`wolves-hex-${hex.x}-${hex.y}`);
+}
+
+function getPieceNode(id) {
+    return document.getElementById(`wolves-piece-${id}`);
+}
+
+function getPieceHexNode(id) {
+    const node = document.getElementById(`wolves-piece-${id}`);
+    if (node) {
+        return node.parentNode;
+    }
+}
+
 function hexAdd(hex1, hex2) {
     return {
         x: hex1.x + hex2.x,
         y: hex1.y + hex2.y
     };
 }
+
 function hexDistance(from, to) {
     return Math.round(Math.abs(to.x - from.x) + Math.abs(to.y - from.y) + Math.abs(to.x - to.y - from.x + from.y)) / 2;
 }
@@ -62,7 +100,7 @@ function collectPaths(from, range) {
                 const value = JSON.stringify(newHex);
 
                 if (!visited.has(value)) {
-                    const node = document.getElementById(`wolves-hex-${newHex.x}-${newHex.y}`);
+                    const node = getHexNode(newHex);
 
                     if (node && !node.classList.contains("wolves-hex-water")) {
                         queue.enqueue({hex: newHex, path: [...path, index]});
@@ -75,6 +113,49 @@ function collectPaths(from, range) {
 
     return queue.values.slice(1);
 }
+function prepareMoveSelection(playerId, pieces) {
+    const wolves = pieces.filter(p => p.owner === playerId && PieceKind.is_movable(p.kind));
+    wolves.forEach(wolf => {
+        const node = getPieceNode(wolf.id);
+        node.classList.add("wolves-selectable");
+    });
+}
+
+let paths = [];
+
+function selectWolf(id) {
+    const sourceHex = getPieceHexNode(id);
+    if (sourceHex) {
+        if (!paths[id]) {
+            paths[id] = collectPaths();
+        }
+        paths[i].forEach(path => {
+            const hex = getHexNode(path.hex);
+            hex.classList.add("wolves-passable");
+        })
+        clearTag("wolves-selectable");
+        return true;
+    }
+    return false;
+}
+
+function addPiece(piece, color, templater) {
+    const node = getHexNode(piece);
+    if (node) {
+        let locationClass = "";
+        if (node.children.length > 0) {
+            node.children[0].classList.add(".wolves-hex-item-top ");
+            locationClass = "wolves-hex-item-bottom";
+        }
+        return templater(node, "jstpl_hex_content", {
+            x: piece.x,
+            y: piece.y,
+            color,
+            kind: piece.kind,
+            locationClass
+        });
+    }
+}
 
 define([
     "dojo","dojo/_base/declare",
@@ -83,9 +164,9 @@ define([
 ],
 function (dojo, declare) {
     return declare("bgagame.wolves", ebg.core.gamegui, {
-        constructor: function() {
+        constructor() {
             console.log('wolves constructor');
-              
+
             // Here, you can init the global variables of your user interface
             // Example:
             // this.myGlobalValue = 0;
@@ -104,10 +185,12 @@ function (dojo, declare) {
             "gamedatas" argument contains all datas retrieved by your "getAllDatas" PHP method.
         */
         
-        setup: function(gameData) {
+        setup(gameData) {
             console.log( "Starting game setup" );
+            this.templater = function(node, template, args) {
+                return dojo.place(this.format_block(template, args), node);
+            }.bind(this)
 
-            this.players = gameData.players;
             // Setting up player boards
             for (const player_id in this.players) {
                 const player = gameData.players[player_id];
@@ -115,17 +198,12 @@ function (dojo, declare) {
                 // TODO: Setting up players boards if needed
             }
 
-            for (const piece_id in gameData.pieces) {
-                const piece = gameData.pieces[piece_id];
+            gameData.pieces.forEach(piece => {
                 const color = typeof piece.owner === "string" ?
-                    this.players[piece.owner].color : "000";
+                    gameData[piece.owner].color : "000";
 
-                this.piece_template({
-                    x: piece.x,
-                    y: piece.y,
-                    color: color
-                });
-            }
+                this.addPiece(piece, color, this.templater);
+            })
 
             document.querySelectorAll(".wolves-hex").forEach(hex => {
                 if (!hex.classList.contains("wolves-hex-water")) {
@@ -163,7 +241,17 @@ function (dojo, declare) {
 
             console.log( "Ending game setup" );
         },
-       
+
+        addPiece(piece, color, templater) {
+            const node = addPiece(piece, color, templater);
+            if (node) {
+                dojo.connect(node, "onclick", e => {
+                    if (this.onPieceClick(piece.id)) {
+                        dojo.stopEvent(e);
+                    }
+                });
+            }
+        },
 
         ///////////////////////////////////////////////////
         //// Game & client states
@@ -171,26 +259,15 @@ function (dojo, declare) {
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
-        onEnteringState: function( stateName, args )
-        {
-            console.log( 'Entering state: '+stateName );
-            console.log(`Got args: ${JSON.stringify(args)}`)
+        onEnteringState(stateName, args) {
+            console.log("Entering state: " + stateName );
+            console.log(`Got args: ${JSON.stringify(args)}`);
             
-            switch( stateName )
-            {
-            
-            /* Example:
-            
-            case 'myGameState':
-            
-                // Show some HTML block at this game state
-                dojo.style( 'my_html_block_id', 'display', 'block' );
-                
-                break;
-           */
-           
-           
-            case 'dummmy':
+            switch(stateName) {
+            case "moveSelection":
+                if (this.isCurrentPlayerActive()) {
+                    prepareMoveSelection(this.getActivePlayerId(), this.gamedatas.pieces);
+                }
                 break;
             }
         },
@@ -198,42 +275,24 @@ function (dojo, declare) {
         // onLeavingState: this method is called each time we are leaving a game state.
         //                 You can use this method to perform some user interface changes at this moment.
         //
-        onLeavingState: function( stateName )
-        {
-            console.log( 'Leaving state: '+stateName );
+        onLeavingState(stateName) {
+            console.log(`Leaving state: ${stateName}`);
             
-            switch( stateName )
-            {
-            
-            /* Example:
-            
-            case 'myGameState':
-            
-                // Hide the HTML block we are displaying only during this game state
-                dojo.style( 'my_html_block_id', 'display', 'none' );
-                
-                break;
-           */
-           
-           
-            case 'dummmy':
-                break;
+            switch (stateName) {
+
             }               
         }, 
 
         // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
         //                        action status bar (ie: the HTML links in the status bar).
         //        
-        onUpdateActionButtons: function( stateName, args )
-        {
+        onUpdateActionButtons(stateName, args) {
             console.log( 'onUpdateActionButtons: '+stateName );
                       
-            if( this.isCurrentPlayerActive() )
-            {            
-                switch( stateName )
-                {
+            if (this.isCurrentPlayerActive()) {
+                switch (stateName) {
                     case "actionSelection":
-                        if(this.isCurrentPlayerActive()){
+                        if (this.isCurrentPlayerActive()) {
                             const buttons = {
                                 move: "🐾 Move",
                                 howl: "🌕 Howl",
@@ -252,25 +311,15 @@ function (dojo, declare) {
                         }
                         break;
 
-                    case "client_selectTiles":
-                        if(this.isCurrentPlayerActive()){
-                            if(!$("button_cancel")){
+                    case "clientSelectTiles":
+                        if (this.isCurrentPlayerActive()) {
+                            if (!$("button_cancel")) {
                                 this.addActionButton('button_cancel', _('Cancel'), "onCancel", null, null, 'red');
                             }
                         }
                         break;
-/*               
-                 Example:
- 
-                 case 'myGameState':
-                    
-                    // Add 3 action buttons in the action status bar:
-                    
-                    this.addActionButton( 'button_1_id', _('Button 1 label'), 'onMyMethodToCall1' ); 
-                    this.addActionButton( 'button_2_id', _('Button 2 label'), 'onMyMethodToCall2' ); 
-                    this.addActionButton( 'button_3_id', _('Button 3 label'), 'onMyMethodToCall3' ); 
-                    break;
-*/
+                    case "clientSelectMoveTarget":
+                        break;
                 }
             }
         },        
@@ -285,75 +334,83 @@ function (dojo, declare) {
         
         */
 
-        cancelLocalStateEffects: function(){
+        cancelLocalStateEffects() {
             this.clientStateArgs = {};
             this.restoreServerGameState();
         },
 
-
         ///////////////////////////////////////////////////
         //// Player's action
-        
-        /*
-        
-            Here, you are defining methods to handle player's action (ex: results of mouse click on 
-            game objects).
-            
-            Most of the time, these methods:
-            _ check the action is possible at this game state.
-            _ make a call to the game server
-        
-        */
 
-        onHexClick: function(x, y) {
-            console.log("Click (" + x + ", " + y + ")");
-            if (!this.checkAction("draftPlace")) {
-                return;
+        onHexClick(x, y) {
+            console.log(`Click hex(${x}, ${y})`);
+            if (this.checkAction("draftPlace")) {
+                this.ajaxcall("/wolves/wolves/draftPlace.html", {
+                    lock: true,
+                    x: x,
+                    y: y
+                }, this, () => {
+                    console.log("draftPlace completed")
+                });
+            } else if (this.checkAction("moveSelection")) {
+                const hex = getHexNode({x, y});
+
+                if (hex.classList.contains("wolves-passable")) {
+                    clearTag("wolves-passable");
+                    console.log(`Moving to (${x}, ${y})`);
+                    this.ajaxcall("/wolves/wolves/move.html", {
+                        lock: true,
+                        path: this.clientStateArgs.action_id
+                    });
+                }
             }
-
-            this.ajaxcall("/wolves/wolves/draftPlace.html", {
-                lock: true,
-                x: x,
-                y: y
-            }, this, () => {
-                console.log("draftPlace completed")
-            });
         },
 
-        onSelectAction: function(action) {
-            
+        onPieceClick(id) {
+            console.log(`Click piece(${id})`);
+            const piece = getPieceNode(id);
+            if (piece.classList.contains("wolves-selectable") && selectWolf(id))
+            {
+                this.setClientState("clientSelectMoveTarget", {
+                    descriptionmyturn: _("${you} must select the destination hex")
+                })
+                return true;
+            }
+            return false;
+        },
+
+        onSelectAction(action) {
             if(!this.checkAction("selectAction")){
                 return;
             }
 
             console.log(`Submitting action (${action})`);
-            this.clientStateArgs = {};
-            this.clientStateArgs.action_id = action_names.indexOf(action);
-            this.clientStateArgs.tiles = [];
+            this.clientStateArgs = {
+                action_id: action_names.indexOf(action),
+                tiles: []
+            };
             this.setClientState("client_selectTiles", {
                 descriptionmyturn: _(`\${you} must select ${action_costs[action_names[this.clientStateArgs.action_id]]} matching tiles`)
             });
         },
 
-        onSelectTile: function(tile) {
-
+        onSelectTile(tile) {
             console.log("tile click");
-            console.log(JSON.stringify(this.clientStateArgs))
-            if(this.clientStateArgs.action_id === undefined){
+            console.log(JSON.stringify(this.clientStateArgs));
+            if (this.clientStateArgs.action_id === undefined) {
                 return;
             }
             console.log(`Clicked tile (${tile})`);
-            if(this.clientStateArgs.tiles.includes(tile)){
+            if (this.clientStateArgs.tiles.includes(tile)) {
                 this.clientStateArgs.tiles.splice(this.clientStateArgs.tiles.indexOf(tile), 1);
-            }
-            else{
+            } else {
                 this.clientStateArgs.tiles.push(tile);
             }
 
             const requiredTiles = action_costs[action_names[this.clientStateArgs.action_id]];
             
             console.log(this.clientStateArgs.tiles.join(','));
-            if(this.clientStateArgs.tiles.length === requiredTiles){
+            if (this.clientStateArgs.tiles.length === requiredTiles) {
                 console.log(this.clientStateArgs);
                 this.ajaxcall("/wolves/wolves/selectAction.html", {
                     lock: true,
@@ -363,15 +420,14 @@ function (dojo, declare) {
 
                 });
                 this.clientStateArgs = {};
-            }
-            else{
-                this.setClientState("client_selectTiles", {
+            } else {
+                this.setClientState("clientSelectTiles", {
                     descriptionmyturn: _(`\${you} must select ${requiredTiles - this.clientStateArgs.tiles.length} matching tiles`)
-                })
+                });
             }
         },
 
-        onCancel: function(event) {
+        onCancel(event) {
             dojo.stopEvent(event);
             console.log("cancelled");
             this.cancelLocalStateEffects()
@@ -389,28 +445,23 @@ function (dojo, declare) {
                   your wolves.game.php file.
         
         */
-        setupNotifications: function() {
+        setupNotifications() {
             console.log( 'notifications subscriptions setup' );
-            dojo.subscribe("draft", this, "notif_draft");
+            dojo.subscribe("draft", this, "onDraftNotify");
             this.notifqueue.setSynchronous("draft", 100);
         },
 
-        notif_draft: function(data) {
+        onDraftNotify(data) {
             console.log("Draft notification:");
             console.log(data);
-            const args = data.args;
-            this.piece_template({
-                x: args.x,
-                y: args.y,
-                color: this.players[args.player_id].color
+            const {player_id: playerId, x, y, ids, kinds} = data.args;
+
+            ids.forEach((id, index) => {
+                this.addPiece(
+                    {x, y, id, kind: kinds[index]},
+                    this.gamedatas.players[playerId].color,
+                    this.templater);
             });
         },
-
-        piece_template: function(data) {
-            console.log("Placing template:");
-            console.log(data);
-            const hex = document.querySelector("#wolves-hex-" + data.x + "-" + data.y);
-            dojo.place(this.format_block("jstpl_hex_content", data), hex);
-        }
    });             
 });

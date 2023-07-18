@@ -15,7 +15,7 @@
     </div>
 </div>
 <script type="text/javascript">
-const jstpl_hex_content = `<div id="wolves-hex-\${x}-\${y}-item" class="wolves-hex-item" style="background-color: #\${color}"></div>`
+const jstpl_hex_content = `<div id="wolves-piece-\${id}" class="wolves-hex-item wolves-piece-\${kind} \${locationClass}" style="background-color: #\${color}"></div>`
 </script>  
 
 {OVERALL_GAME_FOOTER}
