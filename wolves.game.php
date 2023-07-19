@@ -317,14 +317,14 @@ class Wolves extends Table {
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $wolf_ids = [];
         for($i = 0; $i<4; $i++){
-            $wolf_id = ($moved_wolves >> (8 * $i)) & 0xff;
+            $wolf_id = ($moved_wolves & (0xff << (8 * $i))) >> (8 * $i);
             if($wolf_id === 0xff){
                 continue;
             }
             $wolf_ids[] = $wolf_id;
         }
 
-        return array_map(fn($id) => self::getObjectFromDB("SELECT * FROM pieces WHERE id=$id"), $wolf_ids);
+        return $wolf_ids;
 
     }
 
@@ -522,7 +522,9 @@ class Wolves extends Table {
     function move(int $wolfId, array $path): void {
         self::checkAction('move');
 
-        if(in_array($wolfId, $this->getMovedWolves())){
+        $movedWolves = $this->getMovedWolves();
+        
+        if(in_array($wolfId, $movedWolves)){
             throw new BgaUserException(_('This wolf has already been moved this turn!'));
         }
 
@@ -579,6 +581,8 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         $this->addMovedWolf($wolf['id']);
+        $movedWolves = $this->getMovedWolves();
+        self::dump("moved_wolves", $movedWolves);
         $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];

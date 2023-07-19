@@ -65,6 +65,7 @@ const TR_CONFIRM_END = 'confirmEnd';
 const TR_NEXT_TURN = 'nextTurn';
 const TR_START_TURN = 'startTurn';
 const TR_END_GAME = 'endGame';
+const TR_SKIP = 'skip';
 
 const BOARD_SETUP = [
     2 => [
