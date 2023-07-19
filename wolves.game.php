@@ -674,6 +674,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
+        self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -810,7 +811,7 @@ class Wolves extends Table {
         
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
-        //TODO: add moonlight board call
+        self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($denValue, $playerId)");
 
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
@@ -916,7 +917,7 @@ class Wolves extends Table {
             self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$wolfType WHERE id=$targetId");
         }
 
-        //TODO: add moonlight board logic
+       self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$wolf['owner']}, {$wolf['kind']}");
 
         $this->gamestate->nextState(TR_POST_ACTION);
 
