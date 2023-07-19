@@ -337,7 +337,7 @@ class Wolves extends Table {
         foreach ($tileIndices as $tileIndex) {
             $nextTerrain = $tileIndex < TILE_TERRAIN_TYPES ?
                 ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES :
-                self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
+                (int)self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
 
             self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
