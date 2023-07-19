@@ -81,7 +81,11 @@ function hexAdd(hex1, hex2) {
 }
 
 function hexDistance(from, to) {
-    return Math.round(Math.abs(to.x - from.x) + Math.abs(to.y - from.y) + Math.abs(to.x - to.y - from.x + from.y)) / 2;
+    const x1 = parseInt(from.x);
+    const y1 = parseInt(from.y);
+    const x2 = parseInt(to.x);
+    const y2 = parseInt(to.y);
+    return Math.round(Math.abs(x2 - x1) + Math.abs(y2 - y1) + Math.abs(x2 - y2 - x1 + y1)) / 2;
 }
 
 function collectPaths(from, range) {
@@ -125,7 +129,7 @@ function objectFilter(object, f) {
     for (const property in object) {
         const value = object[property];
         if (f(value, property)) {
-            result.push(object[p])
+            result.push(object[property])
         }
     }
     return result;
@@ -385,14 +389,21 @@ function (dojo, declare) {
 
             if (hex.classList.contains("wolves-selectable")) {
                 clearTag("wolves-selectable");
-                const wolfId = object.filter(this.gamedatas.pieces, p => hexDistance({x, y}, p) <= 2)[0].id;
+                const playerId = this.getActivePlayerId();
+
+                function isValidAlpha(wolf) {
+                    return wolf.owner === playerId
+                        && parseInt(wolf.kind) === PieceKind.Alpha
+                        && hexDistance(wolf, {x, y}) <= 2
+                }
+
+                const wolfId = objectFilter(this.gamedatas.pieces, isValidAlpha)[0].id;
                 if (this.checkAction("howl")) {
                     this.ajaxcall("/wolves/wolves/howl.html", {
                         lock: true, wolfId, x, y
                     }, this, () => { console.log("howl completed") });
                 }
-            }
-            if (hex.classList.contains("wolves-passable")) {
+            } else if (hex.classList.contains("wolves-passable")) {
                 if (this.checkAction("clientMove")) {
                     console.log(`Moving to (${x}, ${y})`);
 

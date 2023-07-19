@@ -671,7 +671,7 @@ class Wolves extends Table {
             EOF);
         $row = self::DbAffectedRow();
         self::trace("Last row: $row");
-        if ($row < 0) {
+        if ($row <= 0) {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
