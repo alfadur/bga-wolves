@@ -22,11 +22,11 @@ const A_DEN = 2;
 const A_LAIR = 3;
 const A_DOMINATE = 4;
 
-const T_DESERT = 0;
-const T_TUNDRA = 1;
+const T_FOREST = 0;
+const T_ROCK = 1;
 const T_GRASS = 2;
-const T_ROCK = 3;
-const T_FOREST = 4;
+const T_TUNDRA = 3;
+const T_DESERT = 4;
 const T_WATER = 5;
 
 const P_ALPHA = 0;
