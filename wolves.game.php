@@ -669,9 +669,8 @@ class Wolves extends Table {
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
               AND hex_in_range($x, ${wolf['x']}, $y, ${wolf['y']}, $maxRange)
             EOF);
-        $row = self::DbAffectedRow();
-        self::trace("Last row: $row");
-        if ($row <= 0) {
+
+        if (self::DbAffectedRow() <= 0) {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
