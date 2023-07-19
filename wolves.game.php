@@ -330,14 +330,16 @@ class Wolves extends Table {
 
     function flipTiles(int $playerId, array $tileIndices): int {
         $tiles = $this->getPlayerTiles($playerId);
+        self::dump("player_$playerId\_tiles", $tiles);
         $terrain = -1;
         $sets = [];
 
         foreach ($tileIndices as $tileIndex) {
             $nextTerrain = $tileIndex < TILE_TERRAIN_TYPES ?
-                ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES :
+                ($tileIndex - $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES :
                 self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
 
+            self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
@@ -581,8 +583,6 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         $this->addMovedWolf($wolf['id']);
-        $movedWolves = $this->getMovedWolves();
-        self::dump("moved_wolves", $movedWolves);
         $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
