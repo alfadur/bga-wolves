@@ -257,12 +257,12 @@ class Wolves extends Table {
         $kindCheck = is_int($kinds) ? "kind = $kinds" : 'kind IN (' . implode(', ', $kinds) . ')';
 
         $query = <<<EOF
-            SELECT pieces.x, pieces.y FROM pieces NATURAL JOIN land
-            WHERE land.x BETWEEN $xMin AND $xMax
-                AND land.y BETWEEN $yMin AND $yMax
+            SELECT x, y FROM pieces NATURAL JOIN land
+            WHERE x BETWEEN $xMin AND $xMax
+                AND y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
                 AND $kindCheck
-                AND (ABS(land.x - $x) + ABS(land.y - $y) + ABS(land.x - land.y - $x + $y)) / 2 <= $range
+                AND hex_in_range(x, $x, y, $y, $range)
             $playerCheck
             EOF;
         return self::getObjectListFromDb($query);
@@ -279,7 +279,7 @@ class Wolves extends Table {
             WHERE l.x BETWEEN $xMin AND $xMax
                 AND l.y BETWEEN $yMin AND $yMax
                 AND l.terrain = $terrain
-                AND (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - l.y - $x + $y)) / 2 <= $range
+                AND hex_in_range(l.x, $x, l.y, $y, $range)
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                 AND (p.kind IS NULL OR $kind != $pack OR p.kind != $pack OR p.owner = $player_id)
                 AND (p.kind IS NULL OR p.kind NOT IN ($kinds) OR p.owner = $player_id)
@@ -596,22 +596,17 @@ class Wolves extends Table {
     }
 
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
+            $water = T_WATER;
             $query = <<<EOF
-                        SELECT (ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - l.y - $x + $y))/2 as dist
-                        FROM land l
-                        LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-                        WHERE l.terrain <> 5
-                        AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
-                        AND (p.kind IS NULL OR p.owner = $playerId)
-                        ORDER BY ABS(l.x - $x) + ABS(l.y - $y) + ABS(l.x - l.y - $x + $y)
-                        LIMIT 1
-                        EOF;
-            $dist = self::getUniqueValueFromDB($query);
-            if($dist === NULL){
-                return -1;
-            }
-            return $dist;
-
+                SELECT hex_range(l.x, $x, l.y, $y) AS dist
+                FROM land l NATURAL LEFT JOIN pieces p
+                WHERE l.terrain <> $water
+                AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
+                AND (p.kind IS NULL OR p.owner = $playerId)
+                ORDER BY dist
+                LIMIT 1
+                EOF;
+            return self::getUniqueValueFromDB($query) ?? -1;
     }
 
     function displace(array $path): void {
@@ -649,17 +644,41 @@ class Wolves extends Table {
 
     }
 
-    function howl(int $wolfId, array $path): void {
+    function howl(int $wolfId, int $x, int $y): void {
         self::checkAction('howl');
         $playerId = self::getActivePlayerId();
-        $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
+        $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $deployedDens = self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
-        $max_range = HOWL_RANGE[$deployedDens];
+
+        ['dens' => $deployedDens, 'wolves' => $wolfIndex] = self::getObjectFromDB(<<<EOF
+            SELECT deployed_howl_dens AS dens, deployed_wolves AS wolves  
+            FROM player_status WHERE player_id=$playerId
+            EOF);
+
         if($wolf == NULL || $wolf['kind'] != P_ALPHA || $wolf['owner'] != $playerId){
             throw new BgaUserException(_('Invalid wolf!'));
         }
-        $finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
+
+        $lone = P_LONE;
+        $maxRange = HOWL_RANGE[$deployedDens];
+        $newKind = WOLF_DEPLOYMENT[$wolfIndex];
+
+        self::DbQuery(<<<EOF
+            UPDATE pieces NATURAL JOIN land
+            SET kind=$newKind, owner=$playerId
+            WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
+              AND hex_in_range($x, ${wolf['x']}, $y, ${wolf['y']}, $maxRange)
+            EOF);
+        $row = self::DbAffectedRow();
+        self::trace("Last row: $row");
+        if ($row < 0) {
+            throw new BgaUserException(_('Selected tile is invalid'));
+        }
+
+        self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
+        $this->gamestate->nextState(TR_POST_ACTION);
+
+        /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
             $lone_val = P_LONE;
             $wolfX = $wolf['x'];
             $wolfY = $wolf['y'];
@@ -669,17 +688,7 @@ class Wolves extends Table {
                 throw new BgaUserException(_('Selected tile is invalid'));
             }
         };
-        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
-
-        $wolfIndex = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-        
-        self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
-
-        $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
-
-        self::DbQuery("UPDATE pieces SET kind=$wolfType, owner=$playerId WHERE x=$x AND y=$y");
-
-        $this->gamestate->nextState(TR_POST_ACTION);
+        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);*/
     }
 
     function placeDen(int $wolfId, array $path, int $denType): void {
@@ -713,7 +722,7 @@ class Wolves extends Table {
                     WHERE (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
                     AND (p.kind IS NULL OR (p.owner <=> $playerId AND p.kind < $denValue))
                     AND l.terrain = $terrain_type
-                    AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= 1
+                    AND hex_in_range(l.x, $wolfX, l.y, $wolfY, 1)
                     AND l.x = $x AND l.y=$y
                     EOF;
         $validLand = self::getObjectFromDB($query);
@@ -784,7 +793,7 @@ class Wolves extends Table {
                     NATURAL LEFT JOIN pieces p
                     AND (p.owner <=> $playerId AND p.kind = $denValue)
                     AND l.terrain = $terrain_type
-                    AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= 1
+                    AND hex_in_range(l.x, $wolfX, l.y, $wolfY, 1)
                     AND l.x = $x AND l.y=$y
                     AND (SELECT COUNT(*) 
                         FROM land 
@@ -869,7 +878,7 @@ class Wolves extends Table {
                         WHERE l.x=$x AND l.y=$y
                         AND NOT (p.owner IS NULL OR p.owner <=> $playerId)
                         AND ((SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2 OR (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y GROUP BY owner) <> 1)
-                        AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= $max_range"
+                        AND hex_in_range(l.x, $wolfX, l.y, $wolfY, $max_range)
             EOF;
             $validLand = self::getObjectFromDB($query);
             if($validLand === NULL){

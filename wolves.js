@@ -113,36 +113,56 @@ function collectPaths(from, range) {
 
     return queue.values.slice(1);
 }
+
+function objectForEach(object, f) {
+    for (const property in object) {
+        f(object[property], property);
+    }
+}
+
+function objectFilter(object, f) {
+    const result = [];
+    for (const property in object) {
+        const value = object[property];
+        if (f(value, property)) {
+            result.push(object[p])
+        }
+    }
+    return result;
+}
+
+function prepareHowlSelection(playerId, pieces, range) {
+    const loneWolves = objectFilter(pieces, p => parseInt(p.kind) === PieceKind.Lone);
+    const alphaWolves = objectFilter(pieces, p => p.owner === playerId && parseInt(p.kind) === PieceKind.Alpha);
+    loneWolves
+        .filter(lone => alphaWolves.some(alpha => hexDistance(lone, alpha) <= range))
+        .forEach(wolf => getPieceHexNode(wolf.id).classList.add("wolves-selectable"));
+}
+
 function prepareMoveSelection(playerId, pieces) {
-    for (const pieceId in pieces) {
-        const piece = pieces[pieceId];
+    objectForEach(pieces, (piece, pieceId) => {
         if (piece.owner === playerId && PieceKind.isMovable(piece.kind)) {
             const node = getPieceNode(pieceId);
             node.classList.add("wolves-selectable");
         }
-    }
+    });
 }
-
-let paths = [];
 
 function selectWolf(id) {
     id = parseInt(id);
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
-        if (!(id in paths)) {
-            paths[id] = collectPaths({
-                x: parseInt(sourceHex.dataset.x),
-                y: parseInt(sourceHex.dataset.y),
-            }, 4);
-        }
-        paths[id].forEach(path => {
+        const paths = collectPaths({
+            x: parseInt(sourceHex.dataset.x),
+            y: parseInt(sourceHex.dataset.y),
+        }, 3);
+        paths.forEach(path => {
             const hex = getHexNode(path.hex);
             hex.classList.add("wolves-passable");
         })
         clearTag("wolves-selectable");
-        return true;
+        return paths;
     }
-    return false;
 }
 
 function addPiece(piece, color, templater) {
@@ -267,15 +287,18 @@ function (dojo, declare) {
         //                  You can use this method to perform some user interface changes at this moment.
         //
         onEnteringState(stateName, args) {
-            console.log("Entering state: " + stateName );
+            console.log(`Entering state: ${stateName}`);
             console.log(`Got args: ${JSON.stringify(args)}`);
-            
-            switch(stateName) {
-            case "moveSelection":
-                if (this.isCurrentPlayerActive()) {
-                    prepareMoveSelection(this.getActivePlayerId(), this.gamedatas.pieces);
+
+            if (this.isCurrentPlayerActive()) {
+                switch (stateName) {
+                    case "howlSelection":
+                        prepareHowlSelection(this.getActivePlayerId(), this.gamedatas.pieces, 2);
+                        break;
+                    case "moveSelection":
+                        prepareMoveSelection(this.getActivePlayerId(), this.gamedatas.pieces);
+                        break;
                 }
-                break;
             }
         },
 
@@ -360,6 +383,15 @@ function (dojo, declare) {
             console.log(`Click hex(${x}, ${y})`);
             const hex = getHexNode({x, y});
 
+            if (hex.classList.contains("wolves-selectable")) {
+                clearTag("wolves-selectable");
+                const wolfId = object.filter(this.gamedatas.pieces, p => hexDistance({x, y}, p) <= 2)[0].id;
+                if (this.checkAction("howl")) {
+                    this.ajaxcall("/wolves/wolves/howl.html", {
+                        lock: true, wolfId, x, y
+                    }, this, () => { console.log("howl completed") });
+                }
+            }
             if (hex.classList.contains("wolves-passable")) {
                 if (this.checkAction("clientMove")) {
                     console.log(`Moving to (${x}, ${y})`);
@@ -368,8 +400,7 @@ function (dojo, declare) {
                     this.ajaxcall("/wolves/wolves/move.html", {
                         lock: true,
                         wolfId: this.selectedPiece,
-                        path: paths[this.selectedPiece]
-                            .filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
+                        path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
                     });
                 }
             } else {
@@ -386,13 +417,16 @@ function (dojo, declare) {
         onPieceClick(id) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
-            if (piece.classList.contains("wolves-selectable") && selectWolf(id)) {
-                this.selectedPiece = id;
-                this.setClientState("clientSelectMoveTarget", {
-                    descriptionmyturn: _("${you} must select the destination hex"),
-                    possibleactions: ["clientMove"]
-                });
-                return true;
+            if (piece.classList.contains("wolves-selectable")) {
+                this.paths = selectWolf(id);
+                if (this.paths) {
+                    this.selectedPiece = id;
+                    this.setClientState("clientSelectMoveTarget", {
+                        descriptionmyturn: _("${you} must select the destination hex"),
+                        possibleactions: ["clientMove"]
+                    });
+                    return true;
+                }
             }
             return false;
         },

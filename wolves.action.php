@@ -55,8 +55,11 @@ class action_wolves extends APP_GameAction {
     function howl(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = explode(',', self::getArg('path', AT_numberlist, true));
-        $this->game->howl($wolfId, $path);
+        /*$path = explode(',', self::getArg('path', AT_numberlist, true));
+        $this->game->howl($wolfId, $path);*/
+        $x = self::getArg('x', AT_int, true);
+        $y = self::getArg('y', AT_int, true);
+        $this->game->howl($wolfId, $x, $y);
         self::ajaxResponse();
     }
 
