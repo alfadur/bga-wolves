@@ -36,6 +36,12 @@ const P_LAIR = 3;
 const P_LONE = 4;
 const P_PREY = 5;
 
+const PR_DEER = 0b1;
+const PR_HOG = 0b10;
+const PR_RACCOON = 0b100;
+const PR_HARE = 0b1000;
+const PR_MOOSE = 0b10000;
+
 const G_SELECTED_TERRAIN = 'selected_terrain';
 const G_ACTIONS_REMAINING = 'actions_remaining';
 const G_MOVES_REMAINING = 'moves_remaining';

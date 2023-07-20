@@ -416,6 +416,38 @@ class Wolves extends Table {
         return self::getObjectListFromDB($query);
     }
 
+    function doHunt(): void {
+        $preyType = P_PREY;
+        $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
+
+        foreach($preyTokens as ["x" => $x, "y" => $y, "prey_metadata" => $preyData]){
+            $args = [];
+            foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+                $newX = $x + $dx;
+                $newY = $y + $dy;
+                $args[] = "(x=$newX AND y=$newY)";
+            }
+
+            $condition = implode(" OR ", $args);
+
+            $query = <<<EOF
+                        SELECT p.owner as player_id
+                        FROM player_status s
+                        LEFT JOIN pieces p ON s.player_id = p.owner
+                        WHERE $condition
+                        AND s.prey_data & $preyData = 0
+                        GROUP BY p.owner, p.x, p.y
+                        HAVING COUNT(*) >= 3
+                        EOF;
+            
+            $playerPresence = self::getObjectListFromDB($query);
+
+            foreach($playerPresence as ["player_id" => $playerId]){
+                self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$playerId");
+            }
+        }
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
