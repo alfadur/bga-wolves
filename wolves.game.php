@@ -440,7 +440,7 @@ class Wolves extends Table {
                         AND s.prey_data & $preyData = 0
                         AND p.kind IN ($preyKind, $alphaKind)
                         GROUP BY p.owner
-                        HAVING COUNT(DISTINCT x, y) >= 3
+                        HAVING COUNT(DISTINCT p.x, p.y) >= 3
                         EOF;
             
             $playerPresence = self::getObjectListFromDB($query);
