@@ -1114,10 +1114,6 @@ class Wolves extends Table {
         $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
     }
 
-    function stHunt(): void {
-        $this->doHunt();
-    }
-
 //////////////////////////////////////////////////////////////////////////////
 //////////// Zombie
 ////////////
