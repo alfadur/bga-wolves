@@ -433,14 +433,14 @@ class Wolves extends Table {
             $preyKind = P_PREY;
             $alphaKind = P_ALPHA;
             $query = <<<EOF
-                        SELECT p.owner as player_id, COUNT(DISTINCT CONCAT(x, '_', y)) as num_owned_tiles
+                        SELECT p.owner as player_id
                         FROM player_status s
                         LEFT JOIN pieces p ON s.player_id = p.owner
                         WHERE $condition
                         AND s.prey_data & $preyData = 0
                         AND p.kind IN ($preyKind, $alphaKind)
                         GROUP BY p.owner
-                        HAVING num_owned_tiles >= 3
+                        HAVING COUNT(DISTINCT CONCAT(x, '_', y)) >= 3
                         EOF;
             
             $playerPresence = self::getObjectListFromDB($query);
