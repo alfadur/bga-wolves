@@ -116,6 +116,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
         'type' => 'activeplayer',
         'args' => 'argsMove',
+        'action' => 'stHunt',
         'possibleactions' => ['move'],
         'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_DISPLACE => ST_DISPLACE, TR_END_MOVE => ST_POST_ACTION]
     ],

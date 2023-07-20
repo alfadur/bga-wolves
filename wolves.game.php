@@ -430,12 +430,15 @@ class Wolves extends Table {
 
             $condition = implode(" OR ", $args);
 
+            $preyKind = P_PREY;
+            $alphaKind = P_ALPHA;
             $query = <<<EOF
                         SELECT p.owner as player_id
                         FROM player_status s
                         LEFT JOIN pieces p ON s.player_id = p.owner
                         WHERE $condition
                         AND s.prey_data & $preyData = 0
+                        AND p.kind IN ($preyKind, $alphaKind)
                         GROUP BY p.owner, p.x, p.y
                         HAVING COUNT(*) >= 3
                         EOF;
@@ -988,6 +991,7 @@ class Wolves extends Table {
             'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING)
         ];
     }
+    
 
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state actions
@@ -1010,6 +1014,7 @@ class Wolves extends Table {
     }
 
     function stPostAction(): void {
+        $this->doHunt();
         $remainingActions = $this->incGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
     }
@@ -1107,6 +1112,10 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVED_WOLVES, -1);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
         $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
+    }
+
+    function stHunt(): void {
+        $this->doHunt();
     }
 
 //////////////////////////////////////////////////////////////////////////////
