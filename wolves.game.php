@@ -189,7 +189,7 @@ class Wolves extends Table {
         $result['regions'] = self::getObjectListFromDb($query);
 
         $query = "SELECT id, owner, kind, x, y FROM pieces";
-        $result['pieces'] = self::getCollectionFromDb($query);
+        $result['pieces'] = self::getObjectListFromDb($query);
 
         return $result;
     }
@@ -504,7 +504,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
-        $terrain = $forceTerrain ?? $this->flipTiles(self::getActivePlayerId(), $tiles);
+        $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
 
         $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
             'player_name' => self::getActivePlayerName(),

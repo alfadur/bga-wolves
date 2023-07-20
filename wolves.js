@@ -25,7 +25,6 @@ const PieceKind = Object.freeze({
     Prey: 5,
 
     isMovable(kind) {
-        kind = parseInt(kind);
         return kind === this.Pack || kind === this.Alpha;
     }
 });
@@ -49,6 +48,109 @@ class Queue {
     isEmpty() { return this.offset === this.values.length; }
     enqueue(value) { this.values.push(value); }
     dequeue() { return this.isEmpty() ? undefined : this.values[this.offset++]; }
+}
+
+class Pieces {
+    idMap = new Map;
+    ownerMap = new Map;
+    hexMap = new Map;
+
+    __hexIndex(x, y) {
+        return x & 0xff | ((y & 0xff) << 8);
+    }
+
+    __push(map, key, value) {
+        const array = map.get(key);
+        if (array !== undefined) {
+            array.push(value);
+        } else {
+            map.set(key, [value]);
+        }
+    }
+    __pop(map, key, value) {
+        const array = map.get(key);
+        const index = array.indexOf(value);
+        array.splice(index, 1);
+    }
+
+    *__yield(pieces, predicate) {
+        if (pieces) {
+            if (predicate) {
+                for (const piece of pieces) {
+                    yield piece;
+                }
+            } else {
+                yield* pieces;
+            }
+        }
+    }
+
+    add(item) {
+        const value = {
+            id: parseInt(item.id),
+            owner: item.owner,
+            x: parseInt(item.x),
+            y: parseInt(item.y),
+            kind: parseInt(item.kind),
+        }
+        if (!this.idMap.has(value.id)) {
+            this.idMap.set(value.id, value);
+            this.__push(this.ownerMap, value.owner, value);
+            this.__push(this.hexMap, this.__hexIndex(value.x, value.y), value);
+        } else {
+            console.warn(`Duplicate piece ID: ${value.id}`);
+        }
+        return value;
+    }
+
+    update(item) {
+        const id = parseInt(item.id);
+        const value = this.idMap.get(id);
+        if (value) {
+            if ("kind" in item) {
+                value.kind = parseInt(item.kind);
+            }
+
+            if ("x" in item && "y" in item) {
+                const oldHexIndex = this.__hexIndex(value.x, value.y);
+                value.x = parseInt(item.x);
+                value.y = parseInt(item.y);
+                const newHexIndex = this.__hexIndex(value.x, value.y);
+                if (newHexIndex !== oldHexIndex) {
+                    this.__pop(this.hexMap, oldHexIndex, value);
+                    this.__push(this.hexMap, newHexIndex, value);
+                }
+            }
+
+            if ("owner" in item && item.owner !== value.owner) {
+                this.__pop(this.ownerMap, value.owner, value);
+                this.__push(this.ownerMap, item.owner, value);
+                value.owner = item.owner;
+            }
+        } else {
+            console.warn(`Unknown piece ID: ${item.id}`);
+        }
+    }
+
+    getById(id) {
+        return this.idMap.get(id);
+    }
+
+    *getByOwner(owner, predicate) {
+        yield* this.__yield(this.ownerMap.get(owner), predicate);
+    }
+
+    *getByHex(hex, predicate) {
+        yield* this.__yield(this.hexMap.get(this.__hexIndex(parseInt(hex.x), parseInt(hex.y))), predicate);
+    }
+
+    *getByKind(kind, predicate) {
+        for (const piece of this.idMap.values()) {
+            if (piece.kind === kind && (predicate === undefined || predicate(piece))) {
+                yield piece;
+            }
+        }
+    }
 }
 
 function clearTag(className) {
@@ -89,8 +191,8 @@ function hexDistance(from, to) {
 }
 
 function collectPaths(from, range) {
-    const queue = new Queue();
-    const visited = new Set();
+    const queue = new Queue;
+    const visited = new Set;
 
     queue.enqueue({hex: from, path: []});
     visited.add(JSON.stringify(from));
@@ -118,42 +220,28 @@ function collectPaths(from, range) {
     return queue.values.slice(1);
 }
 
-function objectForEach(object, f) {
-    for (const property in object) {
-        f(object[property], property);
-    }
-}
-
-function objectFilter(object, f) {
-    const result = [];
-    for (const property in object) {
-        const value = object[property];
-        if (f(value, property)) {
-            result.push(object[property])
+function prepareHowlSelection(playerId, pieces, range) {
+    const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
+    const loneWolves = pieces.getByKind(PieceKind.Lone);
+    for (const wolf in loneWolves) {
+        if (alphaWolves.some(alpha => hexDistance(lone, alpha) <= range)) {
+            getPieceHexNode(wolf.id).classList.add("wolves-selectable");
         }
     }
-    return result;
-}
-
-function prepareHowlSelection(playerId, pieces, range) {
-    const loneWolves = objectFilter(pieces, p => parseInt(p.kind) === PieceKind.Lone);
-    const alphaWolves = objectFilter(pieces, p => p.owner === playerId && parseInt(p.kind) === PieceKind.Alpha);
-    loneWolves
-        .filter(lone => alphaWolves.some(alpha => hexDistance(lone, alpha) <= range))
-        .forEach(wolf => getPieceHexNode(wolf.id).classList.add("wolves-selectable"));
 }
 
 function prepareMoveSelection(playerId, pieces) {
-    objectForEach(pieces, (piece, pieceId) => {
-        if (piece.owner === playerId && PieceKind.isMovable(piece.kind)) {
-            const node = getPieceNode(pieceId);
-            node.classList.add("wolves-selectable");
-        }
-    });
+    const wolves = pieces.getByOwner(playerId, p => PieceKind.isMovable(p.kind));
+    for (const wolf of wolves) {
+        getPieceNode(wolf.id).classList.add("wolves-selectable");
+    }
+}
+
+function prepareDenSelection(playerId, pieces) {
+    const alphaWolves = pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha);
 }
 
 function selectWolf(id) {
-    id = parseInt(id);
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
         const paths = collectPaths({
@@ -169,25 +257,6 @@ function selectWolf(id) {
     }
 }
 
-function addPiece(piece, color, templater) {
-    const node = getHexNode(piece);
-    if (node) {
-        let locationClass = "";
-        if (node.children.length > 0) {
-            node.children[0].classList.add("wolves-hex-item-top");
-            locationClass = "wolves-hex-item-bottom";
-        }
-        return templater(node, "jstpl_hex_content", {
-            id: piece.id,
-            x: piece.x,
-            y: piece.y,
-            color,
-            kind: piece.kind,
-            locationClass
-        });
-    }
-}
-
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -198,9 +267,7 @@ function (dojo, declare) {
         constructor() {
             console.log('wolves constructor');
 
-            // Here, you can init the global variables of your user interface
-            // Example:
-            // this.myGlobalValue = 0;
+            this.pieces = new Pieces;
         },
         
         /*
@@ -218,9 +285,6 @@ function (dojo, declare) {
         
         setup(gameData) {
             console.log( "Starting game setup" );
-            this.templater = function(node, template, args) {
-                return dojo.place(this.format_block(template, args), node);
-            }.bind(this)
 
             // Setting up player boards
             for (const player_id in this.players) {
@@ -229,13 +293,7 @@ function (dojo, declare) {
                 // TODO: Setting up players boards if needed
             }
 
-            for (const pieceId in gameData.pieces) {
-                const piece = gameData.pieces[pieceId];
-                const color = typeof piece.owner === "string" ?
-                    gameData.players[piece.owner].color : "000";
-
-                this.addPiece(piece, color, this.templater);
-            }
+            gameData.pieces.forEach(this.addPiece, this);
 
             document.querySelectorAll(".wolves-hex").forEach(hex => {
                 if (!hex.classList.contains("wolves-hex-water")) {
@@ -273,9 +331,25 @@ function (dojo, declare) {
             console.log( "Ending game setup" );
         },
 
-        addPiece(piece, color, templater) {
-            const node = addPiece(piece, color, templater);
+        addPiece(data) {
+            const piece = this.pieces.add(data);
+            const color = typeof piece.owner === "string" ? this.gamedatas.players[piece.owner].color : "000";
+            const node = getHexNode(piece);
             if (node) {
+                let locationClass = "";
+                if (node.children.length > 0) {
+                    node.children[0].classList.add("wolves-hex-item-top");
+                    locationClass = "wolves-hex-item-bottom";
+                }
+                const args = {
+                    id: piece.id,
+                    x: piece.x,
+                    y: piece.y,
+                    color,
+                    kind: piece.kind,
+                    locationClass
+                };
+                dojo.place(this.format_block("jstpl_hex_content", args), node);
                 dojo.connect(node, "onclick", e => {
                     if (this.onPieceClick(piece.id)) {
                         dojo.stopEvent(e);
@@ -295,12 +369,16 @@ function (dojo, declare) {
             console.log(`Got args: ${JSON.stringify(args)}`);
 
             if (this.isCurrentPlayerActive()) {
+                const playerId = this.getActivePlayerId();
                 switch (stateName) {
                     case "howlSelection":
-                        prepareHowlSelection(this.getActivePlayerId(), this.gamedatas.pieces, 2);
+                        prepareHowlSelection(playerId, this.pieces, 2);
                         break;
                     case "moveSelection":
-                        prepareMoveSelection(this.getActivePlayerId(), this.gamedatas.pieces);
+                        prepareMoveSelection(playerId, this.pieces);
+                        break;
+                    case "denSelection":
+                        prepareDenSelection(playerId, this.pieces);
                         break;
                 }
             }
@@ -388,17 +466,12 @@ function (dojo, declare) {
             const hex = getHexNode({x, y});
 
             if (hex.classList.contains("wolves-selectable")) {
-                clearTag("wolves-selectable");
-                const playerId = this.getActivePlayerId();
-
-                function isValidAlpha(wolf) {
-                    return wolf.owner === playerId
-                        && parseInt(wolf.kind) === PieceKind.Alpha
-                        && hexDistance(wolf, {x, y}) <= 2
-                }
-
-                const wolfId = objectFilter(this.gamedatas.pieces, isValidAlpha)[0].id;
                 if (this.checkAction("howl")) {
+                    clearTag("wolves-selectable");
+                    const playerId = this.getActivePlayerId();
+                    const wolfId = this.pieces.getByOwner(playerId, p =>
+                        p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 2).next().value.id;
+
                     this.ajaxcall("/wolves/wolves/howl.html", {
                         lock: true, wolfId, x, y
                     }, this, () => { console.log("howl completed") });
@@ -416,11 +489,10 @@ function (dojo, declare) {
                 }
             } else {
                 if (this.checkAction("draftPlace")) {
-                    this.ajaxcall("/wolves/wolves/draftPlace.html", {
-                        lock: true,
-                        x: x,
-                        y: y
-                    }, this, () => { console.log("draftPlace completed") });
+                    this.ajaxcall("/wolves/wolves/draftPlace.html",
+                        {lock: true, x, y},
+                        this,
+                        () => { console.log("draftPlace completed") });
                 }
             }
         },
@@ -525,10 +597,7 @@ function (dojo, declare) {
             const {player_id: playerId, x, y, ids, kinds} = data.args;
 
             ids.forEach((id, index) => {
-                this.addPiece(
-                    {x, y, id, kind: kinds[index]},
-                    this.gamedatas.players[playerId].color,
-                    this.templater);
+                this.addPiece({x, y, id, owner: playerId, kind: kinds[index]});
             });
         },
    });             
