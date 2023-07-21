@@ -988,7 +988,27 @@ class Wolves extends Table {
 
     function argsMove(){
         return [
-            'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING)
+            'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING),
+            'selectedTerrain' => $this->getGameStateValue(G_SELECTED_TERRAIN)
+        ];
+    }
+
+    function argActionSelection(){
+        $returnArr = [];
+        $playerId = self::getActivePlayerId();
+        $returnArr["remainingActions"] = $this->getGameStateValue(G_ACTIONS_REMAINING);
+        return returnArr;
+    }
+
+    function argTerrain(){
+        return [
+            "selectedTerrain" => $this->getGameStateValue(G_SELECTED_TERRAIN)
+        ];
+    }
+
+    function argDisplaceSelection(){
+        return [
+            "displacementWolf" => $this->getGameStateValue(G_DISPLACEMENT_WOLF)
         ];
     }
     

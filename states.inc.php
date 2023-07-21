@@ -90,6 +90,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must select a 🐺 action'),
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 action'),
         'type' => 'activeplayer',
+        'args' => 'argActionSelection',
         'possibleactions' => ['selectAction'],
         'action' => 'stPreActionSelection',
         'transitions' => [
@@ -106,6 +107,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must select a howl target'),
         'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
         'type' => 'activeplayer',
+        'args' => 'argTerrain',
         'possibleactions' => ['howl'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
@@ -135,6 +137,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must place a den'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
         'type' => 'activeplayer',
+        'args' => 'argTerrain',
         'possibleactions' => ['den'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
@@ -144,6 +147,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must upgrade a den to a lair'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
+        'args' => 'argTerrain',
         'possibleactions' => ['lair'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION, TR_DISPLACE => ST_DISPLACE]
     ],
@@ -153,6 +157,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must dominate one enemy piece'),
         'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
         'type' => 'activeplayer',
+        'args' => 'argTerrain',
         'possibleactions' => ['dominate'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
