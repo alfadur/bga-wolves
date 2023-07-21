@@ -31,6 +31,8 @@ const PieceKind = Object.freeze({
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
     .map(([x, y]) => Object.freeze({x, y})));
 
+const terrainNames = ["forest", "rock", "grass", "tundra", "desert", "water"];
+
 const actioNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
 const actionCosts = Object.freeze({
     move: 1,
@@ -221,12 +223,19 @@ function collectPaths(from, range) {
     return queue.values.slice(1);
 }
 
-function prepareHowlSelection(playerId, pieces, range) {
+function makeHexSelectable(hex, terrain) {
+    let node = getHexNode(hex);
+    if (node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)) {
+        node.classList.add("wolves-selectable");
+    }
+}
+
+function prepareHowlSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
     for (const wolf of loneWolves) {
         if (alphaWolves.some(alpha => hexDistance(wolf, alpha) <= range)) {
-            getPieceHexNode(wolf.id).classList.add("wolves-selectable");
+            makeHexSelectable(wolf, terrain);
         }
     }
 }
@@ -238,7 +247,7 @@ function prepareMoveSelection(playerId, pieces) {
     }
 }
 
-function prepareDenSelection(playerId, pieces) {
+function prepareDenSelection(playerId, pieces, terrain) {
     const alphaWolves = pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha);
     for (const wolf of alphaWolves) {
         for (const direction of [{x: 0, y: 0}, ...hexDirections]) {
@@ -247,13 +256,13 @@ function prepareDenSelection(playerId, pieces) {
             const canBuild = otherPieces.length < 2
                 && otherPieces.every(p => p.owner === playerId && !PieceKind.isStructure(p.kind));
             if (canBuild) {
-                getHexNode(hex).classList.add("wolves-selectable");
+                makeHexSelectable(hex, terrain);
             }
         }
     }
 }
 
-function prepareLairSelection(playerId, pieces) {
+function prepareLairSelection(playerId, pieces, terrain) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const dens = pieces.getByOwner(playerId, p => p.kind === PieceKind.Den);
     for (const den of dens) {
@@ -262,12 +271,12 @@ function prepareLairSelection(playerId, pieces) {
             return node && node.classList.contains("wolves-hex-water");
         })
         if (canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
-            getHexNode(den).classList.add("wolves-selectable");
+            makeHexSelectable(den, terrain);
         }
     }
 }
 
-function selectWolf(id) {
+function selectWolf(id, terrain) {
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
         const paths = collectPaths({
@@ -275,11 +284,7 @@ function selectWolf(id) {
             y: parseInt(sourceHex.dataset.y),
         }, 3);
         clearTag("wolves-selectable");
-        paths.forEach(path => {
-            const hex = getHexNode(path.hex);
-            hex.classList.add("wolves-selectable");
-        })
-
+        paths.forEach(path => makeHexSelectable(path.hex, terrain));
         return paths;
     }
 }
@@ -394,21 +399,24 @@ function (dojo, declare) {
         onEnteringState(stateName, args) {
             console.log(`Entering state: ${stateName}`);
             console.log(`Got args: ${JSON.stringify(args)}`);
+            if ("selectedTerrain" in args) {
+                this.selectedTerrain = parseInt(args.selectedTerrain);
+            }
 
             if (this.isCurrentPlayerActive()) {
                 const playerId = this.getActivePlayerId();
                 switch (stateName) {
                     case "howlSelection":
-                        prepareHowlSelection(playerId, this.pieces, 2);
+                        prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, 2);
                         break;
                     case "moveSelection":
                         prepareMoveSelection(playerId, this.pieces);
                         break;
                     case "denSelection":
-                        prepareDenSelection(playerId, this.pieces);
+                        prepareDenSelection(playerId, this.pieces, this.selectedTerrain);
                         break;
                     case "lairSelection":
-                        prepareLairSelection(playerId, this.pieces);
+                        prepareLairSelection(playerId, this.pieces, this.selectedTerrain);
                         break;
                 }
             }
@@ -421,7 +429,12 @@ function (dojo, declare) {
             console.log(`Leaving state: ${stateName}`);
             
             switch (stateName) {
-
+                case "clientSelectMoveTarget":
+                case "howlSelection":
+                case "denSelection":
+                case "lairSelection":
+                    clearTag("wolves-selectable");
+                    break;
             }               
         }, 
 
@@ -521,7 +534,6 @@ function (dojo, declare) {
                 return;
             }
 
-            clearTag("wolves-selectable");
             const playerId = this.getActivePlayerId();
 
             if (this.checkAction("clientMove", true)) {
@@ -551,7 +563,7 @@ function (dojo, declare) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
             if (piece.classList.contains("wolves-selectable")) {
-                this.paths = selectWolf(id);
+                this.paths = selectWolf(id, this.selectedTerrain);
                 if (this.paths) {
                     this.selectedPiece = id;
                     this.setClientState("clientSelectMoveTarget", {
