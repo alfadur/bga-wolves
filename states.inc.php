@@ -91,7 +91,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 action'),
         'type' => 'activeplayer',
         'args' => 'argActionSelection',
-        'possibleactions' => ['selectAction'],
+        'possibleactions' => ['selectAction', 'undo'],
         'action' => 'stPreActionSelection',
         'transitions' => [
             TR_HOWL_SELECT => ST_HOWL_SELECTION,
@@ -108,7 +108,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a howl target'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
-        'possibleactions' => ['howl'],
+        'possibleactions' => ['howl', 'undo'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -118,7 +118,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
         'type' => 'activeplayer',
         'args' => 'argsMove',
-        'possibleactions' => ['move'],
+        'possibleactions' => ['move', 'undo'],
         'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_DISPLACE => ST_DISPLACE, TR_END_MOVE => ST_POST_ACTION]
     ],
 
@@ -128,7 +128,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must displace ${displacedPlayer}\'s 🐺'),
         'type' => 'activeplayer',
         'args' => 'argDisplaceSelection',
-        'possibleactions' => ['displace'],
+        'possibleactions' => ['displace', 'undo'],
         'transitions' => [TR_MOVE => ST_MOVE_SELECTION, TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -138,7 +138,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
-        'possibleactions' => ['den'],
+        'possibleactions' => ['den', 'undo'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -148,7 +148,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
-        'possibleactions' => ['lair'],
+        'possibleactions' => ['lair', 'undo'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION, TR_DISPLACE => ST_DISPLACE]
     ],
 
@@ -158,7 +158,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
-        'possibleactions' => ['dominate'],
+        'possibleactions' => ['dominate', 'undo'],
         'transitions' => [TR_POST_ACTION => ST_POST_ACTION]
     ],
 
@@ -178,7 +178,7 @@ $machinestates = [
         'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tiles, or end your turn'),
         'type' => 'activeplayer',
         'args' => 'argConfirmEnd',
-        'possibleactions' => ['extraTurn', 'endTurn'],
+        'possibleactions' => ['extraTurn', 'endTurn', 'undo'],
         'transitions' => [TR_CONFIRM_END => ST_NEXT_TURN, TR_SELECT_ACTION => ST_ACTION_SELECTION]
     ],
 

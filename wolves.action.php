@@ -110,6 +110,12 @@ class action_wolves extends APP_GameAction {
         $this->game->endTurn();
         self::ajaxResponse();
     }
+
+    function undo(){
+        self::setAjaxMode();
+        $this->game->undo();
+        self:;ajaxResponse();
+    }
 }
   
 

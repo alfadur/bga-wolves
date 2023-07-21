@@ -1043,6 +1043,12 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
+    function undo(){
+        self::checkAction("undo");
+        $this->undoRestorePoint();
+        $this->gamestate->jumpToState(ST_ACTION_SELECTION);
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -1198,6 +1204,7 @@ class Wolves extends Table {
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
             $this->gamestate->nextState(TR_START_TURN);
         }
+        $this->undoSavepoint();
     }
 
     function stPreActionSelection(): void {

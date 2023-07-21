@@ -136,6 +136,8 @@ $gameinfos = array(
 //    totranslate("It was awarded best triangle game of the year in 2005 and nominated for the Spiel des Jahres."),
 //    ...
 ),
+'db_undo_support' => true,
+
 
 //////// BGA SANDBOX ONLY PARAMETERS (DO NOT MODIFY)
 
