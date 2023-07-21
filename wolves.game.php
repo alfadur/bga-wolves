@@ -1011,6 +1011,13 @@ class Wolves extends Table {
             "displacementWolf" => $this->getGameStateValue(G_DISPLACEMENT_WOLF)
         ];
     }
+
+    function argConfirmEnd(){
+        $playerId = self::getActivePlayerId();
+        return [
+            "remainingTokens" => self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
+        ];
+    }
     
 
 //////////////////////////////////////////////////////////////////////////////

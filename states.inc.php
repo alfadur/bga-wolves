@@ -177,6 +177,7 @@ $machinestates = [
         'description' => clienttranslate('${actplayer} must end their turn'),
         'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tiles, or end your turn'),
         'type' => 'activeplayer',
+        'args' => 'argConfirmEnd',
         'possibleactions' => ['extraTurn', 'endTurn'],
         'transitions' => [TR_CONFIRM_END => ST_NEXT_TURN, TR_SELECT_ACTION => ST_ACTION_SELECTION]
     ],
