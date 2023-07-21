@@ -261,7 +261,7 @@ function prepareLairSelection(playerId, pieces) {
             const node = getHexNode(hexAdd(den, d));
             return node && node.classList.contains("wolves-hex-water");
         })
-        if (canBuild && alphaWolves.some(w => hexDistance(1, den) <= 1)) {
+        if (canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
             getHexNode(den).classList.add("wolves-selectable");
         }
     }
@@ -408,7 +408,7 @@ function (dojo, declare) {
                         prepareDenSelection(playerId, this.pieces);
                         break;
                     case "lairSelection":
-                        prepareDenSelection(playerId, this.pieces);
+                        prepareLairSelection(playerId, this.pieces);
                         break;
                 }
             }

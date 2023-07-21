@@ -262,7 +262,7 @@ class Wolves extends Table {
                 AND y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
                 AND $kindCheck
-                AND hex_in_range(x, $x, y, $y, $range)
+                AND hex_in_range(x, y, $x, $y, $range)
             $playerCheck
             EOF;
         return self::getObjectListFromDb($query);
@@ -279,7 +279,7 @@ class Wolves extends Table {
             WHERE l.x BETWEEN $xMin AND $xMax
                 AND l.y BETWEEN $yMin AND $yMax
                 AND l.terrain = $terrain
-                AND hex_in_range(l.x, $x, l.y, $y, $range)
+                AND hex_in_range(l.x, l.y, $x, $y, $range)
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                 AND (p.kind IS NULL OR $kind != $pack OR p.kind != $pack OR p.owner = $player_id)
                 AND (p.kind IS NULL OR p.kind NOT IN ($kinds) OR p.owner = $player_id)
@@ -643,7 +643,7 @@ class Wolves extends Table {
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
             $water = T_WATER;
             $query = <<<EOF
-                SELECT hex_range(l.x, $x, l.y, $y) AS dist
+                SELECT hex_range(l.x, l.y, $x, $y) AS dist
                 FROM land l NATURAL LEFT JOIN pieces p
                 WHERE l.terrain <> $water
                 AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
@@ -723,7 +723,7 @@ class Wolves extends Table {
             UPDATE pieces NATURAL JOIN land
             SET kind=$newKind, owner=$playerId
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-              AND hex_in_range($x, ${wolf['x']}, $y, ${wolf['y']}, $maxRange)
+              AND hex_in_range($x, $y, ${wolf['x']}, ${wolf['y']}, $maxRange)
             EOF);
 
         if (self::DbAffectedRow() <= 0) {
@@ -832,57 +832,49 @@ class Wolves extends Table {
             throw new BgaUserException(_('No more lairs!'));
         }
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
-        if(count($path) > 1){
-            throw new BgaUserException(_('Too far from Alpha Wolf!'));
-        }
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf === NULL || $wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
+        if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
         $lairValue = P_LAIR;
-        $denValue = P_DEN;
-        $wolfX = $wolf['x'];
-        $wolfY = $wolf['y'];
-        [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
-        $x = $wolfX + $dx;
-        $y = $wolfY + $dy;
-
-        $args = [];
-        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]){
-            $newX = $x + $dx;
-            $newY = $y + $dy;
-            $args[] = " (l.x=$newX AND l.y=$newY) ";
+        $x = (int)$wolf['x'];
+        $y = (int)$wolf['y'];
+        if (count($path)) {
+            [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
+            $x += $dx;
+            $y += $dy;
         }
 
-        $params = '('.implode(" OR ", $args).')';
-
+        $den = P_DEN;
         $water = T_WATER;
         $query = <<<EOF
-                    SELECT l.* 
-                    FROM land l
-                    NATURAL LEFT JOIN pieces p
-                    AND (p.owner <=> $playerId AND p.kind = $denValue)
-                    AND l.terrain = $terrain_type
-                    AND hex_in_range(l.x, $wolfX, l.y, $wolfY, 1)
-                    AND l.x = $x AND l.y=$y
-                    AND (SELECT COUNT(*) 
-                        FROM land 
-                        WHERE $params
-                        AND terrain=$water) > 0
-                    EOF;
+            SELECT l.* 
+            FROM land l
+            NATURAL LEFT JOIN pieces p
+            WHERE l.x = $x AND l.y = $y
+                AND l.terrain = $terrain_type
+                AND p.owner = $playerId 
+                AND p.kind = $den
+                AND (SELECT COUNT(*) 
+                    FROM land 
+                    WHERE x BETWEEN $x - 1 AND $x + 1
+                        AND y BETWEEN $y - 1 AND $y + 1
+                        AND hex_in_range(x, y, $x, $y, 1)
+                    AND terrain=$water) > 0
+            EOF;
         $validLand = self::getObjectFromDB($query);
         if($validLand === NULL){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
 
-        $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind<$denValue AND owner <> $playerId");
+        $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
-        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$denValue");
+        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$den");
         
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
-        self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($denValue, $playerId)");
+        self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($den, $playerId)");
 
         self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${active_player} has placed a lair'), [
             "player_id" => $playerId,
@@ -955,7 +947,7 @@ class Wolves extends Table {
                         WHERE l.x=$x AND l.y=$y
                         AND NOT (p.owner IS NULL OR p.owner <=> $playerId)
                         AND ((SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2 OR (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y GROUP BY owner) <> 1)
-                        AND hex_in_range(l.x, $wolfX, l.y, $wolfY, $max_range)
+                        AND hex_in_range(l.x, l.y, $wolfX, $wolfY, $max_range)
             EOF;
             $validLand = self::getObjectFromDB($query);
             if($validLand === NULL){
