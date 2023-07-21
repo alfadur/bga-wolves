@@ -76,7 +76,9 @@ class Pieces {
         if (pieces) {
             if (predicate) {
                 for (const piece of pieces) {
-                    yield piece;
+                    if (predicate(piece)) {
+                        yield piece;
+                    }
                 }
             } else {
                 yield* pieces;
@@ -182,11 +184,7 @@ function hexAdd(hex1, hex2) {
 }
 
 function hexDistance(from, to) {
-    const x1 = parseInt(from.x);
-    const y1 = parseInt(from.y);
-    const x2 = parseInt(to.x);
-    const y2 = parseInt(to.y);
-    return Math.round(Math.abs(x2 - x1) + Math.abs(y2 - y1) + Math.abs(x2 - y2 - x1 + y1)) / 2;
+    return Math.round(Math.abs(from.x - to.x) + Math.abs(from.y - to.y) + Math.abs(from.x - from.y - to.x + to.y)) / 2;
 }
 
 function hexDirection(from, to) {
@@ -226,8 +224,8 @@ function collectPaths(from, range) {
 function prepareHowlSelection(playerId, pieces, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
-    for (const wolf in loneWolves) {
-        if (alphaWolves.some(alpha => hexDistance(lone, alpha) <= range)) {
+    for (const wolf of loneWolves) {
+        if (alphaWolves.some(alpha => hexDistance(wolf, alpha) <= range)) {
             getPieceHexNode(wolf.id).classList.add("wolves-selectable");
         }
     }
