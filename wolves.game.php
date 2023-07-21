@@ -1002,10 +1002,10 @@ class Wolves extends Table {
                 $piece_type = " Den";
                 break;
             case P_ALPHA:
-                $piece_type = "n Alpha";
+                $piece_type = "n Alpha wolf";
                 break;
             case P_PACK:
-                $piece_type = " Pack";
+                $piece_type = " Pack wolf";
                 break;
         }
         $targetId = $target['owner'];
