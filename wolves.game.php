@@ -379,7 +379,7 @@ class Wolves extends Table {
             || $validityCheck['owners'][0] === $playerId);
     }
 
-    function getDenAwards(int $playerId, int $denType): int {
+    function getDenAwards(int $playerId, int $denType): ?int {
         $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
         $deployedDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
         switch(DEN_COLS[$denType]){
@@ -740,28 +740,28 @@ class Wolves extends Table {
             throw new BgaUserException(_('Too far from Alpha Wolf!'));
         }
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf === NULL || $wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
+        if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
         $denValue = P_DEN;
-        $wolfX = $wolf['x'];
-        $wolfY = $wolf['y'];
-        [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
-        $x = $wolfX + $dx;
-        $y = $wolfY + $dy;
+        $x = (int)$wolf['x'];
+        $y = (int)$wolf['y'];
+        if (count($path)) {
+            [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
+            $x += $dx;
+            $y += $dy;
+        }
+
         $query = <<<EOF
-                    SELECT l.* 
-                    FROM land l
-                    NATURAL LEFT JOIN pieces p
-                    WHERE (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
-                    AND (p.kind IS NULL OR (p.owner <=> $playerId AND p.kind < $denValue))
-                    AND l.terrain = $terrain_type
-                    AND hex_in_range(l.x, $wolfX, l.y, $wolfY, 1)
-                    AND l.x = $x AND l.y=$y
-                    EOF;
-        $validLand = self::getObjectFromDB($query);
-        if($validLand == NULL){
+            SELECT COUNT(*)  
+            FROM land l NATURAL LEFT JOIN pieces p
+            WHERE l.x = $x AND l.y = $y 
+                AND l.terrain = $terrain_type
+                AND (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
+                AND (p.owner IS NULL OR p.kind < $denValue)                    
+            EOF;
+        if (self::getUniqueValueFromDB($query) === 0){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
         

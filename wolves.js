@@ -24,9 +24,8 @@ const PieceKind = Object.freeze({
     Lone: 4,
     Prey: 5,
 
-    isMovable(kind) {
-        return kind === this.Pack || kind === this.Alpha;
-    }
+    isMovable(kind) { return kind === this.Pack || kind === this.Alpha; },
+    isStructure(kind) { return kind === this.Den || kind === this.Lair; }
 });
 
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
@@ -190,6 +189,10 @@ function hexDistance(from, to) {
     return Math.round(Math.abs(x2 - x1) + Math.abs(y2 - y1) + Math.abs(x2 - y2 - x1 + y1)) / 2;
 }
 
+function hexDirection(from, to) {
+    return hexDirections.findIndex(d => d.x === to.x - from.x && d.y === to.y - from.y);
+}
+
 function collectPaths(from, range) {
     const queue = new Queue;
     const visited = new Set;
@@ -239,6 +242,31 @@ function prepareMoveSelection(playerId, pieces) {
 
 function prepareDenSelection(playerId, pieces) {
     const alphaWolves = pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha);
+    for (const wolf of alphaWolves) {
+        for (const direction of [{x: 0, y: 0}, ...hexDirections]) {
+            const hex = hexAdd(wolf, direction);
+            const otherPieces = Array.from(pieces.getByHex(hex));
+            const canBuild = otherPieces.length < 2
+                && otherPieces.every(p => p.owner === playerId && !PieceKind.isStructure(p.kind));
+            if (canBuild) {
+                getHexNode(hex).classList.add("wolves-selectable");
+            }
+        }
+    }
+}
+
+function prepareLairSelection(playerId, pieces) {
+    const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
+    const dens = pieces.getByOwner(playerId, p => p.kind === PieceKind.Den);
+    for (const den of dens) {
+        const canBuild = hexDirections.some(d => {
+            const node = getHexNode(hexAdd(den, d));
+            return node && node.classList.contains("wolves-hex-water");
+        })
+        if (canBuild && alphaWolves.some(w => hexDistance(1, den) <= 1)) {
+            getHexNode(den).classList.add("wolves-selectable");
+        }
+    }
 }
 
 function selectWolf(id) {
@@ -248,11 +276,12 @@ function selectWolf(id) {
             x: parseInt(sourceHex.dataset.x),
             y: parseInt(sourceHex.dataset.y),
         }, 3);
+        clearTag("wolves-selectable");
         paths.forEach(path => {
             const hex = getHexNode(path.hex);
-            hex.classList.add("wolves-passable");
+            hex.classList.add("wolves-selectable");
         })
-        clearTag("wolves-selectable");
+
         return paths;
     }
 }
@@ -380,6 +409,9 @@ function (dojo, declare) {
                     case "denSelection":
                         prepareDenSelection(playerId, this.pieces);
                         break;
+                    case "lairSelection":
+                        prepareDenSelection(playerId, this.pieces);
+                        break;
                 }
             }
         },
@@ -458,6 +490,22 @@ function (dojo, declare) {
             this.restoreServerGameState();
         },
 
+        placeStructure(playerId, x, y, kind, extraArgs) {
+            const wolf = this.pieces.getByOwner(playerId, p =>
+                p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 1).next().value;
+
+            const args = {lock: true, wolfId: wolf.id}
+            const path = hexDirection(wolf, {x, y});
+            if (path) {
+                args.path = path.toString();
+            }
+            Object.assign(args, extraArgs);
+
+            this.ajaxcall(`/wolves/wolves/${kind}.html`, args, this, () => {
+                console.log(`${kind} placement completed`)
+            });
+        },
+
         ///////////////////////////////////////////////////
         //// Player's action
 
@@ -465,35 +513,39 @@ function (dojo, declare) {
             console.log(`Click hex(${x}, ${y})`);
             const hex = getHexNode({x, y});
 
-            if (hex.classList.contains("wolves-selectable")) {
-                if (this.checkAction("howl")) {
-                    clearTag("wolves-selectable");
-                    const playerId = this.getActivePlayerId();
-                    const wolfId = this.pieces.getByOwner(playerId, p =>
-                        p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 2).next().value.id;
-
-                    this.ajaxcall("/wolves/wolves/howl.html", {
-                        lock: true, wolfId, x, y
-                    }, this, () => { console.log("howl completed") });
-                }
-            } else if (hex.classList.contains("wolves-passable")) {
-                if (this.checkAction("clientMove")) {
-                    console.log(`Moving to (${x}, ${y})`);
-
-                    clearTag("wolves-passable");
-                    this.ajaxcall("/wolves/wolves/move.html", {
-                        lock: true,
-                        wolfId: this.selectedPiece,
-                        path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
-                    });
-                }
-            } else {
+            if (!hex.classList.contains("wolves-selectable")) {
                 if (this.checkAction("draftPlace")) {
                     this.ajaxcall("/wolves/wolves/draftPlace.html",
                         {lock: true, x, y},
                         this,
                         () => { console.log("draftPlace completed") });
                 }
+                return;
+            }
+
+            clearTag("wolves-selectable");
+            const playerId = this.getActivePlayerId();
+
+            if (this.checkAction("clientMove", true)) {
+                console.log(`Moving to (${x}, ${y})`);
+
+                clearTag("wolves-passable");
+                this.ajaxcall("/wolves/wolves/move.html", {
+                    lock: true,
+                    wolfId: this.selectedPiece,
+                    path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
+                });
+            } else if (this.checkAction("howl", true)) {
+                const wolfId = this.pieces.getByOwner(playerId, p =>
+                    p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 2).next().value.id;
+
+                this.ajaxcall("/wolves/wolves/howl.html", {
+                    lock: true, wolfId, x, y
+                }, this, () => { console.log("howl completed") });
+            } else if (this.checkAction("den", true)) {
+                this.placeStructure(playerId, x, y, "den", {denType: 0});
+            } else if (this.checkAction("lair")) {
+                this.placeStructure(playerId, x, y, "lair");
             }
         },
 

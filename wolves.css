@@ -149,10 +149,6 @@
     border: 2px solid blueviolet;
 }
 
-.wolves-passable {
-    border: 2px solid blueviolet;
-}
-
-.wolves-selectable:hover, .wolves-passable:hover {
+.wolves-selectable:hover {
     background-color: blueviolet !important;
 }
