@@ -997,7 +997,7 @@ class Wolves extends Table {
         $returnArr = [];
         $playerId = self::getActivePlayerId();
         $returnArr["remainingActions"] = $this->getGameStateValue(G_ACTIONS_REMAINING);
-        return returnArr;
+        return $returnArr;
     }
 
     function argTerrain(){
@@ -1015,7 +1015,7 @@ class Wolves extends Table {
     function argConfirmEnd(){
         $playerId = self::getActivePlayerId();
         return [
-            "remainingTokens" => self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
+            "remainingTokens" => self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
         ];
     }
     
