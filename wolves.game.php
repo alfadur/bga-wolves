@@ -506,22 +506,6 @@ class Wolves extends Table {
 
         $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
 
-        $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
-            'player_name' => self::getActivePlayerName(),
-            'player_id' => $playerId,
-            'action_name' => $this->actionNames[$action],
-            'terrain_name' => $this->terrainNames[$terrain],
-            'new_tiles' => $this->getPlayerTiles($playerId)
-        ]);
-
-        if($bonusTerrain){
-            $query = "UPDATE player_status SET terrain_tokens = terrain_tokens - $bonusTerrain WHERE player_id = $playerId";
-            self::DbQuery($query);
-        }
-
-
-        $this->setGameStateValue(G_SELECTED_TERRAIN, $terrain);
-
         $actionName = $this->actionNames[$action];
         switch($actionName){
             case 'move':
@@ -544,6 +528,22 @@ class Wolves extends Table {
             default:
                 break;
         }
+
+        if($bonusTerrain){
+            $query = "UPDATE player_status SET terrain_tokens = terrain_tokens - $bonusTerrain WHERE player_id = $playerId";
+            self::DbQuery($query);
+        }
+
+        $this->setGameStateValue(G_SELECTED_TERRAIN, $terrain);
+
+        $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
+            'player_name' => self::getActivePlayerName(),
+            'player_id' => $playerId,
+            'action_name' => $this->actionNames[$action],
+            'terrain_name' => $this->terrainNames[$terrain],
+            'new_tiles' => $this->getPlayerTiles($playerId)
+        ]);
+
 
         $this->gamestate->nextState( $actionName . "Select");
     }
@@ -616,9 +616,19 @@ class Wolves extends Table {
 
         $query = "UPDATE pieces SET x=$targetX, y=$targetY WHERE id=$wolfId";
         self::DbQuery($query);
-
         $this->addMovedWolf($wolf['id']);
         $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
+
+        $wolfName = $wolf['kind'] == P_PACK ? " Pack" : "n Alpha";
+        self::notifyAllPlayers(NOT_MOVED_WOLF, clienttranslate('${player_name} has moved a' . $wolfName . ' wolf, to a ${terrain} tile'),
+        [
+            'player_name' => self::getActivePlayerName(),
+            'player_id' => $playerId,
+            'terrain' => $terrain_type,
+            'wolfId' => $wolf['id'],
+            'newX' => $targetX,
+            'newY' => $targetY
+        ]);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
@@ -675,6 +685,17 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
 
+        $targetId = $wolf['owner'];
+        self::notifyAllPlayers(NOT_DISPLACE_WOLF, clienttranslate('${active_player} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
+        [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerName(),
+            "wolf_string" => $wolf['kind'] == P_PACK ? ' Pack' : 'n Alpha',
+            "target_player" => self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$targetId")['player_name'],
+            "wolf_id" => $wolf['id'],
+            "newX" => $x,
+            "newY" => $y
+        ]);
         $this->gamestate->nextState($this->getGameStateValue(G_DISPLACEMENT_STATE));
 
     }
@@ -711,6 +732,14 @@ class Wolves extends Table {
 
         self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
+
+        self::notifyAllPlayers(NOT_HOWL, clienttranslate('${active_player} has howled at a Pack Wolf'), [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerId(),
+            "wolfType" => $newKind,
+            "wolfX" => $x,
+            "wolfY" => $y
+        ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
         /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
@@ -764,9 +793,7 @@ class Wolves extends Table {
         if($validLand == NULL){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
-        
-        self::DbQuery("INSERT INTO pieces (owner, kind, x, y) VALUES ($playerId, $denValue, $x, $y)");
-
+    
         $deployedDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
         $award = $this->getDenAwards($playerId, $denType);
@@ -781,8 +808,17 @@ class Wolves extends Table {
             default:
                 break;
         }
+        self::DbQuery("INSERT INTO pieces (owner, kind, x, y) VALUES ($playerId, $denValue, $x, $y)");
         self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
 
+        self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${active_player} placed a den, from their ${den_type} track'),
+        [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerId(),
+            "den_type" => DEN_COLS[$denType],
+            "denX" => $x,
+            "denY" => $y
+        ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -848,6 +884,12 @@ class Wolves extends Table {
 
         self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($denValue, $playerId)");
 
+        self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${active_player} has placed a lair'), [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerName(),
+            "lairX" => $x,
+            "lairY" => $y
+        ]);
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
@@ -952,8 +994,29 @@ class Wolves extends Table {
             self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$wolfType WHERE id=$targetId");
         }
 
-       self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$wolf['owner']}, {$wolf['kind']}");
+        self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$wolf['owner']}, {$wolf['kind']}");
 
+        $piece_type = "";
+        switch($target['kind']){
+            case P_DEN:
+                $piece_type = " Den";
+                break;
+            case P_ALPHA:
+                $piece_type = "n Alpha";
+                break;
+            case P_PACK:
+                $piece_type = " Pack";
+                break;
+        }
+        $targetId = $target['owner'];
+        self::notifyAllPlayers(NOT_DOMINATE, clienttranslate('${active_player} has dominated a${piece_type} belonging to ${target_player}'),
+        [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerName(),
+            "piece_type" => $piece_type,
+            "target_player" => self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$targetId")['player_name'],
+            "pieceId" => $target['id']
+        ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -968,11 +1031,23 @@ class Wolves extends Table {
         }
         self::DbQuery("UPDATE player_status SET turn_tokens=$turnTokens - 1 WHERE player_id=$playerId");
         $this->incGameStateValue(G_MOVES_REMAINING, 1);
+
+        self::notifyAllPlayers(NOT_EXTRA_TURN, clienttranslate('${active_player} has decided to take an additional turn'),
+        [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerName()
+        ]);
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
 
     function endTurn(){
         self::checkAction('endTurn');
+        $playerId = self::getActivePlayerId();
+        self::notifyAllPlayers(NOT_END_TURN, clienttranslate('${active_player} has ended their turn'),
+        [
+            "player_id" => $playerId,
+            "active_player" => self::getActivePlayerName()
+        ]);
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 

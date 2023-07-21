@@ -1,5 +1,13 @@
 <?php
 
+const NOT_MOVED_WOLF = 'move_wolf';
+const NOT_DISPLACE_WOLF = 'displace_wolf';
+const NOT_HOWL = 'howl';
+const NOT_PLACE_DEN = 'place_den';
+const NOT_PLACE_LAIR = 'place_lair';
+const NOT_DOMINATE = 'dominate';
+const NOT_EXTRA_TURN = 'extra_turn';
+const NOT_END_TURN = 'end_turn';
 
 const ST_GAME_START = 1;
 const ST_DRAFT_RESOLUTION = 2;
