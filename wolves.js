@@ -153,13 +153,34 @@ class Pieces {
     }
 
     *getByHex(hex, predicate) {
-        yield* this.__yield(this.hexMap.get(this.__hexIndex(parseInt(hex.x), parseInt(hex.y))), predicate);
+        const hexIndex = this.__hexIndex(parseInt(hex.x), parseInt(hex.y));
+        yield* this.__yield(this.hexMap.get(hexIndex), predicate);
+    }
+
+    *getByHexRange(hex, range, predicate) {
+        range = parseInt(range);
+        for (let x = hex.x - range; x <= hex.x + range; ++x) {
+            for (let y = hex.y - range; y <= hex.y + range; ++y) {
+                if (hexDistance(hex, {x, y}) < range) {
+                    const hexIndex = this.__hexIndex(x, y);
+                    yield* this.__yield(this.hexMap, hexIndex, predicate);
+                }
+            }
+        }
     }
 
     *getByKind(kind, predicate) {
-        for (const piece of this.idMap.values()) {
-            if (piece.kind === kind && (predicate === undefined || predicate(piece))) {
-                yield piece;
+        if (Array.isArray(kind)) {
+            for (const piece of this.idMap.values()) {
+                if (kinds.indexOf(piece.kind) >= 0 && (predicate === undefined || predicate(piece))) {
+                    yield piece;
+                }
+            }
+        } else {
+            for (const piece of this.idMap.values()) {
+                if (piece.kind === kind && (predicate === undefined || predicate(piece))) {
+                    yield piece;
+                }
             }
         }
     }
@@ -287,6 +308,18 @@ function prepareLairSelection(playerId, pieces, terrain) {
         })
         if (canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
             makeHexSelectable(den, terrain);
+        }
+    }
+}
+
+function prepareDominateSelection(playerId, pieces, terrain, range) {
+    const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
+    const otherPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], p => p.owner !== playerId);
+    for (const piece of otherPieces) {
+        if (getHexNode(piece).classList.contains("wolves-hex-water")
+            && alphaWolves.some(alpha => hexDistance(piece, alpha) <= range))
+        {
+            getPieceNode(piece.id).classList.add("wolves-selectable");
         }
     }
 }
@@ -454,6 +487,9 @@ function (dojo, declare) {
                         this.paths = selectWolf(wolfId,
                             displaceStopPredicate(playerId, this.pieces, this.pieces.getById(wolfId).kind));
                         break;
+                    case "dominateSelection":
+                        prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, 2);
+                        break;
                 }
             }
         },
@@ -466,6 +502,7 @@ function (dojo, declare) {
                 case "howlSelection":
                 case "denSelection":
                 case "lairSelection":
+                case "dominateSelection":
                     clearTag("wolves-selectable");
                     break;
             }               
@@ -595,12 +632,28 @@ function (dojo, declare) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
             if (piece.classList.contains("wolves-selectable")) {
-                this.paths = selectWolf(id, moveStopPredicate(id, this.pieces), this.selectedTerrain);
-                if (this.paths) {
-                    this.selectedPiece = id;
-                    this.setClientState("clientSelectMoveTarget", {
-                        descriptionmyturn: _("${you} must select the destination hex"),
-                        possibleactions: ["clientMove"]
+                if (this.checkAction("move", false)) {
+                    this.paths = selectWolf(id, moveStopPredicate(id, this.pieces), this.selectedTerrain);
+                    if (this.paths) {
+                        this.selectedPiece = id;
+                        this.setClientState("clientSelectMoveTarget", {
+                            descriptionmyturn: _("${you} must select the destination hex"),
+                            possibleactions: ["clientMove"]
+                        });
+                        return true;
+                    }
+                } else if (this.checkAction("dominate")) {
+                    const playerId = this.getActivePlayerId();
+                    const target  = this.pieces.getById(id);
+                    const wolfId = this.pieces.getByOwner(playerId, p =>
+                        p.kind === PieceKind.Alpha && hexDistance(p, target) <= 2).next().value.id;
+
+                    this.ajaxcall("/wolves/wolves/dominate.html", {
+                        lock: true,
+                        wolfId,
+                        targetId: target.id,
+                        denType: 0,
+                        path: ""
                     });
                     return true;
                 }
