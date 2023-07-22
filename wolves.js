@@ -106,6 +106,15 @@ class Pieces {
         return value;
     }
 
+    remove(id) {
+        id = parseInt(id);
+        const value = this.idMap.get(id);
+        if (this.idMap.delete(id)) {
+            this.__pop(this.hexMap, this.__hexIndex(value.x, value.y), value);
+            this.__pop(this.ownerMap, value.owner, value);
+        }
+    }
+
     update(item) {
         const id = parseInt(item.id);
         const value = this.idMap.get(id);
@@ -193,11 +202,11 @@ function hexDirection(from, to) {
     return hexDirections.findIndex(d => d.x === to.x - from.x && d.y === to.y - from.y);
 }
 
-function collectPaths(from, range) {
+function collectPaths(from, range, canStopPredicate) {
     const queue = new Queue;
     const visited = new Set;
 
-    queue.enqueue({hex: from, path: []});
+    queue.enqueue({hex: from, path: [], canStop: false});
     visited.add(JSON.stringify(from));
 
     while (!queue.isEmpty()) {
@@ -212,7 +221,11 @@ function collectPaths(from, range) {
                     const node = getHexNode(newHex);
 
                     if (node && !node.classList.contains("wolves-hex-water")) {
-                        queue.enqueue({hex: newHex, path: [...path, index]});
+                        queue.enqueue({
+                            hex: newHex,
+                            path: [...path, index],
+                            canStop: canStopPredicate(newHex)
+                        });
                         visited.add(value);
                     }
                 }
@@ -225,7 +238,9 @@ function collectPaths(from, range) {
 
 function makeHexSelectable(hex, terrain) {
     let node = getHexNode(hex);
-    if (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)) {
+    if ((terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
+        && !node.classList.contains("wolves-hex-water"))
+    {
         node.classList.add("wolves-selectable");
     }
 }
@@ -276,15 +291,34 @@ function prepareLairSelection(playerId, pieces, terrain) {
     }
 }
 
-function selectWolf(id, terrain) {
+function moveStopPredicate(playerId, pieces, kind) {
+    return hex => {
+        const otherPieces = Array.from(pieces.getByHex(hex));
+        return otherPieces.length < 2 && otherPieces.every(p =>
+            p.owner === playerId || kind === PieceKind.Alpha && p.kind === PieceKind.Pack || p.kind === PieceKind.Den);
+    };
+}
+
+function displaceStopPredicate(playerId, pieces) {
+    return hex => {
+        const otherPieces = Array.from(pieces.getByHex(hex));
+        return otherPieces.length < 2 && otherPieces.every(p => p.owner === playerId);
+    };
+}
+
+function selectWolf(id, canStopPredicate, terrain) {
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
         const paths = collectPaths({
             x: parseInt(sourceHex.dataset.x),
             y: parseInt(sourceHex.dataset.y),
-        }, 3);
+        }, 3, canStopPredicate);
         clearTag("wolves-selectable");
-        paths.forEach(path => makeHexSelectable(path.hex, terrain));
+        for (const path of paths) {
+            if (path.canStop) {
+                makeHexSelectable(path.hex, terrain);
+            }
+        }
         return paths;
     }
 }
@@ -392,10 +426,7 @@ function (dojo, declare) {
 
         ///////////////////////////////////////////////////
         //// Game & client states
-        
-        // onEnteringState: this method is called each time we are entering into a new game state.
-        //                  You can use this method to perform some user interface changes at this moment.
-        //
+
         onEnteringState(stateName, state) {
             console.log(`Entering state: ${stateName}`);
             console.log(`Got args: ${JSON.stringify(state)}`);
@@ -419,15 +450,14 @@ function (dojo, declare) {
                         prepareLairSelection(playerId, this.pieces, this.selectedTerrain);
                         break;
                     case "displaceWold":
-                        this.paths = selectWolf(state.args.displacementWolf);
+                        const wolfId = parseInt(state.args.displacementWolf);
+                        this.paths = selectWolf(wolfId,
+                            displaceStopPredicate(playerId, this.pieces, this.pieces.getById(wolfId).kind));
                         break;
                 }
             }
         },
 
-        // onLeavingState: this method is called each time we are leaving a game state.
-        //                 You can use this method to perform some user interface changes at this moment.
-        //
         onLeavingState(stateName) {
             console.log(`Leaving state: ${stateName}`);
             
@@ -441,9 +471,6 @@ function (dojo, declare) {
             }               
         }, 
 
-        // onUpdateActionButtons: in this method you can manage "action buttons" that are displayed in the
-        //                        action status bar (ie: the HTML links in the status bar).
-        //        
         onUpdateActionButtons(stateName, args) {
             console.log( 'onUpdateActionButtons: '+stateName );
                       
@@ -568,7 +595,7 @@ function (dojo, declare) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
             if (piece.classList.contains("wolves-selectable")) {
-                this.paths = selectWolf(id, this.selectedTerrain);
+                this.paths = selectWolf(id, moveStopPredicate(id, this.pieces), this.selectedTerrain);
                 if (this.paths) {
                     this.selectedPiece = id;
                     this.setClientState("clientSelectMoveTarget", {
