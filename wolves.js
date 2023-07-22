@@ -31,7 +31,7 @@ const PieceKind = Object.freeze({
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
     .map(([x, y]) => Object.freeze({x, y})));
 
-const terrainNames = ["forest", "rock", "grass", "tundra", "desert", "water"];
+const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
 const actioNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
 const actionCosts = Object.freeze({
@@ -225,7 +225,7 @@ function collectPaths(from, range) {
 
 function makeHexSelectable(hex, terrain) {
     let node = getHexNode(hex);
-    if (node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)) {
+    if (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)) {
         node.classList.add("wolves-selectable");
     }
 }
@@ -396,11 +396,11 @@ function (dojo, declare) {
         // onEnteringState: this method is called each time we are entering into a new game state.
         //                  You can use this method to perform some user interface changes at this moment.
         //
-        onEnteringState(stateName, args) {
+        onEnteringState(stateName, state) {
             console.log(`Entering state: ${stateName}`);
-            console.log(`Got args: ${JSON.stringify(args)}`);
-            if ("selectedTerrain" in args) {
-                this.selectedTerrain = parseInt(args.selectedTerrain);
+            console.log(`Got args: ${JSON.stringify(state)}`);
+            if (state.args && "selectedTerrain" in state.args) {
+                this.selectedTerrain = parseInt(state.args.selectedTerrain);
             }
 
             if (this.isCurrentPlayerActive()) {
@@ -417,6 +417,9 @@ function (dojo, declare) {
                         break;
                     case "lairSelection":
                         prepareLairSelection(playerId, this.pieces, this.selectedTerrain);
+                        break;
+                    case "displaceWold":
+                        this.paths = selectWolf(state.args.displacementWolf);
                         break;
                 }
             }
@@ -537,9 +540,6 @@ function (dojo, declare) {
             const playerId = this.getActivePlayerId();
 
             if (this.checkAction("clientMove", true)) {
-                console.log(`Moving to (${x}, ${y})`);
-
-                clearTag("wolves-passable");
                 this.ajaxcall("/wolves/wolves/move.html", {
                     lock: true,
                     wolfId: this.selectedPiece,
@@ -556,6 +556,11 @@ function (dojo, declare) {
                 this.placeStructure(playerId, x, y, "den", {denType: 0});
             } else if (this.checkAction("lair")) {
                 this.placeStructure(playerId, x, y, "lair");
+            } else if (this.checkAction('displace')) {
+                this.ajaxcall("/wolves/wolves/move.html", {
+                    lock: true,
+                    path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
+                });
             }
         },
 
