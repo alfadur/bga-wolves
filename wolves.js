@@ -262,7 +262,7 @@ function makeHexSelectable(hex, terrain) {
     if ((terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
     {
-        node.children[0].classList.add("wolves-selectable");
+        node.classList.add("wolves-selectable");
     }
 }
 
@@ -591,7 +591,7 @@ function (dojo, declare) {
             console.log(`Click hex(${x}, ${y})`);
             const hex = getHexNode({x, y});
 
-            if (!hex.children[0].classList.contains("wolves-selectable")) {
+            if (!hex.classList.contains("wolves-selectable")) {
                 if (this.checkAction("draftPlace")) {
                     this.ajaxcall("/wolves/wolves/draftPlace.html",
                         {lock: true, x, y},

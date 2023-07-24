@@ -98,6 +98,7 @@
     position: absolute;
     width: var(--hex-width);
     height: var(--hex-height);
+    pointer-events: none;
 }
 
 .wolves-hex-selector {
@@ -105,6 +106,7 @@
     width: 100%;
     height: 100%;
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
+    pointer-events: all;
 }
 
 .wolves-hex-selector:hover {
@@ -158,6 +160,7 @@
     width: 100%;
     height: 100%;
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
+    pointer-events: all;
 }
 
 .wolves-selectable > .wolves-piece-selector {
@@ -249,12 +252,10 @@
 
 .wolves-hex-item[data-owner="2"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -2) calc(var(--piece-sprite-y) * -1);
-
 }
 
 .wolves-hex-item[data-owner="3"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -3) calc(var(--piece-sprite-y) * -1);
-
 }
 
 .wolves-hex-item[data-owner="4"] > .wolves-piece-sprite {
