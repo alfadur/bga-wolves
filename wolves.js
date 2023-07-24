@@ -223,7 +223,7 @@ function hexDirection(from, to) {
     return hexDirections.findIndex(d => d.x === to.x - from.x && d.y === to.y - from.y);
 }
 
-function collectPaths(from, range, canStopPredicate) {
+function collectPaths(from, range, terrain, canStopPredicate) {
     const queue = new Queue;
     const visited = new Set;
 
@@ -240,12 +240,13 @@ function collectPaths(from, range, canStopPredicate) {
 
                 if (!visited.has(value)) {
                     const node = getHexNode(newHex);
-
-                    if (node && !node.classList.contains("wolves-hex-water")) {
+                    if (node) {
+                        const terrainMatch = terrain === undefined
+                            || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)
                         queue.enqueue({
                             hex: newHex,
                             path: [...path, index],
-                            canStop: canStopPredicate(newHex)
+                            canStop: terrainMatch && canStopPredicate(newHex)
                         });
                         visited.add(value);
                     }
@@ -345,11 +346,11 @@ function selectWolf(id, canStopPredicate, terrain) {
         const paths = collectPaths({
             x: parseInt(sourceHex.dataset.x),
             y: parseInt(sourceHex.dataset.y),
-        }, 3, canStopPredicate);
+        }, 3, terrain, canStopPredicate);
         clearTag("wolves-selectable");
         for (const path of paths) {
             if (path.canStop) {
-                makeHexSelectable(path.hex, terrain);
+                makeHexSelectable(path.hex);
             }
         }
         return paths;
@@ -484,8 +485,8 @@ function (dojo, declare) {
                         break;
                     case "displaceWold":
                         const wolfId = parseInt(state.args.displacementWolf);
-                        this.paths = selectWolf(wolfId,
-                            displaceStopPredicate(playerId, this.pieces, this.pieces.getById(wolfId).kind));
+                        const predicate = displaceStopPredicate(playerId, this.pieces);
+                        this.paths = selectWolf(wolfId, predicate);
                         break;
                     case "dominateSelection":
                         prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, 2);
@@ -534,13 +535,12 @@ function (dojo, declare) {
                         break;
 
                     case "clientSelectTiles":
+                    case "clientSelectMoveTarget":
                         if (this.isCurrentPlayerActive()) {
                             if (!$("button_cancel")) {
                                 this.addActionButton('button_cancel', _('Cancel'), "onCancel", null, null, 'red');
                             }
                         }
-                        break;
-                    case "clientSelectMoveTarget":
                         break;
                     case "confirmEnd":
                         if (this.isCurrentPlayerActive()) {
@@ -632,8 +632,10 @@ function (dojo, declare) {
             console.log(`Click piece(${id})`);
             const piece = getPieceNode(id);
             if (piece.classList.contains("wolves-selectable")) {
+                let playerId = this.getActivePlayerId();
                 if (this.checkAction("move", false)) {
-                    this.paths = selectWolf(id, moveStopPredicate(id, this.pieces), this.selectedTerrain);
+                    const predicate = moveStopPredicate(playerId, this.pieces, this.pieces.getById(id).kind);
+                    this.paths = selectWolf(id, predicate, this.selectedTerrain);
                     if (this.paths) {
                         this.selectedPiece = id;
                         this.setClientState("clientSelectMoveTarget", {
@@ -643,7 +645,6 @@ function (dojo, declare) {
                         return true;
                     }
                 } else if (this.checkAction("dominate")) {
-                    const playerId = this.getActivePlayerId();
                     const target  = this.pieces.getById(id);
                     const wolfId = this.pieces.getByOwner(playerId, p =>
                         p.kind === PieceKind.Alpha && hexDistance(p, target) <= 2).next().value.id;
