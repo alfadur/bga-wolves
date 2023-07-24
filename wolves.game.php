@@ -324,10 +324,9 @@ class Wolves extends Table {
         $wolf_ids = [];
         for($i = 0; ($i/8)<4; $i += 8){
             $wolf_id = ($moved_wolves & (0xff << $i)) >> $i;
-            if($wolf_id === 0){
-                continue;
+            if($wolf_id > 0){
+                $wolf_ids[] = $wolf_id;
             }
-            $wolf_ids[] = $wolf_id;
         }
 
         return $wolf_ids;
