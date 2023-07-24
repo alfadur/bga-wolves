@@ -51,13 +51,6 @@
     background-color: var(--color);
 }
 
-.action-button {
-    height: 100%;
-    width: calc(100% / 5);
-    position: relative;
-}
-
-
 .player-tile[data-terrain="rock"] {
     --color: dimgray;
 }

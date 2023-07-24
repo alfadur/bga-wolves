@@ -33,7 +33,7 @@ const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [
 
 const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
-const actioNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
+const actionNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
 const actionCosts = Object.freeze({
     move: 1,
     howl: 2,
@@ -368,6 +368,7 @@ function (dojo, declare) {
             console.log('wolves constructor');
 
             this.pieces = new Pieces;
+            this.selectedAction = {};
         },
         
         /*
@@ -421,7 +422,7 @@ function (dojo, declare) {
                 const index = match[1];
                 dojo.connect(tile, 'onclick', e => {
                     dojo.stopEvent(e);
-                    this.onSelectTile(index);
+                    this.onTileClick(index);
                 })
             })
 
@@ -471,6 +472,9 @@ function (dojo, declare) {
             if (this.isCurrentPlayerActive()) {
                 const playerId = this.getActivePlayerId();
                 switch (stateName) {
+                    case "actionSelection":
+                        this.selectedAction = {};
+                        break;
                     case "howlSelection":
                         prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, 2);
                         break;
@@ -510,44 +514,35 @@ function (dojo, declare) {
         }, 
 
         onUpdateActionButtons(stateName, args) {
-            console.log( 'onUpdateActionButtons: '+stateName );
+            console.log(`onUpdateActionButtons: ${stateName}`);
                       
             if (this.isCurrentPlayerActive()) {
                 switch (stateName) {
                     case "actionSelection":
-                        if (this.isCurrentPlayerActive()) {
-                            const buttons = {
-                                move: "🐾 Move",
-                                howl: "🌕 Howl",
-                                den: "🕳 Den",
-                                lair: "🪨 Lair",
-                                dominate: "🐺 Dominate"
-                            }
-
-                            Object.keys(buttons).forEach(name => {
-                                if(!$(`button_${name}`)){
-                                    this.addActionButton(`button_${name}`, _(buttons[name]), () => {
-                                        this.onSelectAction(name);
-                                    });
-                                }
-                            })
+                        const buttons = {
+                            move: "🐾 Move",
+                            howl: "🌕 Howl",
+                            den: "🕳 Den",
+                            lair: "🪨 Lair",
+                            dominate: "🐺 Dominate"
                         }
+                        Object.keys(buttons).forEach(name => {
+                            this.ensureButton(`button_${name}`, _(buttons[name]), () => {
+                                this.onSelectAction(name);
+                            });
+                        })
                         break;
-
                     case "clientSelectTiles":
+                        const flippedTiles = this.selectedAction.tiles.size;
+                        const cost = this.selectedAction.cost - flippedTiles;
+                        const text = _(`Flip ${flippedTiles} tiles (${cost} tokens)`);
+                        this.ensureButton("wolves-action-flip", text, "onFlipTiles");
+                    //fallthrough
                     case "clientSelectMoveTarget":
-                        if (this.isCurrentPlayerActive()) {
-                            if (!$("button_cancel")) {
-                                this.addActionButton('button_cancel', _('Cancel'), "onCancel", null, null, 'red');
-                            }
-                        }
+                        this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                         break;
                     case "confirmEnd":
-                        if (this.isCurrentPlayerActive()) {
-                            if (!$("button_end")) {
-                                this.addActionButton("button_end", _("End turn"), "onEndTurn", null, null, 'red');
-                            }
-                        }
+                        this.ensureButton("button_end", _("End turn"), "onEndTurn", null, null, "red");
                         break;
                 }
             }
@@ -563,9 +558,10 @@ function (dojo, declare) {
         
         */
 
-        cancelLocalStateEffects() {
-            this.clientStateArgs = {};
-            this.restoreServerGameState();
+        ensureButton(id, ...args) {
+            if (!document.getElementById(id)) {
+                this.addActionButton(id, ...args);
+            }
         },
 
         placeStructure(playerId, x, y, kind, extraArgs) {
@@ -663,57 +659,44 @@ function (dojo, declare) {
         },
 
         onSelectAction(action) {
-            if(!this.checkAction("selectAction")){
+            if (!this.checkAction("selectAction")) {
                 return;
             }
-
             console.log(`Submitting action (${action})`);
-            this.clientStateArgs = {
-                action_id: actioNames.indexOf(action),
-                tiles: []
-            };
-            this.setClientState("client_selectTiles", {
-                descriptionmyturn: _(`\${you} must select ${actionCosts[actioNames[this.clientStateArgs.action_id]]} matching tiles`)
+            this.selectedAction = { name: action, cost: actionCosts[action], tiles: new Set() };
+            this.setClientState("clientSelectTiles", {
+                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
             });
         },
 
-        onSelectTile(tile) {
-            console.log("tile click");
-            console.log(JSON.stringify(this.clientStateArgs));
-            if (this.clientStateArgs.action_id === undefined) {
+        onTileClick(tile) {
+            console.log(`Clicked tile (${tile})`);
+            console.log(this.selectedAction);
+            if (!("name" in this.selectedAction)) {
                 return;
             }
-            console.log(`Clicked tile (${tile})`);
-            if (this.clientStateArgs.tiles.includes(tile)) {
-                this.clientStateArgs.tiles.splice(this.clientStateArgs.tiles.indexOf(tile), 1);
-            } else {
-                this.clientStateArgs.tiles.push(tile);
-            }
 
-            const requiredTiles = actionCosts[actioNames[this.clientStateArgs.action_id]];
-            
-            console.log(this.clientStateArgs.tiles.join(','));
-            if (this.clientStateArgs.tiles.length === requiredTiles) {
-                console.log(this.clientStateArgs);
-                this.ajaxcall("/wolves/wolves/selectAction.html", {
-                    lock: true,
-                    action_id: this.clientStateArgs.action_id,
-                    terrain_tokens: 0, //TODO: Implement this
-                    tiles: this.clientStateArgs.tiles.join(',')
-
-                });
-                this.clientStateArgs = {};
-            } else {
+            if (!this.selectedAction.tiles.delete(tile) && this.selectedAction.tiles.size < this.selectedAction.cost) {
+                this.selectedAction.tiles.add(tile);
                 this.setClientState("clientSelectTiles", {
-                    descriptionmyturn: _(`\${you} must select ${requiredTiles - this.clientStateArgs.tiles.length} matching tiles`)
+                    descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost - this.selectedAction.tiles.size} matching tiles`)
                 });
             }
+        },
+
+        onFlipTiles() {
+            this.ajaxcall("/wolves/wolves/selectAction.html", {
+                lock: true,
+                action_id: actionNames.indexOf(this.selectedAction.name),
+                terrain_tokens: this.selectedAction.cost - this.selectedAction.tiles.size,
+                tiles: Array.from(this.selectedAction.tiles).join(',')
+            }, this, () => this.selectedAction = {});
         },
 
         onCancel(event) {
             dojo.stopEvent(event);
             console.log("cancelled");
-            this.cancelLocalStateEffects()
+            this.restoreServerGameState();
         },
 
         onEndTurn(event) {
