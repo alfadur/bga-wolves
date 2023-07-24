@@ -505,7 +505,7 @@ class Wolves extends Table {
         }
 
         $cost = ACTION_COSTS[$action];
-        if ($forceTerrain === null && count($tiles) + $bonusTerrain != $cost) {
+        if (count($tiles) + $bonusTerrain != $cost) {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
