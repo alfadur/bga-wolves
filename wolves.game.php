@@ -33,7 +33,8 @@ class Wolves extends Table {
             G_DISPLACEMENT_WOLF => 14,
             G_DISPLACEMENT_STATE => 15,
             G_MOON_PHASE => 16,
-            G_FLIPPED_TILES => 17
+            G_FLIPPED_TILES => 17,
+            G_SPENT_TERRAIN_TOKENS => 18
         ]);
     }
 
@@ -831,7 +832,7 @@ class Wolves extends Table {
         self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${active_player} placed a den, from their ${den_type} track'),
         [
             "player_id" => $playerId,
-            "active_player" => self::getActivePlayerId(),
+            "active_player" => self::getActivePlayerName(),
             "den_type" => DEN_COLS[$denType],
             "denX" => $x,
             "denY" => $y
@@ -1079,7 +1080,8 @@ class Wolves extends Table {
     function argsMove(){
         return [
             'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING),
-            'selectedTerrain' => $this->getGameStateValue(G_SELECTED_TERRAIN)
+            'selectedTerrain' => $this->getGameStateValue(G_SELECTED_TERRAIN),
+            'movedWolves' => $this->getMovedWolves()
         ];
     }
 
