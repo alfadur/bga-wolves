@@ -104,7 +104,7 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
         self::setGameStateInitialValue(G_ACTIONS_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
-        self::setGameStateInitialValue(G_MOVED_WOLVES, -1);
+        self::setGameStateInitialValue(G_MOVED_WOLVES, 0);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
         self::setGameStateInitialValue(G_DISPLACEMENT_STATE, -1);
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
@@ -324,7 +324,7 @@ class Wolves extends Table {
         $wolf_ids = [];
         for($i = 0; $i<4; $i++){
             $wolf_id = ($moved_wolves & (0xff << (8 * $i))) >> (8 * $i);
-            if($wolf_id === 0xff){
+            if($wolf_id === 0){
                 continue;
             }
             $wolf_ids[] = $wolf_id;
@@ -527,7 +527,7 @@ class Wolves extends Table {
         $actionName = $this->actionNames[$action];
         switch($actionName){
             case 'move':
-                $this->setGameStateValue(G_MOVED_WOLVES, -1);
+                $this->setGameStateValue(G_MOVED_WOLVES, 0);
                 $deployedDens = self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
                 $this->setGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
                 break;
@@ -1229,7 +1229,7 @@ class Wolves extends Table {
     function stPreActionSelection(): void {
         $this->setGameStateValue(G_SELECTED_TERRAIN, -1);
         $this->setGameStateValue(G_MOVES_REMAINING, -1);
-        $this->setGameStateValue(G_MOVED_WOLVES, -1);
+        $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
         $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
         $this->setGameStateValue(G_FLIPPED_TILES, 0);
