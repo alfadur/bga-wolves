@@ -32,7 +32,8 @@ class Wolves extends Table {
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
             G_DISPLACEMENT_STATE => 15,
-            G_MOON_PHASE => 16
+            G_MOON_PHASE => 16,
+            G_FLIPPED_TILES => 17
         ]);
     }
 
@@ -106,6 +107,8 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
         self::setGameStateInitialValue(G_DISPLACEMENT_STATE, -1);
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
+        self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
+        self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -330,7 +333,7 @@ class Wolves extends Table {
 
     }
 
-    function flipTiles(int $playerId, array $tileIndices): int {
+    function flipTiles(int $playerId, array $tileIndices, bool $forceFlip=false): int {
         $tiles = $this->getPlayerTiles($playerId);
         self::dump("player_$playerId\_tiles", $tiles);
         $terrain = -1;
@@ -342,7 +345,7 @@ class Wolves extends Table {
                 (int)self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
 
             self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
-            if ($terrain >= 0 && $nextTerrain !== $terrain) {
+            if ($forceFlip || ($terrain >= 0 && $nextTerrain !== $terrain)) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
             $terrain = $nextTerrain;
@@ -497,7 +500,7 @@ class Wolves extends Table {
 
         $playerId = self::getActivePlayerId();
 
-        if ($bonusTerrain > self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId")) {
+        if ($bonusTerrain >= self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId")) {
             throw new BgaUserException(_('Not enough bonus terrain tokens'));
         }
 
@@ -506,7 +509,19 @@ class Wolves extends Table {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
+        if($forceTerrain && count($tiles) > 0){
+            throw new BgaUserException(_('Cannot force terrain when flipping tiles'));
+        }
+
         $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
+
+        $flipTilesState = 0;
+        foreach($tiles as $tileIndex){
+            $flipTilesState |= (1 << $tileIndex);
+        }
+
+        $this->setGameStateValue(G_FLIPPED_TILES, $flipTilesState);
+        $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, $bonusTerrain);
 
         $actionName = $this->actionNames[$action];
         switch($actionName){
@@ -1215,6 +1230,8 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVED_WOLVES, -1);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
         $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
+        $this->setGameStateValue(G_FLIPPED_TILES, 0);
+        $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, 0);
     }
 
 //////////////////////////////////////////////////////////////////////////////
