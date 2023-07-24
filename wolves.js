@@ -541,6 +541,14 @@ function (dojo, declare) {
                     case "clientSelectMoveTarget":
                         this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                         break;
+                    case "clientSelectTerrain":
+                        for (const terrain of terrainNames) {
+                            if (terrain !== "water") {
+                                this.ensureButton(`wolves-action-select-${terrain}`, terrain, "onSubmitTerrain");
+                            }
+                        }
+                        this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
+                        break;
                     case "confirmEnd":
                         this.ensureButton("button_end", _("End turn"), "onEndTurn", null, null, "red");
                         break;
@@ -665,16 +673,17 @@ function (dojo, declare) {
             console.log(`Submitting action (${action})`);
             this.selectedAction = { name: action, cost: actionCosts[action], tiles: new Set() };
             this.setClientState("clientSelectTiles", {
-                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
+                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`),
+                possibleactions: ["clientSelectTile"]
             });
         },
 
         onTileClick(tile) {
             console.log(`Clicked tile (${tile})`);
-            console.log(this.selectedAction);
-            if (!("name" in this.selectedAction)) {
+            if (!this.checkAction("clientSelectTile")) {
                 return;
             }
+            console.log(this.selectedAction);
 
             if (!this.selectedAction.tiles.delete(tile) && this.selectedAction.tiles.size < this.selectedAction.cost) {
                 this.selectedAction.tiles.add(tile);
@@ -685,11 +694,26 @@ function (dojo, declare) {
         },
 
         onFlipTiles() {
+            if (this.selectedAction.tiles.size > 0) {
+                this.ajaxcall("/wolves/wolves/selectAction.html", {
+                    lock: true,
+                    action_id: actionNames.indexOf(this.selectedAction.name),
+                    terrain_tokens: this.selectedAction.cost - this.selectedAction.tiles.size,
+                    tiles: Array.from(this.selectedAction.tiles).join(',')
+                }, this, () => this.selectedAction = {});
+            } else {
+                this.setClientState("clientSelectTerrain", {
+                    descriptionmyturn: _(`\${you} must select the terrain for the action`)
+                });
+            }
+        },
+
+        onSubmitTerrain() {
             this.ajaxcall("/wolves/wolves/selectAction.html", {
                 lock: true,
                 action_id: actionNames.indexOf(this.selectedAction.name),
-                terrain_tokens: this.selectedAction.cost - this.selectedAction.tiles.size,
-                tiles: Array.from(this.selectedAction.tiles).join(',')
+                terrain_tokens: this.selectedAction.cost,
+                tiles: ""
             }, this, () => this.selectedAction = {});
         },
 
