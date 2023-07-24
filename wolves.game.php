@@ -322,8 +322,8 @@ class Wolves extends Table {
     function getMovedWolves(): array {
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $wolf_ids = [];
-        for($i = 0; $i<4; $i++){
-            $wolf_id = ($moved_wolves & (0xff << (8 * $i))) >> (8 * $i);
+        for($i = 0; ($i/8)<4; $i += 8){
+            $wolf_id = ($moved_wolves & (0xff << $i)) >> $i;
             if($wolf_id === 0){
                 continue;
             }
