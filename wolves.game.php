@@ -185,6 +185,8 @@ class Wolves extends Table {
         $query = 'SELECT player_id id, player_score score, player_color color FROM player';
         $result['players'] = self::getCollectionFromDb($query);
 
+        $result['status'] = self::getCollectionFromDb('SELECT * FROM player_status');
+
         $query = 'SELECT tile_number, center_x, center_y, rotated FROM regions';
         $result['regions'] = self::getObjectListFromDb($query);
 

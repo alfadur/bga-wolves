@@ -91,64 +91,172 @@
 
 .wolves-region-rotated {
     transform: rotate(180deg);
+    transform-origin: center;
 }
 
 .wolves-hex {
     position: absolute;
     width: var(--hex-width);
     height: var(--hex-height);
+}
+
+.wolves-hex-selector {
+    position: absolute;
+    width: 100%;
+    height: 100%;
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
 }
 
-.wolves-hex:hover {
-    background-color: black;
+.wolves-hex-selector:hover {
+    background-color: black !important;
 }
 
-.wolves-hex-grass {
+.wolves-hex-water > .wolves-hex-selector:hover {
+    background-color: revert !important;
+}
+
+.wolves-hex-grass > .wolves-hex-selector {
     background-color: lightgreen;
 }
 
-.wolves-hex-rock {
+.wolves-hex-rock > .wolves-hex-selector {
     background-color: dimgray;
 }
 
-.wolves-hex-tundra {
+.wolves-hex-tundra > .wolves-hex-selector {
     background-color: ghostwhite;
 }
 
-.wolves-hex-desert {
+.wolves-hex-desert > .wolves-hex-selector {
     background-color: sandybrown;
 }
 
-.wolves-hex-forest {
+.wolves-hex-forest > .wolves-hex-selector {
     background-color: darkgreen;
 }
 
-.wolves-hex-water, .wolves-hex-water:hover {
+.wolves-hex-water > .wolves-hex-selector {
     background-color: blue;
 }
 
+.wolves-selectable > .wolves-hex-selector {
+    border: 2px solid blueviolet;
+}
+
+.wolves-selectable > .wolves-hex-selector:hover {
+    background-color: blueviolet !important;
+}
+
 .wolves-hex-item {
+    position: relative;
     width: var(--hex-width);
     height: var(--hex-height);
 }
+
+.wolves-piece-selector {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
+}
+
+.wolves-selectable > .wolves-piece-selector {
+    border: 2px solid blueviolet;
+}
+
+.wolves-hex-item-top > .wolves-piece-selector {
+    clip-path: polygon(0 100%, 25% 0, 75% 0, 100% 100%);
+}
+
+.wolves-hex-item-bottom > .wolves-piece-selector {
+    clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
+}
+
 
 .wolves-hex-item-top, .wolves-hex-item-bottom {
     height: var(--hex-half-height) !important;
 }
 
-.wolves-hex-item-top {
-    clip-path: polygon(0 100%, 25% 0, 75% 0, 100% 100%);
+.wolves-piece-sprite {
+    background-color: transparent;
+    background-image: url("img/wolves.png");
+    background-origin: content-box;
+    background-clip: content-box;
+    pointer-events: none;
 }
 
-.wolves-hex-item-bottom {
-    clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
+.wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite {
+    animation-name: pulse;
+    animation-direction: alternate;
+    animation-timing-function: ease-out;
+    animation-iteration-count: infinite;
+    animation-duration: 0.5s;
 }
 
-.wolves-selectable {
-    border: 2px solid blueviolet;
+@keyframes pulse {
+    from { opacity: 100% }
+    to { opacity: 20% }
 }
 
-.wolves-selectable:hover {
-    background-color: blueviolet !important;
+.wolves-piece-sprite {
+    width: var(--piece-width);
+    height: var(--piece-height);
+    transform: scale(150%);
+    transform-origin: center;
+    background-position: 0 calc(var(--piece-sprite-y) * -1);
+    padding-left: calc((var(--hex-width) - var(--piece-width)) / 2);
+    padding-top: calc((var(--hex-height) - var(--piece-height)) / 2);
+}
+
+.wolves-hex-item[data-kind="0"] > .wolves-piece-sprite {
+    --piece-width:  50px;
+    --piece-height: 48px;
+    --piece-sprite-y: 32px;
+}
+
+.wolves-hex-item[data-kind="1"] > .wolves-piece-sprite {
+    --piece-width:  44px;
+    --piece-height: 32px;
+    --piece-sprite-y: 0px;
+}
+
+.wolves-hex-item[data-kind="2"] > .wolves-piece-sprite {
+    --piece-width:  50px;
+    --piece-height: 44px;
+    --piece-sprite-y: 80px;
+}
+
+.wolves-hex-item[data-kind="3"] > .wolves-piece-sprite {
+    --piece-width:  50px;
+    --piece-height: 54px;
+    --piece-sprite-y: 124px;
+}
+
+.wolves-hex-item[data-kind="4"] > .wolves-piece-sprite {
+    --piece-width:  72px;
+    --piece-height: 72px;
+    --piece-sprite-y: 218px;
+    transform: none;
+}
+
+.wolves-hex-item-top > .wolves-piece-sprite, .wolves-hex-item-bottom > .wolves-piece-sprite {
+    padding-top: calc((var(--hex-half-height) - var(--piece-height) * 6 / 4) / 2);
+}
+
+.wolves-hex-item[data-owner="1"] > .wolves-piece-sprite {
+    background-position: calc(var(--piece-width) * -1) calc(var(--piece-sprite-y) * -1);
+}
+
+.wolves-hex-item[data-owner="2"] > .wolves-piece-sprite {
+    background-position: calc(var(--piece-width) * -2) calc(var(--piece-sprite-y) * -1);
+
+}
+
+.wolves-hex-item[data-owner="3"] > .wolves-piece-sprite {
+    background-position: calc(var(--piece-width) * -3) calc(var(--piece-sprite-y) * -1);
+
+}
+
+.wolves-hex-item[data-owner="4"] > .wolves-piece-sprite {
+    background-position: calc(var(--piece-width) * -4) calc(var(--piece-sprite-y) * -1);
 }

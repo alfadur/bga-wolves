@@ -262,7 +262,7 @@ function makeHexSelectable(hex, terrain) {
     if ((terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
     {
-        node.classList.add("wolves-selectable");
+        node.children[0].classList.add("wolves-selectable");
     }
 }
 
@@ -398,7 +398,7 @@ function (dojo, declare) {
                 if (!hex.classList.contains("wolves-hex-water")) {
                     const x = parseInt(hex.dataset.x);
                     const y = parseInt(hex.dataset.y);
-                    dojo.connect(hex, "onclick", e => {
+                    dojo.connect(hex.children[0], "onclick", e => {
                         dojo.stopEvent(e);
                         this.onHexClick(x, y)
                     });
@@ -432,19 +432,19 @@ function (dojo, declare) {
 
         addPiece(data) {
             const piece = this.pieces.add(data);
-            const color = typeof piece.owner === "string" ? this.gamedatas.players[piece.owner].color : "000";
+            const homeTerrain = typeof piece.owner === "string" ? this.gamedatas.status[piece.owner].home_terrain : "N/A";
             const node = getHexNode(piece);
             if (node) {
                 let locationClass = "";
-                if (node.children.length > 0) {
-                    node.children[0].classList.add("wolves-hex-item-top");
+                if (node.children.length > 1) {
+                    node.children[1].classList.add("wolves-hex-item-top");
                     locationClass = "wolves-hex-item-bottom";
                 }
                 const args = {
                     id: piece.id,
                     x: piece.x,
                     y: piece.y,
-                    color,
+                    owner: homeTerrain,
                     kind: piece.kind,
                     locationClass
                 };
@@ -591,7 +591,7 @@ function (dojo, declare) {
             console.log(`Click hex(${x}, ${y})`);
             const hex = getHexNode({x, y});
 
-            if (!hex.classList.contains("wolves-selectable")) {
+            if (!hex.children[0].classList.contains("wolves-selectable")) {
                 if (this.checkAction("draftPlace")) {
                     this.ajaxcall("/wolves/wolves/draftPlace.html",
                         {lock: true, x, y},
