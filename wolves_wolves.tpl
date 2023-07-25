@@ -1,13 +1,15 @@
 {OVERALL_GAME_HEADER}
-<div id="wolves-land">
-<!-- BEGIN region -->
-    <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
-<!-- END region -->
-<!-- BEGIN hex -->
-    <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
-        <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
+<div id="wolves-land-container">
+    <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
+    <!-- BEGIN region -->
+        <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
+    <!-- END region -->
+    <!-- BEGIN hex -->
+        <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
+            <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
+        </div>
+    <!-- END hex -->
     </div>
-<!-- END hex -->
 </div>
 <div id="player-board">
     <div id="player-tiles">

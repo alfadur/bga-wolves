@@ -37,16 +37,30 @@ class view_wolves_wolves extends game_view {
             ]);
         }
 
+        $maxCx = 0;
+        $maxCy = 0;
+
         $this->page->begin_block('wolves_wolves', 'hex');
         foreach ($this->game->getLand() as $hex) {
+            $cx = $hex['x'] * 89;
+            $cy = $hex['y'] * 103 - $hex['x'] * 51;
+            if ($maxCx < $cx) {
+                $maxCx = $cx;
+            }
+            if ($maxCy < $cy) {
+                $maxCy = $cy;
+            }
             $this->page->insert_block('hex', [
                 'X' => $hex['x'],
                 'Y' => $hex['y'],
-                'CX' => $hex['x'] * 89,
-                'CY' => $hex['y'] * 103 - $hex['x'] * 51,
+                'CX' => $cx,
+                'CY' => $cy,
                 'TYPE' => $this->game->terrainNames[$hex['terrain']]
             ]);
         }
+
+        $this->tpl['LAND_WIDTH'] = $maxCx + 119;
+        $this->tpl['LAND_HEIGHT'] = $maxCy + 103;
 
         global $g_user;
         $current_player_id = $g_user->get_id();
