@@ -112,7 +112,9 @@ class Pieces {
         if (this.idMap.delete(id)) {
             this.__pop(this.hexMap, this.__hexIndex(value.x, value.y), value);
             this.__pop(this.ownerMap, value.owner, value);
+            return true;
         }
+        return false;
     }
 
     update(item) {
@@ -260,7 +262,7 @@ function collectPaths(from, range, terrain, canStopPredicate) {
 
 function makeHexSelectable(hex, terrain) {
     let node = getHexNode(hex);
-    if ((terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
+    if (node && (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
     {
         node.classList.add("wolves-selectable");
@@ -405,16 +407,6 @@ define([
             }
         });
 
-        // document.querySelectorAll(".action-button").forEach(button => {
-        //     const match = button.id.match(/(.+)-button/);
-        //     const action = match[1];
-        //     dojo.connect(button, "onclick", e => {
-        //         dojo.stopEvent(e);
-        //         console.log(`Activating action ${action}`)
-        //         this.onSelectAction(action);
-        //     })
-        // });
-
         document.querySelectorAll(".player-tile").forEach(tile => {
             const match = tile.id.match(/player-tile-(\d+)/);
             const index = match[1];
@@ -454,6 +446,12 @@ define([
                     dojo.stopEvent(e);
                 }
             });
+        }
+    },
+
+    removePiece(id) {
+        if (this.pieces.remove(id)) {
+            dojo.destroy(document.getElementById(`wolves-piece-${id}`));
         }
     },
 
@@ -556,13 +554,6 @@ define([
 
     ///////////////////////////////////////////////////
     //// Utility methods
-
-    /*
-
-        Here, you can defines some utility methods that you can use everywhere in your javascript
-        script.
-
-    */
 
     ensureButton(id, ...args) {
         if (!document.getElementById(id)) {
@@ -706,11 +697,12 @@ define([
         }
     },
 
-    onSubmitTerrain() {
+    onSubmitTerrain(event) {
         this.ajaxcall("/wolves/wolves/selectAction.html", {
             lock: true,
             action_id: actionNames.indexOf(this.selectedAction.name),
             terrain_tokens: this.selectedAction.cost,
+            force_terrain: terrainNames.indexOf(event.target.innerText),
             tiles: ""
         }, this, () => this.selectedAction = {});
     },
@@ -740,11 +732,16 @@ define([
     */
     setupNotifications() {
         console.log( 'notifications subscriptions setup' );
-        dojo.subscribe("draft", this, "onDraftNotify");
+        dojo.subscribe("draft", this, "onDraftNotification");
         this.notifqueue.setSynchronous("draft", 100);
+
+        dojo.subscribe("move_wolf", this, "onUpgradeNotification");
+        dojo.subscribe("howl", this, "onUpgradeNotification");
+        dojo.subscribe("place_den", this, "onPlaceNotification");
+        dojo.subscribe("place_lair", this, "onUpgradeNotification");
     },
 
-    onDraftNotify(data) {
+    onDraftNotification(data) {
         console.log("Draft notification:");
         console.log(data);
         const {player_id: playerId, x, y, ids, kinds} = data.args;
@@ -752,6 +749,16 @@ define([
         ids.forEach((id, index) => {
             this.addPiece({x, y, id, owner: playerId, kind: kinds[index]});
         });
+    },
+
+    onPlaceNotification(data) {
+        this.addPiece(data.args.newPiece);
+    },
+
+    onUpgradeNotification(data) {
+        const pieceData = data.args.newPiece;
+        this.removePiece(pieceData.id);
+        this.addPiece(pieceData);
     },
 
     onScreenWidthChange() {

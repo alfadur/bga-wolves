@@ -640,11 +640,14 @@ class Wolves extends Table {
         self::notifyAllPlayers(NOT_MOVED_WOLF, clienttranslate('${player_name} has moved a' . $wolfName . ' wolf, to a ${terrain} tile'),
         [
             'player_name' => self::getActivePlayerName(),
-            'player_id' => $playerId,
+            'newPiece' => [
+                'id' => $wolfId,
+                'owner' => $playerId,
+                "x" => $targetX,
+                "y" => $targetY,
+                'kind' => $wolf['kind']
+            ],
             'terrain' => $terrain_type,
-            'wolfId' => $wolf['id'],
-            'newX' => $targetX,
-            'newY' => $targetY
         ]);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
@@ -747,15 +750,20 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
+        $updateId = self::DbGetLastId();
+
         self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
 
-        self::notifyAllPlayers(NOT_HOWL, clienttranslate('${active_player} has howled at a Pack Wolf'), [
-            "player_id" => $playerId,
-            "active_player" => self::getActivePlayerId(),
-            "wolfType" => $newKind,
-            "wolfX" => $x,
-            "wolfY" => $y
+        self::notifyAllPlayers(NOT_HOWL, clienttranslate('${player_name} has howled at a Lone Wolf'), [
+            "player_name" => self::getActivePlayerName(),
+            'newPiece' => [
+                'id' => $updateId,
+                'owner' => $playerId,
+                "x" => $x,
+                "y" => $y,
+                'kind' => $newKind
+            ]
         ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -826,15 +834,20 @@ class Wolves extends Table {
                 break;
         }
         self::DbQuery("INSERT INTO pieces (owner, kind, x, y) VALUES ($playerId, $denValue, $x, $y)");
+        $newId = self::DbGetLastId();
         self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
 
-        self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${active_player} placed a den, from their ${den_type} track'),
+        self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${player_name} placed a den, from their ${den_type} track'),
         [
-            "player_id" => $playerId,
-            "active_player" => self::getActivePlayerName(),
+            "player_name" => self::getActivePlayerName(),
+            'newPiece' => [
+                'id' => $newId,
+                'owner' => $playerId,
+                "x" => $x,
+                "y" => $y,
+                'kind' => P_DEN
+            ],
             "den_type" => DEN_COLS[$denType],
-            "denX" => $x,
-            "denY" => $y
         ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -888,16 +901,21 @@ class Wolves extends Table {
         $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
         self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$den");
+        $updateId = self::DbGetLastId();
         
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
         self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($den, $playerId)");
 
-        self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${active_player} has placed a lair'), [
-            "player_id" => $playerId,
-            "active_player" => self::getActivePlayerName(),
-            "lairX" => $x,
-            "lairY" => $y
+        self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${player_name} has placed a lair'), [
+            "player_name" => self::getActivePlayerName(),
+            'newPiece' => [
+                'id' => $updateId,
+                'owner' => $playerId,
+                "x" => $x,
+                "y" => $y,
+                'kind' => P_LAIR
+            ]
         ]);
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
@@ -1062,7 +1080,6 @@ class Wolves extends Table {
 
     function undo(){
         self::checkAction("undo");
-        $this->undoRestorePoint();
         $this->gamestate->jumpToState(ST_ACTION_SELECTION);
     }
 
@@ -1222,7 +1239,6 @@ class Wolves extends Table {
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
             $this->gamestate->nextState(TR_START_TURN);
         }
-        $this->undoSavepoint();
     }
 
     function stPreActionSelection(): void {
