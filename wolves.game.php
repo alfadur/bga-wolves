@@ -31,7 +31,6 @@ class Wolves extends Table {
             G_MOVES_REMAINING => 12,
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
-            G_DISPLACEMENT_STATE => 15,
             G_MOON_PHASE => 16,
             G_FLIPPED_TILES => 17,
             G_SPENT_TERRAIN_TOKENS => 18
@@ -106,7 +105,6 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVED_WOLVES, 0);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
-        self::setGameStateInitialValue(G_DISPLACEMENT_STATE, -1);
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
         self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
         self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
@@ -308,7 +306,7 @@ class Wolves extends Table {
         }
     }
 
-    function checkPath(array $start, array $moves, $finalCheck, $pathCheck = "validityCheck"): array {
+    function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
             $start[0] += $dx;
@@ -573,14 +571,6 @@ class Wolves extends Table {
         $this->gamestate->nextState( $actionName . "Select");
     }
 
-    function testMove(): void {
-        $this->selectAction(A_MOVE, [2], 0);
-    }
-
-    function testHowl(): void {
-        $this->selectAction(A_HOWL, [], 0, T_TUNDRA);
-    }
-
     function move(int $wolfId, array $path): void {
         self::checkAction('move');
 
@@ -594,7 +584,7 @@ class Wolves extends Table {
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $query = "SELECT * FROM pieces WHERE id=$wolfId";
         $wolf = self::getObjectFromDB($query);
-        $isAlpha = $wolf['kind'] === P_ALPHA;
+        $isAlpha = (int)$wolf['kind'] === P_ALPHA;
         if($wolf === NULL || $wolf['owner'] != $playerId || $wolf['kind'] > P_PACK){
             throw new BgaUserException(_('The wolf you selected is not valid!'));
         }
@@ -625,7 +615,7 @@ class Wolves extends Table {
                     break;
                 case 1:
                     $piece = $finalPieces[0];
-                    if($piece['owner'] === NULL || !($piece['owner'] === $playerId || ($isAlpha && $piece['kind'] === P_PACK) || $piece['kind'] === P_DEN)){
+                    if($piece['owner'] !== $playerId && (int)$piece['kind'] === P_DEN && (!$isAlpha || (int)$piece['kind'] === P_PACK)){
                         throw new BgaUserException(_('Invalid move location'));
                     }
                     break;
@@ -651,8 +641,8 @@ class Wolves extends Table {
             'newPiece' => [
                 'id' => $wolfId,
                 'owner' => $playerId,
-                "x" => $targetX,
-                "y" => $targetY,
+                'x' => $targetX,
+                'y' => $targetY,
                 'kind' => $wolf['kind']
             ],
             'terrain' => $terrain_type,
@@ -660,7 +650,6 @@ class Wolves extends Table {
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
-            $this->setGameStateValue(G_DISPLACEMENT_STATE, ($newVal > 0) ? TR_MOVE : TR_POST_ACTION);
             $this->gamestate->nextState(TR_DISPLACE);
         }
         else{
@@ -694,14 +683,14 @@ class Wolves extends Table {
                 throw new BgaUserException(_('Tile is too far'));
             }
             $query = <<<EOF
-                        SELECT l.*
-                        FROM land l
-                        LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-                        WHERE l.terrain <> 5
-                        AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
-                        AND (p.kind IS NULL OR p.owner <=> $playerId)
-                        AND l.x = $x AND l.y = $y
-                        EOF;
+                SELECT l.*
+                FROM land l
+                LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
+                WHERE l.terrain <> 5
+                AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
+                AND (p.kind IS NULL OR p.owner <=> $playerId)
+                AND l.x = $x AND l.y = $y
+                EOF;
 
             $land = self::getObjectFromDB($query);
             if($land === NULL){
@@ -709,23 +698,26 @@ class Wolves extends Table {
             }
 
         };
-        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
+        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, [$this, "validityCheck"]);
 
-        self::DbQuery("UPDATE pieces SET x=$x AND y=$y WHERE id=$wolfId");
+        self::DbQuery("UPDATE pieces SET x=$x, y=$y WHERE id=$wolfId");
 
         $targetId = $wolf['owner'];
-        self::notifyAllPlayers(NOT_DISPLACE_WOLF, clienttranslate('${active_player} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
+        self::notifyAllPlayers(NOT_DISPLACE_WOLF, clienttranslate('${player_name} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
         [
-            "player_id" => $playerId,
-            "active_player" => self::getActivePlayerName(),
-            "wolf_string" => $wolf['kind'] == P_PACK ? ' Pack' : 'n Alpha',
-            "target_player" => self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$targetId")['player_name'],
-            "wolf_id" => $wolf['id'],
-            "newX" => $x,
-            "newY" => $y
+            'player_name' => self::getActivePlayerName(),
+            'newPiece' => [
+                'id' => $wolfId,
+                'owner' => $wolf['owner'],
+                'x' => $x,
+                'y' => $y,
+                'kind' => $wolf['kind']
+            ],
+            'wolf_string' => $wolf['kind'] == P_PACK ? ' Pack' : 'n Alpha',
+            'target_player' => self::getPlayerNameById($targetId),
         ]);
-        $this->gamestate->nextState($this->getGameStateValue(G_DISPLACEMENT_STATE));
-
+        $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
+        $this->gamestate->nextState($remainingMoves > 0 ? TR_MOVE : TR_POST_ACTION);
     }
 
     function howl(int $wolfId, int $x, int $y): void {
@@ -764,12 +756,12 @@ class Wolves extends Table {
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
 
         self::notifyAllPlayers(NOT_HOWL, clienttranslate('${player_name} has howled at a Lone Wolf'), [
-            "player_name" => self::getActivePlayerName(),
+            'player_name' => self::getActivePlayerName(),
             'newPiece' => [
                 'id' => $updateId,
                 'owner' => $playerId,
-                "x" => $x,
-                "y" => $y,
+                'x' => $x,
+                'y' => $y,
                 'kind' => $newKind
             ]
         ]);
@@ -847,15 +839,15 @@ class Wolves extends Table {
 
         self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${player_name} placed a den, from their ${den_type} track'),
         [
-            "player_name" => self::getActivePlayerName(),
+            'player_name' => self::getActivePlayerName(),
             'newPiece' => [
                 'id' => $newId,
                 'owner' => $playerId,
-                "x" => $x,
-                "y" => $y,
+                'x' => $x,
+                'y' => $y,
                 'kind' => P_DEN
             ],
-            "den_type" => DEN_COLS[$denType],
+            'den_type' => DEN_COLS[$denType],
         ]);
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -909,6 +901,7 @@ class Wolves extends Table {
         $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
         self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$den");
+        self::DbAffectedRow();
         $updateId = self::DbGetLastId();
         
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
@@ -916,19 +909,18 @@ class Wolves extends Table {
         self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($den, $playerId)");
 
         self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${player_name} has placed a lair'), [
-            "player_name" => self::getActivePlayerName(),
+            'player_name' => self::getActivePlayerName(),
             'newPiece' => [
                 'id' => $updateId,
                 'owner' => $playerId,
-                "x" => $x,
-                "y" => $y,
+                'x' => $x,
+                'y' => $y,
                 'kind' => P_LAIR
             ]
         ]);
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
-            $this->setGameStateValue(G_DISPLACEMENT_STATE, TR_POST_ACTION);
             $this->setGameStateValue(G_MOVES_REMAINING, 0);
             $this->gamestate->nextState(TR_DISPLACE);
             return;
@@ -952,7 +944,7 @@ class Wolves extends Table {
         }
 
         $target = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$targetId");
-        if($targetWolf === NULL || $target['owner'] === $playerId || !($target['kind'] === P_DEN || $target['kind'] == P_PACK)){
+        if($target === NULL || $target['owner'] === $playerId || !($target['kind'] === P_DEN || $target['kind'] == P_PACK)){
             throw new BgaUserException(_('Selected target is invalid!'));
         }
 
@@ -997,7 +989,7 @@ class Wolves extends Table {
                 throw new BgaUserException(_('Selected tile is invalid'));
             }
         };
-        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);
+        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, [$this, "validityCheck"]);
 
         
 

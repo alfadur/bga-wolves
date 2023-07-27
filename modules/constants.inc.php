@@ -55,7 +55,6 @@ const G_ACTIONS_REMAINING = 'actions_remaining';
 const G_MOVES_REMAINING = 'moves_remaining';
 const G_MOVED_WOLVES = 'moved_wolves';
 const G_DISPLACEMENT_WOLF = 'displacement_wolf';
-const G_DISPLACEMENT_STATE = 'displacement_state';
 const G_MOON_PHASE = 'moon_phase';
 const G_FLIPPED_TILES = 'flipped_tiles';
 const G_SPENT_TERRAIN_TOKENS = 'spent_terrain_tokens';

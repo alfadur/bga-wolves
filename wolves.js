@@ -483,7 +483,7 @@ define([
                 case "lairSelection":
                     prepareLairSelection(playerId, this.pieces, this.selectedTerrain);
                     break;
-                case "displaceWold":
+                case "displaceWolf":
                     const wolfId = parseInt(state.args.displacementWolf);
                     const predicate = displaceStopPredicate(playerId, this.pieces);
                     this.paths = selectWolf(wolfId, predicate);
@@ -611,10 +611,10 @@ define([
             }, this, () => { console.log("howl completed") });
         } else if (this.checkAction("den", true)) {
             this.placeStructure(playerId, x, y, "den", {denType: 0});
-        } else if (this.checkAction("lair")) {
+        } else if (this.checkAction("lair", true)) {
             this.placeStructure(playerId, x, y, "lair");
         } else if (this.checkAction('displace')) {
-            this.ajaxcall("/wolves/wolves/move.html", {
+            this.ajaxcall("/wolves/wolves/displace.html", {
                 lock: true,
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
             });
@@ -735,10 +735,11 @@ define([
         dojo.subscribe("draft", this, "onDraftNotification");
         this.notifqueue.setSynchronous("draft", 100);
 
-        dojo.subscribe("move_wolf", this, "onUpgradeNotification");
-        dojo.subscribe("howl", this, "onUpgradeNotification");
+        dojo.subscribe("move_wolf", this, "onReplacecNotification");
+        dojo.subscribe("howl", this, "onReplacecNotification");
         dojo.subscribe("place_den", this, "onPlaceNotification");
-        dojo.subscribe("place_lair", this, "onUpgradeNotification");
+        dojo.subscribe("place_lair", this, "onReplacecNotification");
+        dojo.subscribe("displace_wolf", this, "onReplacecNotification");
     },
 
     onDraftNotification(data) {
@@ -755,7 +756,7 @@ define([
         this.addPiece(data.args.newPiece);
     },
 
-    onUpgradeNotification(data) {
+    onReplacecNotification(data) {
         const pieceData = data.args.newPiece;
         this.removePiece(pieceData.id);
         this.addPiece(pieceData);

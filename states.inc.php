@@ -124,8 +124,8 @@ $machinestates = [
 
     ST_DISPLACE => [
         'name' => 'displaceWolf',
-        'description' => clienttranslate('${actplayer} must displace ${displacedPlayer}\'s 🐺'),
-        'descriptionmyturn' => clienttranslate('${you} must displace ${displacedPlayer}\'s 🐺'),
+        'description' => clienttranslate('${actplayer} must displace 🐺'),
+        'descriptionmyturn' => clienttranslate('${you} must displace 🐺'),
         'type' => 'activeplayer',
         'args' => 'argDisplaceSelection',
         'possibleactions' => ['displace', 'undo'],
