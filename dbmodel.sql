@@ -7,14 +7,6 @@
 -- See http://en.boardgamearena.com/#!doc/Studio for more information.
 -- -----
 
-CREATE FUNCTION hex_range (`x1` TINYINT, `y1` TINYINT, `x2` TINYINT, `y2` TINYINT)
-    RETURNS TINYINT DETERMINISTIC
-    RETURN (ABS(`x2` - `x1`) + ABS(`y2` - `y1`) + ABS(`x2` - `y2` - `x1` + `y1`)) / 2;
-
-CREATE FUNCTION hex_in_range (`x1` TINYINT, `y1` TINYINT, `x2` TINYINT, `y2` TINYINT, `range` TINYINT)
-    RETURNS BOOLEAN DETERMINISTIC
-    RETURN ABS(`x2` - `x1`) + ABS(`y2` - `y1`) + ABS(`x2` - `y2` - `x1` + `y1`) <= 2  * `range`;
-
 CREATE TABLE IF NOT EXISTS `regions`(
     `region_id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `tile_number` TINYINT NOT NULL,

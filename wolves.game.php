@@ -239,6 +239,14 @@ class Wolves extends Table {
         return $phases;
     }
 
+    static function sql_hex_range($x1, $y1, $x2, $y2) {
+        return "(ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1)) / 2";
+    }
+
+    static function sql_hex_in_range($x1, $y1, $x2, $y2, $range) {
+        return "ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1) <= 2 * $range";
+    }
+
     function getLand(): array {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
@@ -268,7 +276,7 @@ class Wolves extends Table {
                 AND y BETWEEN $yMin AND $yMax
                 AND terrain = $terrain
                 AND $kindCheck
-                AND hex_in_range(x, y, $x, $y, $range)
+                AND {$this->sql_hex_in_range('x', 'y', $x, $y, $range)}
             $playerCheck
             EOF;
         return self::getObjectListFromDb($query);
@@ -285,7 +293,7 @@ class Wolves extends Table {
             WHERE l.x BETWEEN $xMin AND $xMax
                 AND l.y BETWEEN $yMin AND $yMax
                 AND l.terrain = $terrain
-                AND hex_in_range(l.x, l.y, $x, $y, $range)
+                AND {$this->sql_hex_in_range('l.x', 'l.y', $x, $y, $range)}
                 AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
                 AND (p.kind IS NULL OR $kind != $pack OR p.kind != $pack OR p.owner = $player_id)
                 AND (p.kind IS NULL OR p.kind NOT IN ($kinds) OR p.owner = $player_id)
@@ -663,7 +671,7 @@ class Wolves extends Table {
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
             $water = T_WATER;
             $query = <<<EOF
-                SELECT hex_range(l.x, l.y, $x, $y) AS dist
+                SELECT {$this->sql_hex_range('l.x', 'l.y', $x, $y)} AS dist
                 FROM land l NATURAL LEFT JOIN pieces p
                 WHERE l.terrain <> $water
                 AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
@@ -743,7 +751,7 @@ class Wolves extends Table {
             UPDATE pieces NATURAL JOIN land
             SET kind=$newKind, owner=$playerId
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-              AND hex_in_range($x, $y, ${wolf['x']}, ${wolf['y']}, $maxRange)
+              AND {$this->sql_hex_in_range($x, $y, $wolf['x'], $wolf['y'], $maxRange)}
             EOF);
 
         if (self::DbAffectedRow() <= 0) {
@@ -890,7 +898,7 @@ class Wolves extends Table {
                     FROM land 
                     WHERE x BETWEEN $x - 1 AND $x + 1
                         AND y BETWEEN $y - 1 AND $y + 1
-                        AND hex_in_range(x, y, $x, $y, 1)
+                        AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND terrain=$water) > 0
             EOF;
         $validLand = self::getObjectFromDB($query);
@@ -982,7 +990,7 @@ class Wolves extends Table {
                         WHERE l.x=$x AND l.y=$y
                         AND NOT (p.owner IS NULL OR p.owner <=> $playerId)
                         AND ((SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2 OR (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y GROUP BY owner) <> 1)
-                        AND hex_in_range(l.x, l.y, $wolfX, $wolfY, $max_range)
+                        AND {$this->sql_hex_in_range('l.x', 'l.y', $wolfX, $wolfY, $max_range)}
             EOF;
             $validLand = self::getObjectFromDB($query);
             if($validLand === NULL){
