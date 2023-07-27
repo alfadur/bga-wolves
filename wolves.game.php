@@ -1246,7 +1246,6 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVES_REMAINING, -1);
         $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
-        $this->setGameStateValue(G_DISPLACEMENT_STATE, -1);
         $this->setGameStateValue(G_FLIPPED_TILES, 0);
         $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, 0);
     }
