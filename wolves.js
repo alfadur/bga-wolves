@@ -567,7 +567,7 @@ define([
 
         const args = {lock: true, wolfId: wolf.id}
         const path = hexDirection(wolf, {x, y});
-        if (path) {
+        if (path !== undefined) {
             args.path = path.toString();
         }
         Object.assign(args, extraArgs);

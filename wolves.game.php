@@ -780,7 +780,7 @@ class Wolves extends Table {
         [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);*/
     }
 
-    function placeDen(int $wolfId, array $path, int $denType): void {
+    function placeDen(int $wolfId, ?int $path, int $denType): void {
         self::checkAction('den');
 
         $playerId = self::getActivePlayerId();
@@ -790,9 +790,6 @@ class Wolves extends Table {
             throw new BgaUserException(_('No more dens of this type!'));
         }
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
-        if(count($path) > 1){
-            throw new BgaUserException(_('Too far from Alpha Wolf!'));
-        }
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
         if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
@@ -801,8 +798,8 @@ class Wolves extends Table {
         $denValue = P_DEN;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
-        if (count($path)) {
-            [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
+        if ($path !== null) {
+            [$dx, $dy] = HEX_DIRECTIONS[$path];
             $x += $dx;
             $y += $dy;
         }
@@ -853,7 +850,7 @@ class Wolves extends Table {
 
     }
 
-    function placeLair(int $wolfId, array $path): void {
+    function placeLair(int $wolfId, ?int $path): void {
         self::checkAction('lair');
 
         $playerId = self::getActivePlayerId();
@@ -870,8 +867,8 @@ class Wolves extends Table {
         $lairValue = P_LAIR;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
-        if (count($path)) {
-            [$dx, $dy] = HEX_DIRECTIONS[$path[0]];
+        if ($path !== null) {
+            [$dx, $dy] = HEX_DIRECTIONS[$path];
             $x += $dx;
             $y += $dy;
         }

@@ -83,7 +83,7 @@ class action_wolves extends APP_GameAction {
     function den(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $path = self::getArg('path', AT_int, false);
         $denType = self::getArg('denType', AT_int, true);
         $this->game->placeDen($wolfId, $path, $denType);
         self::ajaxResponse();
@@ -92,7 +92,7 @@ class action_wolves extends APP_GameAction {
     function lair(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = explode(',', self::getArg('path', AT_numberlist, true));
+        $path = self::getArg('path', AT_int, false);
         $this->game->placeLair($wolfId, $path);
         self::ajaxResponse();
     }
