@@ -614,8 +614,8 @@ class Wolves extends Table {
                 case 0:
                     break;
                 case 1:
-                    $piece = $finalPieces[0];
-                    if($piece['owner'] !== $playerId && (int)$piece['kind'] === P_DEN && (!$isAlpha || (int)$piece['kind'] === P_PACK)){
+                    ['owner' => $owner, 'kind' => $kind] = $finalPieces[0];
+                    if($owner !== $playerId && (int)$kind !== P_DEN && (!$isAlpha || (int)$kind !== P_PACK)){
                         throw new BgaUserException(_('Invalid move location'));
                     }
                     break;
