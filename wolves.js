@@ -174,7 +174,7 @@ class Pieces {
     *getByKind(kind, predicate) {
         if (Array.isArray(kind)) {
             for (const piece of this.idMap.values()) {
-                if (kinds.indexOf(piece.kind) >= 0 && (predicate === undefined || predicate(piece))) {
+                if (kind.indexOf(piece.kind) >= 0 && (predicate === undefined || predicate(piece))) {
                     yield piece;
                 }
             }
@@ -319,8 +319,9 @@ function prepareDominateSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const otherPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], p => p.owner !== playerId);
     for (const piece of otherPieces) {
-        if (getHexNode(piece).classList.contains("wolves-hex-water")
-            && alphaWolves.some(alpha => hexDistance(piece, alpha) <= range))
+        if (!getHexNode(piece).classList.contains("wolves-hex-water")
+            && alphaWolves.some(alpha => hexDistance(piece, alpha) <= range)
+            && Array.from(pieces.getByHex(piece, p => p.owner === piece.owner)).length === 1)
         {
             getPieceNode(piece.id).classList.add("wolves-selectable");
         }
@@ -735,11 +736,12 @@ define([
         dojo.subscribe("draft", this, "onDraftNotification");
         this.notifqueue.setSynchronous("draft", 100);
 
-        dojo.subscribe("move_wolf", this, "onReplacecNotification");
-        dojo.subscribe("howl", this, "onReplacecNotification");
+        dojo.subscribe("move_wolf", this, "onReplacedNotification");
+        dojo.subscribe("howl", this, "onReplacedNotification");
         dojo.subscribe("place_den", this, "onPlaceNotification");
-        dojo.subscribe("place_lair", this, "onReplacecNotification");
-        dojo.subscribe("displace_wolf", this, "onReplacecNotification");
+        dojo.subscribe("place_lair", this, "onReplacedNotification");
+        dojo.subscribe("displace_wolf", this, "onReplacedNotification");
+        dojo.subscribe("dominate", this, "onReplacedNotification");
     },
 
     onDraftNotification(data) {
@@ -756,7 +758,7 @@ define([
         this.addPiece(data.args.newPiece);
     },
 
-    onReplacecNotification(data) {
+    onReplacedNotification(data) {
         const pieceData = data.args.newPiece;
         this.removePiece(pieceData.id);
         this.addPiece(pieceData);
