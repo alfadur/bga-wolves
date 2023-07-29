@@ -15,7 +15,6 @@
  *
  */
 
-
 const PieceKind = Object.freeze({
     Alpha: 0,
     Pack: 1,
@@ -41,6 +40,27 @@ const actionCosts = Object.freeze({
     lair: 2,
     dominate: 3
 });
+
+class Attributes {
+    constructor(data) {
+        Object.assign(this, {
+            homeTerrain: parseInt(data.home_terrain),
+            deployedHowlDens: parseInt(data.deployed_howl_dens),
+            deployedPackDens: parseInt(data.deployed_pack_dens),
+            deployedSpeedDens: parseInt(data.deployed_speed_dens),
+            deployedLairs: parseInt(data.deployed_lairs),
+            deployedWolves: parseInt(data.deployed_wolves),
+            terrainTokens: parseInt(data.terrain_tokens),
+            turnTokens: parseInt(data.turn_tokens),
+            preyData: parseInt(data.prey_data),
+        })
+    }
+
+    attributeValue(min, upgrades) { return min + Math.floor(upgrades + 1) / 2; }
+    get moveRange() { return this.attributeValue(3, this.deployedSpeedDens); }
+    get packSpread() { return this.attributeValue(2, this.deployedPackDens); }
+    get howlRange() { return this.attributeValue(2, this.deployedHowlDens); }
+}
 
 class Queue {
     values = [];
@@ -343,13 +363,13 @@ function displaceStopPredicate(playerId, pieces) {
     };
 }
 
-function selectWolf(id, canStopPredicate, terrain) {
+function selectWolf(id, canStopPredicate, range, terrain) {
     const sourceHex = getPieceHexNode(id);
     if (sourceHex) {
         const paths = collectPaths({
             x: parseInt(sourceHex.dataset.x),
             y: parseInt(sourceHex.dataset.y),
-        }, 3, terrain, canStopPredicate);
+        }, range, terrain, canStopPredicate);
         clearTag("wolves-selectable");
         for (const path of paths) {
             if (path.canStop) {
@@ -369,6 +389,7 @@ define([
         console.log('wolves constructor');
 
         this.pieces = new Pieces;
+        this.attributes = {};
         this.selectedAction = {};
     },
 
@@ -393,6 +414,10 @@ define([
             const player = gameData.players[player_id];
 
             // TODO: Setting up players boards if needed
+        }
+
+        for (const status of gameData.status) {
+            this.attributes[status.player_id] = new Attributes(status);
         }
 
         gameData.pieces.forEach(this.addPiece, this);
@@ -425,7 +450,7 @@ define([
 
     addPiece(data) {
         const piece = this.pieces.add(data);
-        const homeTerrain = typeof piece.owner === "string" ? this.gamedatas.status[piece.owner].home_terrain : "N/A";
+        const homeTerrain = typeof piece.owner === "string" ? this.attributes[piece.owner].homeTerrain : "N/A";
         const node = getHexNode(piece);
         if (node) {
             let locationClass = "";
@@ -468,12 +493,13 @@ define([
 
         if (this.isCurrentPlayerActive()) {
             const playerId = this.getActivePlayerId();
+            const howlRange = this.activeAttributes().howlRange;
             switch (stateName) {
                 case "actionSelection":
                     this.selectedAction = {};
                     break;
                 case "howlSelection":
-                    prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, 2);
+                    prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
                     break;
                 case "moveSelection":
                     prepareMoveSelection(playerId, this.pieces);
@@ -487,10 +513,10 @@ define([
                 case "displaceWolf":
                     const wolfId = parseInt(state.args.displacementWolf);
                     const predicate = displaceStopPredicate(playerId, this.pieces);
-                    this.paths = selectWolf(wolfId, predicate);
+                    this.paths = selectWolf(wolfId, predicate, 1);
                     break;
                 case "dominateSelection":
-                    prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, 2);
+                    prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
                     break;
             }
         }
@@ -555,6 +581,10 @@ define([
 
     ///////////////////////////////////////////////////
     //// Utility methods
+
+    activeAttributes() {
+        return this.attributes[this.getActivePlayerId()];
+    },
 
     ensureButton(id, ...args) {
         if (!document.getElementById(id)) {
@@ -629,7 +659,8 @@ define([
             let playerId = this.getActivePlayerId();
             if (this.checkAction("move", false)) {
                 const predicate = moveStopPredicate(playerId, this.pieces, this.pieces.getById(id).kind);
-                this.paths = selectWolf(id, predicate, this.selectedTerrain);
+                const moveRange = this.activeAttributes().moveRange;
+                this.paths = selectWolf(id, predicate, moveRange, this.selectedTerrain);
                 if (this.paths) {
                     this.selectedPiece = id;
                     this.setClientState("clientSelectMoveTarget", {
