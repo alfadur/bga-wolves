@@ -1357,5 +1357,19 @@ class Wolves extends Table {
 //        // Please add your future database scheme changes here
 //
 //
-    }    
+    }
+
+    function ___debugAddTerrain(): void {
+        $playerId = self::getActivePlayerId();
+        $tokens = 100;
+        self::DbQuery("UPDATE player_status SET terrain_tokens = $tokens WHERE player_id = $playerId");
+        self::notifyAllPlayers('update', '${player_name} gained bonus terrain tokens by cheating',
+            [
+                'player_name' => self::getActivePlayerName(),
+                'newAttributes' => [
+                    'playerId' => $playerId,
+                    'terrain_tokens' => $tokens
+                ]
+            ]);
+    }
 }
