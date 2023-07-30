@@ -81,8 +81,8 @@ class view_wolves_wolves extends game_view {
 
         $this->page->begin_block('wolves_wolves', 'calendarSpace');
         for ($i = 0; $i < 22; ++$i) {
-            $x = ($i + 2) % 8 + 16;
-            $y = intdiv($i + 2, 8) + 58;
+            $x = 54 * (($i + 2) % 8) + 16;
+            $y = 54 * (intdiv($i + 2, 8)) + 58;
             $this->page->insert_block('calendarSpace', [
                 'INDEX' => $i,
                 'CX' => $x,

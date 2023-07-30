@@ -480,8 +480,8 @@ define([
                 kind: piece.kind,
                 locationClass
             };
-            dojo.place(this.format_block("jstpl_hex_content", args), node);
-            dojo.connect(node, "onclick", e => {
+            const newNode = dojo.place(this.format_block("jstpl_hex_content", args), node);
+            dojo.connect(newNode, "onclick", e => {
                 if (this.onPieceClick(piece.id)) {
                     dojo.stopEvent(e);
                 }
@@ -490,6 +490,7 @@ define([
     },
 
     removePiece(id, progress) {
+        const hexNode = getPieceHexNode(id);
         if (this.pieces.remove(id)) {
             const node = document.getElementById(`wolves-piece-${id}`);
             if (progress) {
@@ -504,6 +505,7 @@ define([
                 dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
             }
             dojo.destroy(node);
+            hexNode.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
         }
     },
 
