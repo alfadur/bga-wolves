@@ -144,7 +144,7 @@
     background-color: blueviolet !important;
 }
 
-.wolves-hex-item {
+.wolves-piece {
     position: relative;
     width: var(--hex-width);
     height: var(--hex-height);
@@ -163,16 +163,16 @@
     pointer-events: all;
 }
 
-.wolves-hex-item-top > .wolves-piece-selector {
+.wolves-piece-top > .wolves-piece-selector {
     clip-path: polygon(0 100%, 25% 0, 75% 0, 100% 100%);
 }
 
-.wolves-hex-item-bottom > .wolves-piece-selector {
+.wolves-piece-bottom > .wolves-piece-selector {
     clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
 }
 
 
-.wolves-hex-item-top, .wolves-hex-item-bottom {
+.wolves-piece-top, .wolves-piece-bottom {
     height: var(--hex-half-height) !important;
 }
 
@@ -207,58 +207,75 @@
     padding-top: calc((var(--hex-height) - var(--piece-height)) / 2);
 }
 
-.wolves-hex-item[data-kind="0"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="0"] > .wolves-piece-sprite {
     --piece-width:  50px;
     --piece-height: 48px;
     --piece-sprite-y: 32px;
 }
 
-.wolves-hex-item[data-kind="1"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="1"] > .wolves-piece-sprite {
     --piece-width:  44px;
     --piece-height: 32px;
     --piece-sprite-y: 0px;
 }
 
-.wolves-hex-item[data-kind="2"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="2"] > .wolves-piece-sprite {
     --piece-width:  50px;
     --piece-height: 44px;
     --piece-sprite-y: 80px;
 }
 
-.wolves-hex-item[data-kind="3"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="3"] > .wolves-piece-sprite {
     --piece-width:  50px;
     --piece-height: 54px;
     --piece-sprite-y: 124px;
 }
 
-.wolves-hex-item[data-kind="4"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="4"] > .wolves-piece-sprite {
     --piece-width:  72px;
     --piece-height: 72px;
     --piece-sprite-y: 218px;
     transform: none;
 }
 
-.wolves-hex-item-top > .wolves-piece-sprite, .wolves-hex-item-bottom > .wolves-piece-sprite {
+.wolves-piece-top > .wolves-piece-sprite, .wolves-piece-bottom > .wolves-piece-sprite {
     padding-top: calc((var(--hex-half-height) - var(--piece-height) * 6 / 4) / 2);
 }
 
-.wolves-hex-item[data-owner="1"] > .wolves-piece-sprite {
+.wolves-piece[data-owner="1"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -1) calc(var(--piece-sprite-y) * -1);
 }
 
-.wolves-hex-item[data-owner="2"] > .wolves-piece-sprite {
+.wolves-piece[data-owner="2"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -2) calc(var(--piece-sprite-y) * -1);
 }
 
-.wolves-hex-item[data-owner="3"] > .wolves-piece-sprite {
+.wolves-piece[data-owner="3"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -3) calc(var(--piece-sprite-y) * -1);
 }
 
-.wolves-hex-item[data-owner="4"] > .wolves-piece-sprite {
+.wolves-piece[data-owner="4"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -4) calc(var(--piece-sprite-y) * -1);
 }
 
 .wolves-player-status {
     display: flex;
     gap: 4px
+}
+
+#wolves-boards {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+#wolves-calendar {
+    background-image: url("img/calendar2_3p.jpg");
+    width: 472px;
+    height: 296px;
+    border-radius: 4px;
+}
+
+.wolves-calendar-space {
+    width: 54px;
+    height: 54px;
 }

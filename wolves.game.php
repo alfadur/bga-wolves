@@ -184,16 +184,13 @@ class Wolves extends Table {
         $result = [];
 
         // Get information about players
-        $query = 'SELECT player_id id, player_score score, player_color color FROM player';
-        $result['players'] = self::getCollectionFromDb($query);
-
+        $result['players'] = self::getCollectionFromDb(
+            'SELECT player_id id, player_score score, player_color color FROM player');
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
-
-        $query = 'SELECT tile_number, center_x, center_y, rotated FROM regions';
-        $result['regions'] = self::getObjectListFromDb($query);
-
-        $query = "SELECT id, owner, kind, x, y FROM pieces";
-        $result['pieces'] = self::getObjectListFromDb($query);
+        $result['regions'] = self::getObjectListFromDb(
+            'SELECT tile_number, center_x, center_y, rotated FROM regions');
+        $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y FROM pieces");
+        $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
 
         return $result;
     }
@@ -756,7 +753,8 @@ class Wolves extends Table {
                 'owner' => $playerId,
                 'x' => $x,
                 'y' => $y,
-                'kind' => $newKind
+                'kind' => $newKind,
+                'progress' => true
             ]
         ]);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -907,7 +905,8 @@ class Wolves extends Table {
                 'owner' => $playerId,
                 'x' => $x,
                 'y' => $y,
-                'kind' => P_LAIR
+                'kind' => P_LAIR,
+                'progress' => true
             ]
         ]);
         if(count($pieces) == 1){
@@ -992,7 +991,8 @@ class Wolves extends Table {
                     'owner' => $playerId,
                     'x' => $target['x'],
                     'y' => $target['y'],
-                    'kind' => $newKind
+                    'kind' => $newKind,
+                    'progress' => true
                 ],
                 "target_player" => self::getPlayerNameById($target['owner'])
             ]);

@@ -18,9 +18,16 @@
         <!-- END tile -->
     </div>
 </div>
+<div id="wolves-boards">
+    <div id="wolves-calendar">
+        <!-- BEGIN calendarSpace -->
+            <div id="wolves-calendar-space-{INDEX}" class="wolves-calendar-space" style="left: {CX}px; top: {CY}px"></div>
+        <!-- END calendarSpace -->
+    </div>
+</div>
 <script type="text/javascript">
 const jstpl_hex_content =
-    `<div id="wolves-piece-\${id}" class="wolves-hex-item \${locationClass}" data-kind="\${kind}" data-owner="\${owner}">
+    `<div id="wolves-piece-\${id}" class="wolves-piece \${locationClass}" data-kind="\${kind}" data-owner="\${owner}">
         <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-sprite"></div>
     </div>`

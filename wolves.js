@@ -425,6 +425,19 @@ define([
 
         gameData.pieces.forEach(this.addPiece, this);
 
+        this.gameProgress = gameData.calendar.length;
+        gameData.calendar.forEach(function(piece, index) {
+            const homeTerrain = typeof piece.owner === "string" ? this.attributes[piece.owner].homeTerrain : "N/A";
+            const args = {
+                id: `calendar-${index}`,
+                owner: homeTerrain,
+                kind: piece.kind,
+                locationClass: ""
+            };
+            const node = document.getElementById(`wolves-calendar-space-${index}`);
+            dojo.place(this.format_block("jstpl_hex_content", args), node);
+        })
+
         document.querySelectorAll(".wolves-hex").forEach(hex => {
             if (!hex.classList.contains("wolves-hex-water")) {
                 const x = parseInt(hex.dataset.x);
@@ -458,13 +471,11 @@ define([
         if (node) {
             let locationClass = "";
             if (node.children.length > 1) {
-                node.children[1].classList.add("wolves-hex-item-top");
-                locationClass = "wolves-hex-item-bottom";
+                node.children[1].classList.add("wolves-piece-top");
+                locationClass = "wolves-piece-bottom";
             }
             const args = {
                 id: piece.id,
-                x: piece.x,
-                y: piece.y,
                 owner: homeTerrain,
                 kind: piece.kind,
                 locationClass
@@ -478,9 +489,21 @@ define([
         }
     },
 
-    removePiece(id) {
+    removePiece(id, progress) {
         if (this.pieces.remove(id)) {
-            dojo.destroy(document.getElementById(`wolves-piece-${id}`));
+            const node = document.getElementById(`wolves-piece-${id}`);
+            if (progress) {
+                const index = this.gameProgress++;
+                const args = {
+                    id: `calendar-${index}`,
+                    owner: node.dataset.owner,
+                    kind: node.dataset.kind,
+                    locationClass: ""
+                };
+                const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
+                dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
+            }
+            dojo.destroy(node);
         }
     },
 
@@ -783,7 +806,7 @@ define([
         const attributeData = data.args.newAttributes;
 
         if (pieceData) {
-            this.removePiece(pieceData.id);
+            this.removePiece(pieceData.id, pieceData.progress);
             this.addPiece(pieceData);
         }
 
