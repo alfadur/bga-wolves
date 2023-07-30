@@ -440,7 +440,7 @@ class Wolves extends Table {
         return self::getObjectListFromDB($query);
     }
 
-    function doHunt(): void {
+    function doHunt(): bool {
         $preyType = P_PREY;
         $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
 

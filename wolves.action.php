@@ -124,6 +124,13 @@ class action_wolves extends APP_GameAction {
         $this->game->skip();
         self::ajaxResponse();
     }
+
+    function huntWinner(){
+        self::setAjaxMode();
+        $winnerId = self::getArg('winnerId', AT_INT, true);
+        $this->game->huntWinner($winnerId);
+        self::ajaxResponse();
+    }
 }
   
 

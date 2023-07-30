@@ -178,7 +178,7 @@ $machinestates = [
         'type' => 'activeplayer',
         'args' => 'argHuntConflict',
         'possibleactions' => ['huntWinner'],
-        'transitions' => [TR_HUNT_CHOICE => ST_ACTION_SELECTION, TR_HUNT_CONFLICT => ST_HUNT_CONFLICT]
+        'transitions' => [TR_SELECT_ACTION => ST_ACTION_SELECTION, TR_CONFIRM_END => ST_CONFIRM_END, TR_HUNT_CONFLICT => ST_HUNT_CONFLICT]
     ],
 
     ST_CONFIRM_END => [
