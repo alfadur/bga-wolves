@@ -228,8 +228,8 @@ class Wolves extends Table {
 //////////// Utility functions
 ////////////    
 
-    function isWaterTerrain($terrainType){
-        return !($terrainType === T_WATER || $terrainType === T_CHASM);
+    function isImpassableTerrain($terrainType){
+        return $terrainType === T_WATER || $terrainType === T_CHASM;
     }
 
     function getRegions(): array {
@@ -396,7 +396,7 @@ class Wolves extends Table {
                     HAVING land.x=$x AND land.y=$y
                     EOF;
         $validityCheck = self::getObjectFromDB($query);
-        return !isWaterTerrain($validityCheck['terrain'])
+        return !isImpassableTerrain($validityCheck['terrain'])
         && $validityCheck['pieces_count'] < 2 
         && ($validityCheck['pieces_count'] == 0 
             || $validityCheck['kinds'][0] === P_DEN 
@@ -489,13 +489,22 @@ class Wolves extends Table {
         $numPlayers = self::getPlayersNumber();
         
         if($numPlayers > 2){
+            $selectedRegion = self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
             $chasmType = T_CHASM;
             $chasmRegion = self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
         
-            $selectedTile = self::getObjectFromDB("SELECT * FROM land where x=$x AND y=$y");
-
-            if($selectedTile['region_id'] != $chasmRegion){
+            if($selectedRegion !== $chasmRegion){
                 throw new BgaUserException(_("You may only draft into the chasm region!"));
+            }
+
+            $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$player_id GROUP BY x, y");
+            if(!is_null($drafted)){
+                $centerY = self::getObjectFromDB("SELECT center_y FROM regions WHERE region_id=$chasmRegion");
+                $hasDraftedTop = $drafted['y'] - $centerY < 0;
+                $isChoosingTop = $y - $centerY < 0;
+                if($hasDraftedTop === $isChoosingTop){
+                    throw new BgaUserException(_('Second draft location must be on the opposite side of the chasm!'));
+                }
             }
         }
 
@@ -621,7 +630,7 @@ class Wolves extends Table {
 
         $pathCheck = function($x, $y) {
             $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($hex === NULL || !$this->isWaterTerrain($hex['terrain'])){
+            if($hex === NULL || !$this->isImpassableTerrain($hex['terrain'])){
                 throw new BgaUserException(_('Cannot find a clear path to the given tile'));
             } 
         };
