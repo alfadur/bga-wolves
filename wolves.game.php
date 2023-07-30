@@ -201,7 +201,7 @@ class Wolves extends Table {
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
         $result['regions'] = self::getObjectListFromDb(
             'SELECT tile_number, center_x, center_y, rotated FROM regions');
-        $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y FROM pieces");
+        $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
 
         return $result;
