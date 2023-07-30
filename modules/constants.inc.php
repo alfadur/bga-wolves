@@ -135,13 +135,13 @@ const HEX_COORDS = [
 
 const CHASM_HEXES = [
     0, 1, 2,
-    T_CHASM, T_CHASM, T_CHASM, 3, 4,
-    2, 3, T_CHASM, T_CHASM, T_CHASM,
+    5, 5, 5, 3, 4,
+    2, 3, 5, 5, 5,
     4, 0, 1
 ];
 
 const CHASM_PALLETTE = [
-    T_TUNDRA, T_ROCK, T_DESERT, T_GRASS, T_FOREST, T_WATER
+    T_TUNDRA, T_ROCK, T_DESERT, T_GRASS, T_FOREST, T_CHASM
 ];
 
 const REGION_HEXES = [
