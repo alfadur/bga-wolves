@@ -629,7 +629,7 @@ class Wolves extends Table {
         $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
 
         $wolfName = $wolf['kind'] == P_PACK ? " Pack" : "n Alpha";
-        self::notifyAllPlayers(NOT_MOVED_WOLF, clienttranslate('${player_name} has moved a' . $wolfName . ' wolf, to a ${terrain} tile'),
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a' . $wolfName . ' wolf, to a ${terrain} tile'),
         [
             'player_name' => self::getActivePlayerName(),
             'newPiece' => [
@@ -697,7 +697,7 @@ class Wolves extends Table {
         self::DbQuery("UPDATE pieces SET x=$x, y=$y WHERE id=$wolfId");
 
         $targetId = $wolf['owner'];
-        self::notifyAllPlayers(NOT_DISPLACE_WOLF, clienttranslate('${player_name} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
         [
             'player_name' => self::getActivePlayerName(),
             'newPiece' => [
@@ -744,12 +744,12 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
-        $updateId = self::DbGetLastId();
+        $updateId = self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
 
         self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
 
-        self::notifyAllPlayers(NOT_HOWL, clienttranslate('${player_name} has howled at a Lone Wolf'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has howled at a Lone Wolf'), [
             'player_name' => self::getActivePlayerName(),
             'newPiece' => [
                 'id' => $updateId,
@@ -828,7 +828,7 @@ class Wolves extends Table {
         $newId = self::DbGetLastId();
         self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
 
-        self::notifyAllPlayers(NOT_PLACE_DEN, clienttranslate('${player_name} placed a den, from their ${den_type} track'),
+        self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den, from their ${den_type} track'),
         [
             'player_name' => self::getActivePlayerName(),
             'newPiece' => [
@@ -837,6 +837,10 @@ class Wolves extends Table {
                 'x' => $x,
                 'y' => $y,
                 'kind' => P_DEN
+            ],
+            'newAttributes' => [
+                'playerId' => $playerId,
+                $denCol => $deployedDens + 1
             ],
             'den_type' => DEN_COLS[$denType],
         ]);
@@ -896,7 +900,7 @@ class Wolves extends Table {
 
         self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($den, $playerId)");
 
-        self::notifyAllPlayers(NOT_PLACE_LAIR, clienttranslate('${player_name} has placed a lair'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has placed a lair'), [
             'player_name' => self::getActivePlayerName(),
             'newPiece' => [
                 'id' => $updateId,
@@ -932,11 +936,11 @@ class Wolves extends Table {
 
         [$pack, $den] = [P_PACK, P_DEN];
         $target = self::getObjectFromDB(<<<EOF
-            SELECT * FROM pieces NATURAL JOIN land
+            SELECT * FROM pieces AS target NATURAL JOIN land
             WHERE id=$targetId AND owner <> $playerId 
                 AND terrain = $terrain AND kind IN ($pack, $den)
                 AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
-                AND (SELECT COUNT(*) FROM pieces p WHERE p.x = x AND p.y = y AND p.owner = owner) = 1
+                AND (SELECT COUNT(*) FROM pieces WHERE x = target.x AND y = target.y AND owner = target.owner) = 1
             EOF);
         if ($target === null) {
             throw new BgaUserException(_('Selected target is invalid!'));
@@ -979,7 +983,7 @@ class Wolves extends Table {
         self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$newKind WHERE id=$targetId");
         self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$target['owner']}, {$target['kind']})");
 
-        self::notifyAllPlayers(NOT_DOMINATE, clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
             [
                 "player_id" => $playerId,
                 "player_name" => self::getActivePlayerName(),

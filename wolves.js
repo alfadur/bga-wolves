@@ -56,10 +56,19 @@ class Attributes {
         })
     }
 
-    attributeValue(min, upgrades) { return min + Math.floor(upgrades + 1) / 2; }
+    attributeValue(min, upgrades) { return min + Math.floor((upgrades + 1)  / 2); }
     get moveRange() { return this.attributeValue(3, this.deployedSpeedDens); }
     get packSpread() { return this.attributeValue(2, this.deployedPackDens); }
     get howlRange() { return this.attributeValue(2, this.deployedHowlDens); }
+
+    update(data) {
+        for (const name of Object.getOwnPropertyNames(this)) {
+            const snakeName = name.replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`);
+            if (snakeName in data) {
+                this[name] = parseInt(data[snakeName]);
+            }
+        }
+    }
 }
 
 class Queue {
@@ -339,11 +348,11 @@ function prepareDominateSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const otherPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], p => p.owner !== playerId);
     for (const piece of otherPieces) {
-        if (!getHexNode(piece).classList.contains("wolves-hex-water")
+        if (getHexNode(piece).classList.contains(`wolves-hex-${terrainNames[terrain]}`)
             && alphaWolves.some(alpha => hexDistance(piece, alpha) <= range)
             && Array.from(pieces.getByHex(piece, p => p.owner === piece.owner)).length === 1)
         {
-            getPieceNode(piece.id).classList.add("wolves-selectable");
+            getPieceNode(piece.id, terrain).classList.add("wolves-selectable");
         }
     }
 }
@@ -632,10 +641,11 @@ define([
                 lock: true,
                 wolfId: this.selectedPiece,
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
-            });
+            }, () => {});
         } else if (this.checkAction("howl", true)) {
+            const howlRange = this.activeAttributes().howlRange;
             const wolfId = this.pieces.getByOwner(playerId, p =>
-                p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 2).next().value.id;
+                p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= howlRange).next().value.id;
 
             this.ajaxcall("/wolves/wolves/howl.html", {
                 lock: true, wolfId, x, y
@@ -648,7 +658,7 @@ define([
             this.ajaxcall("/wolves/wolves/displace.html", {
                 lock: true,
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
-            });
+            }, () => {});
         }
     },
 
@@ -671,8 +681,9 @@ define([
                 }
             } else if (this.checkAction("dominate")) {
                 const target  = this.pieces.getById(id);
+                const howlRange = this.activeAttributes().howlRange;
                 const wolfId = this.pieces.getByOwner(playerId, p =>
-                    p.kind === PieceKind.Alpha && hexDistance(p, target) <= 2).next().value.id;
+                    p.kind === PieceKind.Alpha && hexDistance(p, target) <= howlRange).next().value.id;
 
                 this.ajaxcall("/wolves/wolves/dominate.html", {
                     lock: true,
@@ -680,7 +691,7 @@ define([
                     targetId: target.id,
                     denType: 0,
                     path: ""
-                });
+                }, () => {});
                 return true;
             }
         }
@@ -747,7 +758,7 @@ define([
 
     onEndTurn(event) {
         dojo.stopEvent(event);
-        this.ajaxcall("/wolves/wolves/endTurn.html", {lock: true});
+        this.ajaxcall("/wolves/wolves/endTurn.html", {lock: true}, () => {});
     },
 
     ///////////////////////////////////////////////////
@@ -767,12 +778,7 @@ define([
         dojo.subscribe("draft", this, "onDraftNotification");
         this.notifqueue.setSynchronous("draft", 100);
 
-        dojo.subscribe("move_wolf", this, "onReplacedNotification");
-        dojo.subscribe("howl", this, "onReplacedNotification");
-        dojo.subscribe("place_den", this, "onPlaceNotification");
-        dojo.subscribe("place_lair", this, "onReplacedNotification");
-        dojo.subscribe("displace_wolf", this, "onReplacedNotification");
-        dojo.subscribe("dominate", this, "onReplacedNotification");
+        dojo.subscribe("update", this, "onUpdateNotification");
     },
 
     onDraftNotification(data) {
@@ -785,14 +791,20 @@ define([
         });
     },
 
-    onPlaceNotification(data) {
-        this.addPiece(data.args.newPiece);
-    },
-
-    onReplacedNotification(data) {
+    onUpdateNotification(data) {
+        console.log("Update notification:");
+        console.log(data);
         const pieceData = data.args.newPiece;
-        this.removePiece(pieceData.id);
-        this.addPiece(pieceData);
+        const attributeData = data.args.newAttributes;
+
+        if (pieceData) {
+            this.removePiece(pieceData.id);
+            this.addPiece(pieceData);
+        }
+
+        if (attributeData) {
+            this.attributes[attributeData.playerId].update(attributeData);
+        }
     },
 
     onScreenWidthChange() {
