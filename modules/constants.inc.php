@@ -22,6 +22,7 @@ const ST_DISPLACE = 10;
 const ST_POST_ACTION = 11;
 const ST_CONFIRM_END = 12;
 const ST_NEXT_TURN = 13;
+const ST_HUNT_CONFLICT = 14;
 const ST_GAME_END = 99;
 
 const A_MOVE = 0;
@@ -59,6 +60,9 @@ const G_DISPLACEMENT_WOLF = 'displacement_wolf';
 const G_MOON_PHASE = 'moon_phase';
 const G_FLIPPED_TILES = 'flipped_tiles';
 const G_SPENT_TERRAIN_TOKENS = 'spent_terrain_tokens';
+const G_HUNT_TOKEN_ID = 'hunt_token_id';
+const G_HUNT_CONFLICT_PLAYER_1 = 'hunt_conflict_player_1';
+const G_HUNT_CONFLICT_PLAYER_2 = 'hunt_conflict_player_2';
 
 const TR_DRAFT_CONTINUE = 'draftContinue';
 const TR_DRAFT_END = 'draftEnd';
@@ -82,6 +86,8 @@ const TR_NEXT_TURN = 'nextTurn';
 const TR_START_TURN = 'startTurn';
 const TR_END_GAME = 'endGame';
 const TR_SKIP = 'skip';
+const TR_HUNT_CONFLICT = 'hunt_conflict';
+const TR_HUNT_CHOICE = 'hunt_choice';
 
 const BOARD_SETUP = [
     2 => [
