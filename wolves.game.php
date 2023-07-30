@@ -396,7 +396,7 @@ class Wolves extends Table {
                     HAVING land.x=$x AND land.y=$y
                     EOF;
         $validityCheck = self::getObjectFromDB($query);
-        return isImpassableTerrain($validityCheck['terrain'])
+        return !isImpassableTerrain($validityCheck['terrain'])
         && $validityCheck['pieces_count'] < 2 
         && ($validityCheck['pieces_count'] == 0 
             || $validityCheck['kinds'][0] === P_DEN 
