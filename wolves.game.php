@@ -396,7 +396,7 @@ class Wolves extends Table {
                     HAVING land.x=$x AND land.y=$y
                     EOF;
         $validityCheck = self::getObjectFromDB($query);
-        return !isImpassableTerrain($validityCheck['terrain'])
+        return isImpassableTerrain($validityCheck['terrain'])
         && $validityCheck['pieces_count'] < 2 
         && ($validityCheck['pieces_count'] == 0 
             || $validityCheck['kinds'][0] === P_DEN 
@@ -630,7 +630,7 @@ class Wolves extends Table {
 
         $pathCheck = function($x, $y) {
             $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($hex === NULL || !$this->isImpassableTerrain($hex['terrain'])){
+            if($hex === NULL || $this->isImpassableTerrain($hex['terrain'])){
                 throw new BgaUserException(_('Cannot find a clear path to the given tile'));
             } 
         };
