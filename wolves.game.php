@@ -1142,7 +1142,8 @@ class Wolves extends Table {
         self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
 
         if(!$this->doHunt()){
-            $this->gamestate->nextState(TR_HUNT_CHOICE);
+            $remainingActions = $this->getGameStateValue(G_ACTIONS_REMAINING);
+            $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
         }
 
     }
