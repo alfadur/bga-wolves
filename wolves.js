@@ -505,7 +505,9 @@ define([
                 dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
             }
             dojo.destroy(node);
-            hexNode.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
+            if (hexNode.children.length > 1) {
+                hexNode.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
+            }
         }
     },
 
