@@ -1128,9 +1128,15 @@ class Wolves extends Table {
         $wolvesDrafted = self::getUniqueValueFromDB(
             "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL");
         $draftCompleted = $wolvesDrafted >= 2 * self::getPlayersNumber();
+        $numPlayers = self::getPlayersNumber();
 
-        if ($wolvesDrafted > 0 && !$draftCompleted) {
-            $this->activeNextPlayer();
+        if ($wolvesDrafted % $numPlayers != 0 && !$draftCompleted) {
+            if($wolvesDrafted > $numPlayers){
+                $this->activePrevPlayer();
+            }
+            else{
+                $this->activeNextPlayer();
+            }
         }
 
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
