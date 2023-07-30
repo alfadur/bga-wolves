@@ -509,7 +509,7 @@ class Wolves extends Table {
 
         $playerId = self::getActivePlayerId();
 
-        if ($bonusTerrain > self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId")) {
+        if ($bonusTerrain >= self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId")) {
             throw new BgaUserException(_('Not enough bonus terrain tokens'));
         }
 
