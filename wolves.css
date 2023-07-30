@@ -238,6 +238,12 @@
     transform: none;
 }
 
+.wolves-piece[data-kind="5"] > .wolves-piece-sprite {
+    --piece-width:  50px;
+    --piece-height: 40px;
+    --piece-sprite-y: 178px;
+}
+
 .wolves-piece-top > .wolves-piece-sprite, .wolves-piece-bottom > .wolves-piece-sprite {
     padding-top: calc((var(--hex-half-height) - var(--piece-height) * 6 / 4) / 2);
 }
