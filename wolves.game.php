@@ -494,7 +494,7 @@ class Wolves extends Table {
             'player_id' => $player_id,
             'x' => $x,
             'y' => $y,
-            'ids' => [$insertId - 1, $insertId],
+            'ids' => [$insertId, $insertId + 1],
             'kinds' => $kinds
         ]);
 
