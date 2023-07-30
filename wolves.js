@@ -590,6 +590,9 @@ define([
                         });
                     })
                     break;
+                case "moveSelection":
+                    this.ensureButton("wolves-skip-move", "Skip", "onSkipAction", null, null, "red");
+                    break;
                 case "clientSelectTiles":
                     const flippedTiles = this.selectedAction.tiles.size;
                     const cost = this.selectedAction.cost - flippedTiles;
@@ -764,6 +767,10 @@ define([
                 descriptionmyturn: _(`\${you} must select the terrain for the action`)
             });
         }
+    },
+
+    onSkipAction() {
+        this.ajaxcall("/wolves/wolves/skip.html", {lock: true}, this, () => this.selectedAction = {})
     },
 
     onSubmitTerrain(event) {

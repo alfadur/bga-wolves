@@ -688,6 +688,11 @@ class Wolves extends Table {
         }  
     }
 
+    function skip(): void {
+        $this->checkAction('skip');
+        $this->gamestate->nextState(TR_END_MOVE);
+    }
+
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
             $water = T_WATER;
             $chasm = T_CHASM;

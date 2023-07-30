@@ -118,6 +118,12 @@ class action_wolves extends APP_GameAction {
         $this->game->undo();
         self::ajaxResponse();
     }
+
+    function skip() {
+        self::setAjaxMode();
+        $this->game->skip();
+        self::ajaxResponse();
+    }
 }
   
 
