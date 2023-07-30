@@ -827,7 +827,17 @@ define([
         }
 
         if (attributeData) {
-            this.attributes[attributeData.playerId].update(attributeData);
+            const playerId = attributeData.playerId;
+            const attributes = this.attributes[playerId];
+            attributes.update(attributeData);
+
+            const statusNode = document.querySelector(
+                `#player_board_${playerId} .wolves-player-status`);
+            if (statusNode) {
+                dojo.destroy(statusNode);
+                const node = document.getElementById(`player_board_${playerId}`);
+                dojo.place(this.format_block("jstpl_player_status", attributes), node);
+            }
         }
     },
 
