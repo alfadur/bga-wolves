@@ -167,7 +167,7 @@ const REGION_LONE_WOLVES = [
     [-1, -2], [-1, 1]
 ];
 
-const REGION_PREY = [-2, 1];
+const REGION_PREY = [-2, -1];
 
 // const PR_DEER = 0b1;
 // const PR_BOAR = 0b10;
