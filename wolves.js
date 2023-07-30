@@ -470,7 +470,7 @@ define([
             typeof piece.owner === "string" ?
                 this.attributes[piece.owner].homeTerrain :
             typeof data.prey_metadata === "string" ?
-                data.prey_metadata  :
+                31 - Math.clz32(parseInt(data.prey_metadata))  :
                 "N/A";
         const node = getHexNode(piece);
         if (node) {
