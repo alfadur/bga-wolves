@@ -405,9 +405,6 @@ define([
     /*
         setup:
 
-        This method must set up the game user interface according to current game situation specified
-        in parameters.
-
         The method is called each time the game interface is displayed to a player, ie:
         _ when the game starts
         _ when a player refreshes the game page (F5)
@@ -418,15 +415,12 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
-        // Setting up player boards
-        for (const player_id in this.players) {
-            const player = gameData.players[player_id];
-
-            // TODO: Setting up players boards if needed
-        }
-
         for (const status of gameData.status) {
-            this.attributes[status.player_id] = new Attributes(status);
+            const attributes = new Attributes(status)
+            this.attributes[status.player_id] = attributes;
+
+            const node = document.getElementById(`player_board_${status.player_id}`);
+            dojo.place(this.format_block("jstpl_player_status", attributes), node);
         }
 
         gameData.pieces.forEach(this.addPiece, this);
@@ -764,15 +758,6 @@ define([
     ///////////////////////////////////////////////////
     //// Reaction to cometD notifications
 
-    /*
-        setupNotifications:
-
-        In this method, you associate each of your game notifications with your local method to handle it.
-
-        Note: game notification names correspond to "notifyAllPlayers" and "notifyPlayer" calls in
-              your wolves.game.php file.
-
-    */
     setupNotifications() {
         console.log( 'notifications subscriptions setup' );
         dojo.subscribe("draft", this, "onDraftNotification");

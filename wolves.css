@@ -257,3 +257,8 @@
 .wolves-hex-item[data-owner="4"] > .wolves-piece-sprite {
     background-position: calc(var(--piece-width) * -4) calc(var(--piece-sprite-y) * -1);
 }
+
+.wolves-player-status {
+    display: flex;
+    gap: 4px
+}

@@ -24,6 +24,14 @@ const jstpl_hex_content =
         <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-sprite"></div>
     </div>`
+const jstpl_player_status =
+    `<div class="wolves-player-status">
+        <div>Move \${moveRange}</div>
+        <div>Spread \${packSpread}</div>
+        <div>Howl \${howlRange}</div>
+        <div>Terrain \${terrainTokens}</div>
+        <div>Turns \${turnTokens}</div>
+     </div>`
 </script>  
 
 {OVERALL_GAME_FOOTER}
