@@ -154,21 +154,33 @@ class Wolves extends Table {
     protected function generatePieces(array $players): void {
         $values = [];
         $kind = P_LONE;
+        $prey_kind = P_PREY;
+        $available_prey = AVAILABLE_PREY[count($players)];
+        shuffle($available_prey);
 
         foreach (BOARD_SETUP[count($players)] as $tile) {
             if (!array_key_exists('chasm', $tile)) {
+                
                 $center = $tile['center'];
                 $scale = array_key_exists('rotate', $tile) ? -1 : 1;
                 foreach (REGION_LONE_WOLVES as [$x, $y]) {
                     $x = $center[0] + $x * $scale;
                     $y = $center[1] + $y * $scale;
-                    $values[] = "($x, $y, $kind)";
+                    $values[] = "($x, $y, $kind, NULL)";
+                }
+                [$preyType => $numPrey] = array_pop($available_prey);
+
+                [$preyX, $preyY] = REGION_PREY;
+                $x = $center[0] + $preyX * $scale;
+                $y = $center[1] + $preyY * $scale;
+                for($i = 0; $i<$numPrey; $i++){
+                    $values[] = "($x, $y, $prey_kind, $preyType)";
                 }
             }
         }
 
         $args = implode(', ', $values);
-        self::DbQuery("INSERT INTO pieces (x, y, kind) VALUES $args");
+        self::DbQuery("INSERT INTO pieces (x, y, kind, prey_metadata) VALUES $args");
     }
 
     /*

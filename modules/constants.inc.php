@@ -45,7 +45,7 @@ const P_LONE = 4;
 const P_PREY = 5;
 
 const PR_DEER = 0b1;
-const PR_HOG = 0b10;
+const PR_BOAR = 0b10;
 const PR_RACCOON = 0b100;
 const PR_HARE = 0b1000;
 const PR_MOOSE = 0b10000;
@@ -166,6 +166,54 @@ const REGION_PALETTES = [
 const REGION_LONE_WOLVES = [
     [-1, -2], [-1, 1]
 ];
+
+const REGION_PREY = [-2, 1];
+
+// const PR_DEER = 0b1;
+// const PR_BOAR = 0b10;
+// const PR_RACCOON = 0b100;
+// const PR_HARE = 0b1000;
+// const PR_MOOSE = 0b10000;
+
+const AVAILABLE_PREY = [
+    2 => [
+        PR_RACCOON => 1,
+        PR_HARE => 1,
+        PR_DEER => 1,
+        PR_MOOSE => 1,
+        PR_BOAR => 1
+    ],
+    3 => [
+        PR_HARE => 2,
+        PR_HARE => 2,
+        PR_BOAR => 2,
+        PR_DEER => 2,
+        PR_MOOSE => 2,
+        PR_RACCOON => 2
+    ],
+    4 => [
+        PR_HARE => 2,
+        PR_HARE => 2,
+        PR_BOAR => 2,
+        PR_BOAR => 2,
+        PR_RACCOON => 2,
+        PR_RACCOON => 2,
+        PR_DEER => 2,
+        PR_MOOSE => 2
+    ],
+    5 => [
+        PR_HARE => 2,
+        PR_HARE => 2,
+        PR_BOAR => 2,
+        PR_BOAR => 2,
+        PR_RACCOON => 2,
+        PR_RACCOON => 2,
+        PR_DEER => 2,
+        PR_DEER => 2,
+        PR_MOOSE => 2,
+        PR_MOOSE => 2
+    ]
+    ];
 
 const ACTION_COSTS = [
     A_MOVE => 1,
