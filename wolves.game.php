@@ -168,7 +168,7 @@ class Wolves extends Table {
                     $y = $center[1] + $y * $scale;
                     $values[] = "($x, $y, $kind, NULL)";
                 }
-                [$preyType => $numPrey] = array_pop($available_prey);
+                ["type" => $preyType, "amt" => $numPrey] = array_pop($available_prey);
 
                 [$preyX, $preyY] = REGION_PREY;
                 $x = $center[0] + $preyX * $scale;

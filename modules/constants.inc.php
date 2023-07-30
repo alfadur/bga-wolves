@@ -177,43 +177,44 @@ const REGION_PREY = [-2, 1];
 
 const AVAILABLE_PREY = [
     2 => [
-        PR_RACCOON => 1,
-        PR_HARE => 1,
-        PR_DEER => 1,
-        PR_MOOSE => 1,
-        PR_BOAR => 1
+        ["type" => PR_RACCOON, "amt" => 1],
+        ["type" => PR_HARE, "amt" => 1],
+        ["type" => PR_DEER, "amt" => 1],
+        ["type" => PR_MOOSE, "amt" => 1],
+        ["type" => PR_BOAR, "amt" => 1]
     ],
     3 => [
-        PR_HARE => 2,
-        PR_HARE => 2,
-        PR_BOAR => 2,
-        PR_DEER => 2,
-        PR_MOOSE => 2,
-        PR_RACCOON => 2
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_BOAR, "amt" => 2],
+        ["type" => PR_DEER, "amt" => 2],
+        ["type" => PR_MOOSE, "amt" => 2],
+        ["type" => PR_RACCOON, "amt" => 2]
     ],
     4 => [
-        PR_HARE => 2,
-        PR_HARE => 2,
-        PR_BOAR => 2,
-        PR_BOAR => 2,
-        PR_RACCOON => 2,
-        PR_RACCOON => 2,
-        PR_DEER => 2,
-        PR_MOOSE => 2
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_BOAR, "amt" => 2],
+        ["type" => PR_RACCOON, "amt" => 2],
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_BOAR, "amt" => 2],
+        ["type" => PR_RACCOON, "amt" => 2],
+        ["type" => PR_DEER, "amt" => 2],
+        ["type" => PR_MOOSE, "amt" => 2]
     ],
     5 => [
-        PR_HARE => 2,
-        PR_HARE => 2,
-        PR_BOAR => 2,
-        PR_BOAR => 2,
-        PR_RACCOON => 2,
-        PR_RACCOON => 2,
-        PR_DEER => 2,
-        PR_DEER => 2,
-        PR_MOOSE => 2,
-        PR_MOOSE => 2
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_BOAR, "amt" => 2],
+        ["type" => PR_RACCOON, "amt" => 2],
+        ["type" => PR_DEER, "amt" => 2],
+        ["type" => PR_MOOSE, "amt" => 2],
+        ["type" => PR_HARE, "amt" => 2],
+        ["type" => PR_BOAR, "amt" => 2],
+        ["type" => PR_RACCOON, "amt" => 2],
+        ["type" => PR_DEER, "amt" => 2],
+        ["type" => PR_MOOSE, "amt" => 2]
     ]
-    ];
+];
+
 
 const ACTION_COSTS = [
     A_MOVE => 1,
