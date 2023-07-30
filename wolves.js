@@ -436,7 +436,7 @@ define([
             };
             const node = document.getElementById(`wolves-calendar-space-${index}`);
             dojo.place(this.format_block("jstpl_hex_content", args), node);
-        })
+        }, this);
 
         document.querySelectorAll(".wolves-hex").forEach(hex => {
             if (!hex.classList.contains("wolves-hex-water")) {

@@ -269,6 +269,7 @@
 }
 
 #wolves-calendar {
+    position: relative;
     background-image: url("img/calendar2_3p.jpg");
     width: 472px;
     height: 296px;
@@ -276,6 +277,11 @@
 }
 
 .wolves-calendar-space {
+    position: absolute;
     width: 54px;
     height: 54px;
+}
+
+.wolves-calendar-space .wolves-piece-sprite {
+    padding: 0;
 }
