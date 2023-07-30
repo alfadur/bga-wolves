@@ -36,6 +36,7 @@ const T_GRASS = 2;
 const T_TUNDRA = 3;
 const T_DESERT = 4;
 const T_WATER = 5;
+const T_CHASM = 6;
 
 const P_ALPHA = 0;
 const P_PACK = 1;
@@ -134,8 +135,8 @@ const HEX_COORDS = [
 
 const CHASM_HEXES = [
     0, 1, 2,
-    5, 5, 5, 3, 4,
-    2, 3, 5, 5, 5,
+    T_CHASM, T_CHASM, T_CHASM, 3, 4,
+    2, 3, T_CHASM, T_CHASM, T_CHASM,
     4, 0, 1
 ];
 

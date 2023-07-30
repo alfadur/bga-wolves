@@ -228,6 +228,10 @@ class Wolves extends Table {
 //////////// Utility functions
 ////////////    
 
+    function isWaterTerrain($terrainType){
+        return !($terrainType === T_WATER || $terrainType === T_CHASM);
+    }
+
     function getRegions(): array {
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
@@ -392,7 +396,7 @@ class Wolves extends Table {
                     HAVING land.x=$x AND land.y=$y
                     EOF;
         $validityCheck = self::getObjectFromDB($query);
-        return $validityCheck['terrain'] != T_WATER 
+        return !isWaterTerrain($validityCheck['terrain'])
         && $validityCheck['pieces_count'] < 2 
         && ($validityCheck['pieces_count'] == 0 
             || $validityCheck['kinds'][0] === P_DEN 
@@ -436,7 +440,7 @@ class Wolves extends Table {
 
         foreach($preyTokens as ["x" => $x, "y" => $y, "prey_metadata" => $preyData]){
             $args = [];
-            foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+            foreach (HEX_DIRECTIONS as [$dx, $dy]) {
                 $newX = $x + $dx;
                 $newY = $y + $dy;
                 $args[] = "(x=$newX AND y=$newY)";
@@ -481,6 +485,20 @@ class Wolves extends Table {
         if (self::getUniqueValueFromDB($query) > 0 ) {
             throw new BgaUserException(_("This place is already occupied"));
         }
+
+        $numPlayers = self::getPlayersNumber();
+        
+        if($numPlayers > 2){
+            $chasmType = T_CHASM;
+            $chasmRegion = self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
+        
+            $selectedTile = self::getObjectFromDB("SELECT * FROM land where x=$x AND y=$y");
+
+            if($selectedTile['region_id'] != $chasmRegion){
+                throw new BgaUserException(_("You may only draft into the chasm region!"));
+            }
+        }
+
 
         $kinds = [P_ALPHA, P_PACK];
         $values = array_map(fn($piece) => "($x, $y, $player_id, $piece)", $kinds);
@@ -603,7 +621,7 @@ class Wolves extends Table {
 
         $pathCheck = function($x, $y) {
             $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($hex === NULL || $hex['terrain'] === T_WATER){
+            if($hex === NULL || !$this->isWaterTerrain($hex['terrain'])){
                 throw new BgaUserException(_('Cannot find a clear path to the given tile'));
             } 
         };
@@ -663,10 +681,11 @@ class Wolves extends Table {
 
     function getMaxDisplacement(int $x, int $y, int $playerId): int {
             $water = T_WATER;
+            $chasm = T_CHASM;
             $query = <<<EOF
                 SELECT {$this->sql_hex_range('l.x', 'l.y', $x, $y)} AS dist
                 FROM land l NATURAL LEFT JOIN pieces p
-                WHERE l.terrain <> $water
+                WHERE (l.terrain <> $water AND l.terrain <> $chasm)
                 AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
                 AND (p.kind IS NULL OR p.owner = $playerId)
                 ORDER BY dist
@@ -686,11 +705,13 @@ class Wolves extends Table {
             if($dist > $range){
                 throw new BgaUserException(_('Tile is too far'));
             }
+            $water = T_WATER;
+            $chasm = T_CHASM;
             $query = <<<EOF
                 SELECT l.*
                 FROM land l
                 LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-                WHERE l.terrain <> 5
+                WHERE (l.terrain <> $water AND l.terrain <> $chasm)
                 AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
                 AND (p.kind IS NULL OR p.owner <=> $playerId)
                 AND l.x = $x AND l.y = $y
