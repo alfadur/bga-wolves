@@ -164,7 +164,7 @@ $machinestates = [
 
     ST_POST_ACTION => [
         'name' => 'postAction',
-        'description' => ''
+        'description' => '',
         'type' => 'game',
         'action' => 'stPostAction',
         'updateGameProgression' => true,
