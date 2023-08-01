@@ -468,10 +468,9 @@ class Wolves extends Table {
                         GROUP BY p.owner
                         HAVING COUNT(DISTINCT p.x, p.y) >= 3
                         EOF;
-            
             $playerPresence = self::getObjectListFromDB($query);
             $currTurnPlayerId = self::getActivePlayerId();
-            if(in_array($currTurnPlayerId, array_map(fn($player) => $player['player_id']))){
+            if(in_array($currTurnPlayerId, array_map(fn($player) => $player['player_id'], $playerPresence))){
                 self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$currTurnPlayerId");
                 self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
                 $numPrey--;
