@@ -38,7 +38,7 @@ $gameinfos = array(
 
 
 // Players configuration that can be played (ex: 2 to 4 players)
-'players' => array( 2,3,4,5 ),    
+'players' => [2, 3, 4, 5],
 
 // Suggest players to play with this number of players. Must be null if there is no such advice, or if there is only one possible player configuration.
 // NB: the automatic lobby will try first the lowest number of players if this is not specified. So you _have to_ specify this parameter if the lowest player number is not compatible with the default options.
@@ -67,7 +67,7 @@ $gameinfos = array(
 // Note: if you are NOT using any tie breaker, leave the empty string.
 //
 // Example: 'tie_breaker_description' => totranslate( "Number of remaining cards in hand" ),
-'tie_breaker_description' => "",
+'tie_breaker_description' => totranslate("100 * number of Region Scoring Tokens + number of wolves on the board"),
 
 // If in the game, all losers are equal (no score to rank them or explicit in the rules that losers are not ranked between them), set this to true 
 // The game end result will display "Winner" for the 1st player and "Loser" for all other players
@@ -94,13 +94,13 @@ $gameinfos = array(
 'luck' => 0,    
 
 // Strategy of the game, from 0 (no strategy can be setup) to 5 (totally based on strategy)
-'strategy' => 3,    
+'strategy' => 5,
 
 // Diplomacy of the game, from 0 (no interaction in this game) to 5 (totally based on interaction and discussion between players)
-'diplomacy' => 2,    
+'diplomacy' => 0,
 
 // Colors attributed to players
-'player_colors' => array( "ff0000", "008000", "0000ff", "ffa500", "773300" ),
+'player_colors' => ['656E1D', '7B517F', 'BAA307', '6BA0AE', '584936'],
 
 // Favorite colors support : if set to "true", support attribution of favorite colors based on player's preferences (see reattributeColorsBasedOnPreferences PHP method)
 // NB: this parameter is used only to flag games supporting this feature; you must use (or not use) reattributeColorsBasedOnPreferences PHP method to actually enable or disable the feature.
@@ -112,7 +112,7 @@ $gameinfos = array(
 
 // Game interface width range (pixels)
 // Note: game interface = space on the left side, without the column on the right
-'game_interface_width' => array(
+'game_interface_width' => [
 
     // Minimum width
     //  default: 740
@@ -125,17 +125,17 @@ $gameinfos = array(
     //  maximum possible value: unlimited
     //  minimum possible value: 740
     'max' => null
-),
+],
 
 // Game presentation
 // Short game presentation text that will appear on the game description page, structured as an array of paragraphs.
 // Each paragraph must be wrapped with totranslate() for translation and should not contain html (plain text without formatting).
 // A good length for this text is between 100 and 150 words (about 6 to 9 lines on a standard display)
-'presentation' => array(
-//    totranslate("This wonderful game is about geometric shapes!"),
-//    totranslate("It was awarded best triangle game of the year in 2005 and nominated for the Spiel des Jahres."),
-//    ...
-),
+'presentation' => [
+    totranslate("The Wolves is a pack-building strategy game for 2-5 players. It's survival of the fittest as you compete to build the largest, most dominant pack by claiming territory, recruiting lone wolves, and hunting prey."),
+    totranslate("Each action requires you to flip terrain tiles matching the terrain where you wish to take your action. These double-sided tiles mean the actions you take this round will set up which terrain types you can act on in the next round. As you take actions to expand your pack's control of each region, you also upgrade your pack's attributes, allowing you to take more aggressive actions as the game goes on."),
+    totranslate("In three mid-game scoring phases, power is calculated in each region. At the end of the game, players tally points based on VP tokens earned in these scoring phases and the highest VP number revealed in each of the six tracks on your player board. The player with the most VP wins!")
+],
 'db_undo_support' => true,
 
 
