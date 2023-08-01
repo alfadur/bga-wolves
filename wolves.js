@@ -400,6 +400,11 @@ define([
         this.pieces = new Pieces;
         this.attributes = {};
         this.selectedAction = {};
+        try {
+            this.useMoveAnimation = CSS.supports("offset-path", "path('M 0 0')");
+        } catch (e) {
+            this.useMoveAnimation = false;
+        }
     },
 
     /*
@@ -507,9 +512,24 @@ define([
                     locationClass: ""
                 };
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
-                dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
+                const newNode = dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
+
+                if (this.useMoveAnimation) {
+                    const start = node.getBoundingClientRect();
+                    const end = calendarNode.getBoundingClientRect();
+
+                    const [dX, dY] = [end.left - start.left, end.top - start.top];
+                    newNode.style.offsetPath = `path("M ${-dX} ${-dY} Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} 0 0")`;
+                    newNode.classList.add("wolves-moving");
+                    const timeMs = Math.floor(1000 * parseFloat(getComputedStyle(newNode).animationDuration));
+                    setTimeout(() => {
+                        newNode.classList.remove("wolves-moving");
+                        newNode.style.offsetPath = "unset";
+                    }, timeMs)
+                }
             }
             dojo.destroy(node);
+
             if (hexNode.children.length > 1) {
                 hexNode.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
             }

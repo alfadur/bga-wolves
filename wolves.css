@@ -291,3 +291,16 @@
 .wolves-calendar-space .wolves-piece-sprite {
     padding: 0;
 }
+
+.wolves-moving {
+    animation-name: follow-path;
+    animation-duration: 1500ms;
+    animation-timing-function: ease;
+    animation-fill-mode: forwards;
+    z-index: 2;
+}
+
+@keyframes follow-path {
+    from { offset-distance: 0; }
+    to { offset-distance: 100%; }
+}
