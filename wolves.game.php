@@ -526,8 +526,9 @@ class Wolves extends Table {
 
             $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$player_id GROUP BY x, y");
             if(!is_null($drafted)){
-                $centerY = self::getObjectFromDB("SELECT center_y FROM regions WHERE region_id=$chasmRegion");
-                $hasDraftedTop = $drafted['y'] - $centerY < 0;
+                $draftedY = (int)$drafted['y'];
+                $centerY = (int)self::getUniqueValueFromDB("SELECT center_y FROM regions WHERE region_id=$chasmRegion");
+                $hasDraftedTop = $draftedY - $centerY < 0;
                 $isChoosingTop = $y - $centerY < 0;
                 if($hasDraftedTop === $isChoosingTop){
                     throw new BgaUserException(_('Second draft location must be on the opposite side of the chasm!'));
