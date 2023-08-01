@@ -52,6 +52,14 @@ const PR_RACCOON = 0b100;
 const PR_HARE = 0b1000;
 const PR_MOOSE = 0b10000;
 
+const PREY_NAMES = [
+    PR_DEER => "Deer",
+    PR_BOAR => "Boar",
+    PR_RACCOON => "Raccoon",
+    PR_HARE => "Hare",
+    PR_MOOSE => "Moose"
+];
+
 const G_SELECTED_TERRAIN = 'selected_terrain';
 const G_ACTIONS_REMAINING = 'actions_remaining';
 const G_MOVES_REMAINING = 'moves_remaining';
@@ -60,9 +68,6 @@ const G_DISPLACEMENT_WOLF = 'displacement_wolf';
 const G_MOON_PHASE = 'moon_phase';
 const G_FLIPPED_TILES = 'flipped_tiles';
 const G_SPENT_TERRAIN_TOKENS = 'spent_terrain_tokens';
-const G_HUNT_TOKEN_ID = 'hunt_token_id';
-const G_HUNT_CONFLICT_PLAYER_1 = 'hunt_conflict_player_1';
-const G_HUNT_CONFLICT_PLAYER_2 = 'hunt_conflict_player_2';
 
 const TR_DRAFT_CONTINUE = 'draftContinue';
 const TR_DRAFT_END = 'draftEnd';

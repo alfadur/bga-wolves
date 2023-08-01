@@ -33,10 +33,7 @@ class Wolves extends Table {
             G_DISPLACEMENT_WOLF => 14,
             G_MOON_PHASE => 16,
             G_FLIPPED_TILES => 17,
-            G_SPENT_TERRAIN_TOKENS => 18,
-            G_HUNT_CONFLICT_PLAYER_1 => 19,
-            G_HUNT_CONFLICT_PLAYER_2 => 20,
-            G_HUNT_TOKEN_ID => 21
+            G_SPENT_TERRAIN_TOKENS => 18
         ]);
     }
 
@@ -111,9 +108,6 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
         self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
         self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
-        self::setGameStateInitialValue(G_HUNT_CONFLICT_PLAYER_1, -1);
-        self::setGameStateInitialValue(G_HUNT_CONFLICT_PLAYER_2, -1);
-        self::setGameStateInitialValue(G_HUNT_TOKEN_ID, -1);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -440,7 +434,7 @@ class Wolves extends Table {
         return self::getObjectListFromDB($query);
     }
 
-    function doHunt(): bool {
+    function doHunt(): void {
         $preyType = P_PREY;
         $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
 
@@ -449,50 +443,46 @@ class Wolves extends Table {
             foreach (HEX_DIRECTIONS as [$dx, $dy]) {
                 $newX = $x + $dx;
                 $newY = $y + $dy;
-                $args[] = "(x=$newX AND y=$newY)";
+                $args[] = "(p.x=$newX AND p.y=$newY)";
             }
 
             $numPrey = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE x=$x AND y=$y AND kind=$preyType");
 
             $condition = implode(" OR ", $args);
+            $numPlayers = self::getPlayersNumber();
 
-            $preyKind = P_PREY;
+            $currTurnPlayerId = self::getActivePlayerId();
+            $currentTurnIndex = (int)self::getUniqueValueFromDB("SELECT player_no FROM player WHERE player_id=$currTurnPlayerId");
             $alphaKind = P_ALPHA;
+            $packKind = P_PACK;
             $query = <<<EOF
-                        SELECT p.owner as player_id
+                        SELECT p.owner as player_id, pl.player_name as name
                         FROM player_status s
                         LEFT JOIN pieces p ON s.player_id = p.owner
-                        WHERE $condition
+                        LEFT JOIN player pl ON s.player_id = pl.player_id
+                        WHERE ($condition)
                         AND s.prey_data & $preyData = 0
-                        AND p.kind IN ($preyKind, $alphaKind)
+                        AND p.kind IN ($packKind, $alphaKind)
                         GROUP BY p.owner
                         HAVING COUNT(DISTINCT p.x, p.y) >= 3
+                        ORDER BY (pl.player_no + $numPlayers - $currentTurnIndex) % $numPlayers ASC
+                        LIMIT $numPrey
                         EOF;
+
             $playerPresence = self::getObjectListFromDB($query);
-            $currTurnPlayerId = self::getActivePlayerId();
-            if(in_array($currTurnPlayerId, array_map(fn($player) => $player['player_id'], $playerPresence))){
-                self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$currTurnPlayerId");
-                self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
-                $numPrey--;
-            }
-            if($numPrey === 0){
-                continue;
-            }
-            $playerPresence = array_diff($playerPresence, [$currTurnPlayerId]);
-            if(count($playerPresence) > $numPrey){
-                $this->setGameStateValue(G_HUNT_CONFLICT_PLAYER_1, $playerPresence[0]);
-                $this->setGameStateValue(G_HUNT_CONFLICT_PLAYER_2, $playerPresence[1]);
-                $this->setGameStateValue(G_HUNT_TOKEN_ID, (int)self::getUniqueValueFromDB("SELECT id FROM pieces WHERE x=$x AND y=$y AND kind=$preyType"));
-                $this->gamestate->nextState(TR_HUNT_CONFLICT);
-                return true;
-            }
-            foreach($playerPresence as ["player_id" => $playerId]){
+            
+            foreach($playerPresence as ["player_id" => $playerId, 'name' => $playerName]){
                 self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$playerId");
                 self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
+                self::notifyAllPlayers("hunted", clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
+                [
+                    'player_id' => $playerId,
+                    'player_name' => $playerName,
+                    'prey_type' => PREY_NAMES[$preyData]
+                ]);
             }
 
         }
-        return false;
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1133,21 +1123,6 @@ class Wolves extends Table {
         $this->gamestate->jumpToState(ST_ACTION_SELECTION);
     }
 
-    function huntWinner(int $winnerId){
-        self::checkAction("huntWinner");
-        if(!($this->getGameStateValue(G_HUNT_CONFLICT_PLAYER_1) === $winnerId || $this->getGameStateValue(G_HUNT_CONFLICT_PLAYER_2) === $winnerId)){
-            throw new BgaUserException(_('This is not a valid player choice!'));
-        }
-        self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$winnerId");
-        self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
-
-        if(!$this->doHunt()){
-            $remainingActions = $this->getGameStateValue(G_ACTIONS_REMAINING);
-            $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
-        }
-
-    }
-
 //////////////////////////////////////////////////////////////////////////////
 //////////// Game state arguments
 ////////////
@@ -1191,21 +1166,6 @@ class Wolves extends Table {
             "remainingTokens" => (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
         ];
     }
-
-    function argHuntConflict(){
-        $preyId = $this->getGameStateValue(G_HUNT_TOKEN_ID);
-        $player1Id = $this->getGameStateValue(G_HUNT_CONFLICT_PLAYER_1);
-        $player2Id = $this->getGameStateValue(G_HUNT_CONFLICT_PLAYER_2);
-        $player1Name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player1Id");
-        $player2Name = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player2Id");
-        return [
-            "player1Name" => $player1Name,
-            "player1Id" => $player1Id,
-            "player2Name" => $player2Name,
-            "player2Id" => $player2Id,
-            "preyId" => $preyId
-        ];
-    }
     
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1240,9 +1200,8 @@ class Wolves extends Table {
 
     function stPostAction(): void {
         $remainingActions = $this->incGameStateValue(G_ACTIONS_REMAINING, -1);
-        if(!$this->doHunt()){
-            $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
-        }
+        $this->doHunt();
+        $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
         
     }
 
