@@ -225,7 +225,7 @@ class Wolves extends Table {
     */
     function getGameProgression(): int {
 
-        $numEntries = self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
+        $numEntries = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         return intval(($numEntries * 100) / FULL_DATES[self::getPlayersNumber()]);
     }
 
@@ -243,7 +243,7 @@ class Wolves extends Table {
     }
 
     function getMoonPhases(int $regionId): array {
-        $phase = self::getUniqueValueFromDB("SELECT moon_phase from regions WHERE region_id=$regionId");
+        $phase = (int)self::getUniqueValueFromDB("SELECT moon_phase from regions WHERE region_id=$regionId");
         $phases = [];
         if($phase == NULL){
             return $phases;
@@ -270,7 +270,7 @@ class Wolves extends Table {
 
     function getPlayerTiles(int $player_id): array {
         $tiles = self::getObjectFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
-        $home_terrain = self::getUniqueValueFromDB("SELECT `home_terrain` FROM `player_status` WHERE player_id=$player_id");
+        $home_terrain = (int)self::getUniqueValueFromDB("SELECT `home_terrain` FROM `player_status` WHERE player_id=$player_id");
         $tiles[] = $home_terrain;
         return $tiles;
     }
@@ -452,7 +452,7 @@ class Wolves extends Table {
                 $args[] = "(x=$newX AND y=$newY)";
             }
 
-            $numPrey = self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE x=$x AND y=$y AND kind=$preyType");
+            $numPrey = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE x=$x AND y=$y AND kind=$preyType");
 
             $condition = implode(" OR ", $args);
 
@@ -483,7 +483,7 @@ class Wolves extends Table {
             if(count($playerPresence) > $numPrey){
                 $this->setGameStateValue(G_HUNT_CONFLICT_PLAYER_1, $playerPresence[0]);
                 $this->setGameStateValue(G_HUNT_CONFLICT_PLAYER_2, $playerPresence[1]);
-                $this->setGameStateValue(G_HUNT_TOKEN_ID, self::getUniqueValueFromDB("SELECT id FROM pieces WHERE x=$x AND y=$y AND kind=$preyType"));
+                $this->setGameStateValue(G_HUNT_TOKEN_ID, (int)self::getUniqueValueFromDB("SELECT id FROM pieces WHERE x=$x AND y=$y AND kind=$preyType"));
                 $this->gamestate->nextState(TR_HUNT_CONFLICT);
                 return true;
             }
@@ -509,16 +509,16 @@ class Wolves extends Table {
         self::checkAction('draftPlace');
         $player_id = self::getActivePlayerId();
         $query = "SELECT COUNT(*) FROM pieces WHERE x = $x AND y = $y";
-        if (self::getUniqueValueFromDB($query) > 0 ) {
+        if ((int)self::getUniqueValueFromDB($query) > 0 ) {
             throw new BgaUserException(_("This place is already occupied"));
         }
 
         $numPlayers = self::getPlayersNumber();
         
         if($numPlayers > 2){
-            $selectedRegion = self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
+            $selectedRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
             $chasmType = T_CHASM;
-            $chasmRegion = self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
+            $chasmRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
         
             if($selectedRegion !== $chasmRegion){
                 throw new BgaUserException(_("You may only draft into the chasm region!"));
@@ -563,7 +563,7 @@ class Wolves extends Table {
 
         $playerId = self::getActivePlayerId();
 
-        $playerBonusTerrainTokens = self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId");
+        $playerBonusTerrainTokens = (int)self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId");
         if ($bonusTerrain > $playerBonusTerrainTokens) {
             throw new BgaUserException(_('Not enough bonus terrain tokens'));
         }
@@ -591,17 +591,17 @@ class Wolves extends Table {
         switch($actionName){
             case 'move':
                 $this->setGameStateValue(G_MOVED_WOLVES, 0);
-                $deployedDens = self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
+                $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
                 $this->setGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
                 break;
             case 'howl':
-                $deployedWolves = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
+                $deployedWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
                 if($deployedWolves > count(WOLF_DEPLOYMENT)){
                     throw new BgaUserException(_('You have no wolves to deploy!'));
                 }
                 break;
             case 'den':
-                $deployedDens = self::getUniqueValueFromDB("SELECT (deployed_howl_dens + deployed_pack_dens + deployed_speed_dens) as deployed_dens FROM player_status WHERE player_id=$playerId");
+                $deployedDens = (int)self::getUniqueValueFromDB("SELECT (deployed_howl_dens + deployed_pack_dens + deployed_speed_dens) as deployed_dens FROM player_status WHERE player_id=$playerId");
                 if($deployedDens >= count(HOWL_RANGE) + count(PACK_SPREAD) + count(WOLF_SPEED)){
                     throw new BgaUserException(_('You have no dens to deploy!'));
                 }
@@ -649,7 +649,7 @@ class Wolves extends Table {
 
         //Verify move is valid
 
-        $deployedDens = self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
+        $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
         $max_distance = WOLF_SPEED[$deployedDens];
         if(count($path) > $max_distance){
             throw new BgaUserException(_('The selected tile is out of range'));
@@ -732,7 +732,7 @@ class Wolves extends Table {
                 ORDER BY dist
                 LIMIT 1
                 EOF;
-            return self::getUniqueValueFromDB($query) ?? -1;
+            return (int)self::getUniqueValueFromDB($query) ?? -1;
     }
 
     function displace(array $path): void {
@@ -816,7 +816,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
-        $updateId = self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
+        $updateId = (int)self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
 
         self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
@@ -852,7 +852,7 @@ class Wolves extends Table {
 
         $playerId = self::getActivePlayerId();
         $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
-        $numDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
+        $numDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
         if($numDens >= 4){
             throw new BgaUserException(_('No more dens of this type!'));
         }
@@ -879,11 +879,11 @@ class Wolves extends Table {
                 AND (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
                 AND (p.owner IS NULL OR p.kind < $denValue)                    
             EOF;
-        if (self::getUniqueValueFromDB($query) === 0){
+        if ((int)self::getUniqueValueFromDB($query) === 0){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
 
-        $deployedDens = self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
+        $deployedDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
         $award = $this->getDenAwards($denType, $deployedDens);
         $rewardString = "";
@@ -925,7 +925,7 @@ class Wolves extends Table {
         self::checkAction('lair');
 
         $playerId = self::getActivePlayerId();
-        $numLairs = self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
+        $numLairs = (int)self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
         if($numLairs >= 4){
             throw new BgaUserException(_('No more lairs!'));
         }
@@ -960,7 +960,7 @@ class Wolves extends Table {
                         AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND terrain=$water) > 0
             EOF;
-        $updateId = self::getUniqueValueFromDB($query);
+        $updateId = (int)self::getUniqueValueFromDB($query);
         if($updateId === NULL){
             throw new BgaUserException(_('Invalid hex selected!'));
         }
@@ -1001,7 +1001,7 @@ class Wolves extends Table {
         $playerId = self::getActivePlayerId();
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $deployedDens = self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
+        $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
         $maxRange = HOWL_RANGE[$deployedDens];
 
         if($wolf === NULL || $wolf['owner'] !== $playerId || (int)$wolf['kind'] !== P_ALPHA){
@@ -1025,7 +1025,7 @@ class Wolves extends Table {
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
             }
             $denName = 'deployed_'.DEN_COLS[$denType].'_dens';
-            $numDens = self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
+            $numDens = (int)self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
             if($numDens >= 4){
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
@@ -1044,11 +1044,11 @@ class Wolves extends Table {
             self::DbQuery("UPDATE player_status SET $denName=$denName + 1$rewardString WHERE player_id=$playerId");
             $newKind = P_DEN;
         } else {
-            $numWolves = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
+            $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             if($numWolves >= 8){
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
-            $wolfIndex = self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
+            $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
             $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
             $newKind = $wolfType;
@@ -1102,7 +1102,7 @@ class Wolves extends Table {
         self::checkAction('extraTurn');
 
         $playerId = self::getActivePlayerId();
-        $turnTokens = self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
+        $turnTokens = (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
         if($turnTokens == 0){
             throw new BgaUserException(_('You have no extra turn tokens to play!'));
         }
@@ -1188,7 +1188,7 @@ class Wolves extends Table {
     function argConfirmEnd(){
         $playerId = self::getActivePlayerId();
         return [
-            "remainingTokens" => self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
+            "remainingTokens" => (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
         ];
     }
 
@@ -1217,12 +1217,16 @@ class Wolves extends Table {
         The action method of state X is called everytime the current game state is set to X.    */
 
     function stDraftResolution(): void {
-        $wolvesDrafted = self::getUniqueValueFromDB(
-            "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL");
-        $draftCompleted = $wolvesDrafted >= 2 * self::getPlayersNumber();
+        $wolvesDrafted = (int)self::getUniqueValueFromDB(
+            "SELECT COUNT(*)/2 FROM pieces WHERE owner IS NOT NULL");
         $numPlayers = self::getPlayersNumber();
+        $draftCompleted = $wolvesDrafted >= (2 * $numPlayers);
+        
 
-        if ($wolvesDrafted % $numPlayers != 0 && !$draftCompleted) {
+        $type = gettype($wolvesDrafted);
+        self::debug("TESTING: $type");
+        self::debug("Wolves drafted: $wolvesDrafted, numPlayers: $numPlayers");
+        if ($wolvesDrafted % $numPlayers !== 0 && !$draftCompleted) {
             if($wolvesDrafted > $numPlayers){
                 $this->activePrevPlayer();
             }
@@ -1246,7 +1250,7 @@ class Wolves extends Table {
 
         //Scoring
         $numPlayers = self::getPlayersNumber();
-        $currentDate = self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
+        $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
         $phaseDate = PHASES[$currentPhase];
 
