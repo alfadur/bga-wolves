@@ -258,6 +258,13 @@ class Wolves extends Table {
         return "ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1) <= 2 * $range";
     }
 
+    function getPlayers(): array {
+        return self::getObjectListFromDb(<<<EOF
+            SELECT player_id AS id, player_name AS name, player_color AS color, home_terrain AS terrain 
+            FROM player NATURAL JOIN player_status 
+            EOF);
+    }
+
     function getLand(): array {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
@@ -843,7 +850,7 @@ class Wolves extends Table {
         $playerId = self::getActivePlayerId();
         $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
         $numDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
-        if($numDens >= 4){
+        if($numDens >= DEN_COUNT){
             throw new BgaUserException(_('No more dens of this type!'));
         }
         $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
@@ -916,7 +923,7 @@ class Wolves extends Table {
 
         $playerId = self::getActivePlayerId();
         $numLairs = (int)self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
-        if($numLairs >= 4){
+        if($numLairs >= LAIR_COUNT){
             throw new BgaUserException(_('No more lairs!'));
         }
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
@@ -1035,7 +1042,7 @@ class Wolves extends Table {
             $newKind = P_DEN;
         } else {
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-            if($numWolves >= 8){
+            if($numWolves >= count(WOLF_DEPLOYMENT)){
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
             $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");

@@ -1,11 +1,5 @@
 <?php
 
-const NOT_MOVED_WOLF = 'move_wolf';
-const NOT_DISPLACE_WOLF = 'displace_wolf';
-const NOT_HOWL = 'howl';
-const NOT_PLACE_DEN = 'place_den';
-const NOT_PLACE_LAIR = 'place_lair';
-const NOT_DOMINATE = 'dominate';
 const NOT_EXTRA_TURN = 'extra_turn';
 const NOT_END_TURN = 'end_turn';
 
@@ -245,6 +239,9 @@ const HEX_DIRECTIONS = [
 const WOLF_DEPLOYMENT = [
     P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK, P_ALPHA, P_PACK, P_PACK
 ];
+
+const DEN_COUNT = 4;
+const LAIR_COUNT = 4;
 
 const AW_TURN = 0;
 const AW_TERRAIN = 1;

@@ -18,14 +18,6 @@ class view_wolves_wolves extends game_view {
     }
 
   	function build_page($viewArgs): void {
-        $tile_order = [
-            T_FOREST,
-            T_ROCK,
-            T_GRASS,
-            T_TUNDRA,
-            T_DESERT
-        ];
-
         $this->page->begin_block('wolves_wolves', 'region');
         foreach ($this->game->getRegions() as $region) {
             $this->page->insert_block('region', [
@@ -62,23 +54,6 @@ class view_wolves_wolves extends game_view {
         $this->tpl['LAND_WIDTH'] = $maxCx + 119;
         $this->tpl['LAND_HEIGHT'] = $maxCy + 103;
 
-        global $g_user;
-        $current_player_id = $g_user->get_id();
-        $player_tiles = $this->game->getPlayerTiles($current_player_id);
-        $this->page->begin_block("wolves_wolves", 'tile');
-        for($i=0; $i < TILE_TERRAIN_TYPES; $i++){
-            $tile_value = $player_tiles[$i];
-            $order_index = ($i + $tile_value) % TILE_TERRAIN_TYPES;
-            $this->page->insert_block('tile', [
-                'INDEX' => $i,
-                'TYPE' => $this->game->terrainNames[$tile_order[$order_index]]
-            ]);
-        }
-        $this->page->insert_block('tile', [
-            'INDEX' => TILE_TERRAIN_TYPES,
-            'TYPE' => $this->game->terrainNames[$tile_order[$player_tiles[TILE_TERRAIN_TYPES]]]
-        ]);
-
         $this->page->begin_block('wolves_wolves', 'calendarSpace');
         for ($i = 0; $i < 22; ++$i) {
             $x = 54 * (($i + 2) % 8) + 16;
@@ -87,6 +62,53 @@ class view_wolves_wolves extends game_view {
                 'INDEX' => $i,
                 'CX' => $x,
                 'CY' => $y
+            ]);
+        }
+
+        $this->page->begin_block('wolves_wolves', 'playerTile');
+        $this->page->begin_block('wolves_wolves', 'playerBoardSpace');
+        $this->page->begin_block('wolves_wolves', 'playerBoardSpaceGroup');
+        $this->page->begin_block('wolves_wolves', 'playerBoard');
+
+        $players = $this->game->getPlayers();
+        foreach ($players as $player) {
+            $this->page->reset_subblocks("playerTile");
+
+            $this->page->insert_block("playerTile", [
+                'FRONT' => $player['terrain'],
+                'BACK' => $player['terrain']
+            ]);
+            for ($i = 0; $i < TILE_TERRAIN_TYPES; ++$i) {
+                $this->page->insert_block("playerTile", [
+                    'FRONT' => $i,
+                    'BACK' => ($i + 1) % TILE_TERRAIN_TYPES
+                ]);
+            }
+
+            $this->page->reset_subblocks('playerBoardSpaceGroup');
+
+            $reservePieces = [
+                ['pack', 'den', DEN_COUNT],
+                ['speed', 'den', DEN_COUNT],
+                ['howl', 'den', DEN_COUNT],
+                ['lair', 'lair', LAIR_COUNT],
+                ['prey', 'prey', count(PREY_NAMES)],
+                ['wolf', 'wolf', count(WOLF_DEPLOYMENT)]
+            ];
+
+            foreach ($reservePieces as [$item, $kind, $count]) {
+                $this->page->reset_subblocks('playerBoardSpace');
+                $args = ['KIND' => $kind];
+                for ($i = 0; $i < $count; ++$i) {
+                    $this->page->insert_block('playerBoardSpace', $args);
+                }
+                $this->page->insert_block('playerBoardSpaceGroup', ['ITEM' => $item]);
+            }
+
+            $this->page->insert_block('playerBoard', [
+                'ID' => $player['id'],
+                'NAME' => $player['name'],
+                'COLOR' => "#${player['color']}",
             ]);
         }
     }

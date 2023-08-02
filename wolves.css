@@ -23,60 +23,11 @@
     transform-origin: top left;
 }
 
-#player-board {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    height: 500px;
-}
-
-#player-tiles {
-    width: 100%;
-    height: 230px;
-    display: flex;
-    justify-content: center;
-}
-
-#action-buttons {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    justify-content: center;
-}
-
-.player-tile {
-    --color: black;
-    height: 100%;
-    width: calc(100% / 7);
-    position: relative;
-    background-color: var(--color);
-}
-
-.player-tile[data-terrain="rock"] {
-    --color: dimgray;
-}
-
-.player-tile[data-terrain="grass"] {
-    --color: lightgreen;
-}
-
-.player-tile[data-terrain="tundra"] {
-    --color: ghostwhite;
-}
-
-.player-tile[data-terrain="desert"] {
-    --color: sandybrown;
-}
-
-.player-tile[data-terrain="forest"] {
-    --color: darkgreen;
-}
-
 .wolves-region {
+    background-image: url("img/region.jpg");
     position: absolute;
-    width: 440px;
-    height: 412px;
+    width: 475px;
+    height: 411px;
     clip-path: polygon(
             18.75% 25%, 25% 12.25%, 37.25% 12.25%, 43.75% 0, 56.25% 0, 62.5% 12.25%, 75% 12.25%, 81.25% 0,
             93.75% 0, 100% 12.5%, 93.75% 25%, 100% 37.5%, 93.75% 50%, 100% 62.5%, 93.75% 75%,
@@ -304,3 +255,116 @@
     from { offset-distance: 0; }
     to { offset-distance: 100%; }
 }
+
+.wolves-player-container {
+    position: relative;
+}
+
+.wolves-player-name {
+    position: absolute;
+}
+
+.wolves-tile-container {
+    width: 100%;
+    height: 35%;
+}
+
+.wolves-player-tile {
+    position: absolute;
+    width: 14.2%;
+    height: 37.3%;
+    border-radius: 22%;
+    background-color: red;
+}
+
+.wolves-player-tile:nth-child(1) { left: 3.9%; top: 7% }
+.wolves-player-tile:nth-child(2) { left: 19.5%; top: 3% }
+.wolves-player-tile:nth-child(3) { left: 35% }
+.wolves-player-tile:nth-child(4) { left: 50.5% }
+.wolves-player-tile:nth-child(5) { left: 66.5%; top: 3% }
+.wolves-player-tile:nth-child(6) { left: 82%; top: 7% }
+
+.wolves-player-board {
+    position: relative;
+}
+
+.wolves-player-board:after {
+    position: relative;
+    min-width: 500px;;
+    content: "";
+    background-image: url("img/player.png");
+    background-size: cover;
+    display: block;
+    width: 100%;
+    height: 0;
+    padding-top: 57.2%;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.wolves-space-group {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.wolves-pack-group { left: 6.9%; top: 30.8% }
+.wolves-speed-group { left: 40.8%; top: 36.8% }
+.wolves-howl-group { left: 74.2%; top: 30.8% }
+.wolves-lair-group { left: 7.5%; top: 75.8% }
+.wolves-prey-group { left: 30.8%; top: 76.4% }
+.wolves-wolf-group { left: 76.9%; top: 63% }
+
+.wolves-player-board-space {
+    position: absolute;
+    border-radius: 4%;
+    background-color: black;
+    transition: transform 500ms ease-in;
+    pointer-events: all;
+}
+
+.wolves-player-board-space:hover {
+    transform: translateY(-100%);
+    transition-timing-function: ease-out;
+}
+
+.wolves-den-space {
+    width: 5.3%;
+    height: 6.7%;
+}
+
+.wolves-den-space:nth-child(1) { left: 5.9% }
+.wolves-den-space:nth-child(2) { left: 11.7% }
+.wolves-den-space:nth-child(3) { left: 2.9%; top: 7.6% }
+.wolves-den-space:nth-child(4) { left: 8.8%; top: 7.6% }
+
+.wolves-lair-space {
+    width: 4.2%;
+    height: 14%;
+}
+
+.wolves-lair-space:nth-child(2) { left: 5.2% }
+.wolves-lair-space:nth-child(3) { left: 10.4% }
+.wolves-lair-space:nth-child(4) { left: 15.6% }
+
+.wolves-prey-space {
+    width: 7.5%;
+    height: 10.9%;
+    clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
+}
+
+.wolves-prey-space:nth-child(2) { left: 8.3% }
+.wolves-prey-space:nth-child(3) { left: 16.6% }
+.wolves-prey-space:nth-child(4) { left: 24.9% }
+.wolves-prey-space:nth-child(5) { left: 33.2% }
+
+.wolves-wolf-space {
+    width: 3.8%;
+    height: 16%;
+}
+
+.wolves-wolf-space:nth-child(n + 5) { top: 17.2% }
+.wolves-wolf-space:nth-child(4n + 2) { left: 4.1% }
+.wolves-wolf-space:nth-child(4n + 3) { left: 8.2% }
+.wolves-wolf-space:nth-child(4n + 4) { left: 12.3% }

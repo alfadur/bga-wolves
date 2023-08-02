@@ -11,19 +11,31 @@
     <!-- END hex -->
     </div>
 </div>
-<div id="player-board">
-    <div id="player-tiles">
-        <!-- BEGIN tile -->
-            <span id="player-tile-{INDEX}" style="margin-inline:0.5em;" class="player-tile" data-terrain="{TYPE}"></span>
-        <!-- END tile -->
-    </div>
-</div>
 <div id="wolves-boards">
     <div id="wolves-calendar">
         <!-- BEGIN calendarSpace -->
             <div id="wolves-calendar-space-{INDEX}" class="wolves-calendar-space" style="left: {CX}px; top: {CY}px"></div>
         <!-- END calendarSpace -->
     </div>
+    <!-- BEGIN playerBoard -->
+        <div id="wolves-player-container-{ID}" class="wolves-player-container">
+            <h3 class="wolves-player-name" style="color: {COLOR}">{NAME}</h3>
+            <div class="wolves-tile-container">
+                <!-- BEGIN playerTile -->
+                <div class="wolves-player-tile" data-front="{FRONT}" data-back="{BACK}"></div>
+                <!-- END playerTile -->
+            </div>
+            <div id="wolves-player-board-{ID}" class="wolves-player-board">
+                <!-- BEGIN playerBoardSpaceGroup -->
+                    <div class="wolves-space-group wolves-{ITEM}-group">
+                        <!-- BEGIN playerBoardSpace -->
+                        <div class="wolves-player-board-space wolves-{KIND}-space"></div>
+                        <!-- END playerBoardSpace -->
+                    </div>
+                <!-- END playerBoardSpaceGroup -->
+            </div>
+        </div>
+    <!-- END playerBoard -->
 </div>
 <script type="text/javascript">
 const jstpl_hex_content =
