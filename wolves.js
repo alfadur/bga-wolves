@@ -421,11 +421,23 @@ define([
         console.log( "Starting game setup" );
 
         for (const status of gameData.status) {
+            const playerId = status.player_id;
             const attributes = new Attributes(status)
-            this.attributes[status.player_id] = attributes;
+            this.attributes[playerId] = attributes;
 
-            const node = document.getElementById(`player_board_${status.player_id}`);
+            const node = document.getElementById(`player_board_${playerId}`);
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
+
+            function removeSpaces(groupName, count) {
+                Array.from(document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group > *`))
+                    .slice(0, count).forEach(s => s.classList.add("hidden"));
+            }
+
+            removeSpaces("pack", attributes.deployedPackDens);
+            removeSpaces("speed", attributes.deployedSpeedDens);
+            removeSpaces("howl", attributes.deployedHowlDens);
+            removeSpaces("lair", attributes.deployedLairs);
+            removeSpaces("wolf", attributes.deployedWolves);
         }
 
         gameData.pieces.forEach(this.addPiece, this);
