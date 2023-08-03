@@ -519,13 +519,12 @@ define([
                     const end = calendarNode.getBoundingClientRect();
 
                     const [dX, dY] = [end.left - start.left, end.top - start.top];
-                    newNode.style.offsetPath = `path("M ${-dX} ${-dY} Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} 0 0")`;
+                    newNode.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
                     newNode.classList.add("wolves-moving");
-                    const timeMs = Math.floor(1000 * parseFloat(getComputedStyle(newNode).animationDuration));
-                    setTimeout(() => {
+                    newNode.addEventListener("animationend", () => {
                         newNode.classList.remove("wolves-moving");
                         newNode.style.offsetPath = "unset";
-                    }, timeMs)
+                    }, {once: true});
                 }
             }
             dojo.destroy(node);
