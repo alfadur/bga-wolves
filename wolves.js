@@ -876,7 +876,7 @@ define([
         const container = document.getElementById("wolves-land-container");
         const land = document.getElementById("wolves-land");
         const areaWidth = container.getBoundingClientRect().width;
-        const scale = areaWidth / parseInt(land.style.width);
+        const scale = Math.min(1.0, areaWidth / parseInt(land.style.width));
         container.style.height = `${parseInt(land.style.height) * scale}px`;
         land.style.transform = `scale(${scale})`;
     }
