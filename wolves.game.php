@@ -106,6 +106,22 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
         self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
 
+        $stats = [
+            STAT_ACTIONS_TAKEN,
+            STAT_WOLF_SCORE,
+            STAT_PREY_SCORE,
+            STAT_LAIR_SCORE,
+            STAT_PACK_SCORE,
+            STAT_SPEED_SCORE,
+            STAT_HOWL_SCORE,
+            STAT_MOON_SCORE,
+            STAT_SCORE_TOKENS,
+            STAT_WOLVES_ON_BOARD
+        ];
+        foreach($stats as $stat){
+            self::initStat("player", $stat, 0);
+        }
+
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
 

@@ -73,9 +73,54 @@ $stats_type = array(
     // Statistics existing for each player
     "player" => array(
 
-        "turns_number" => array("id"=> 10,
-                    "name" => totranslate("Number of turns"),
+        STAT_ACTIONS_TAKEN => array("id"=> 10,
+                    "name" => totranslate("Number of actions"),
                     "type" => "int" ),
+        STAT_WOLF_SCORE => [
+            "id" => 11,
+            "name" => totranslate("Score from deployed wolves"),
+            "type" => "int"
+        ],
+        STAT_PREY_SCORE => [
+            "id" => 12,
+            "name" => totranslate("Score from prey tokens"),
+            "type" => "int"
+        ],
+        STAT_PACK_SCORE => [
+            "id" => 13,
+            "name" => totranslate("Score from pack spread dens"),
+            "type" => "int"
+        ],
+        STAT_SPEED_SCORE => [
+            "id" => 14,
+            "name" => totranslate("Score from wolf speed dens"),
+            "type" => "int"
+        ],
+        STAT_HOWL_SCORE => [
+            "id" => 15,
+            "name" => totranslate("Score from howl range dens"),
+            "type" => "int"
+        ],
+        STAT_LAIR_SCORE => [
+            "id" => 16,
+            "name" => totranslate("Score from lairs"),
+            "type" => "int"
+        ],
+        STAT_MOON_SCORE => [
+            "id" => 17,
+            "name" => totranslate("Score from regions"),
+            "type" => "int"
+        ],
+        STAT_SCORE_TOKENS => [
+            "id" => 18,
+            "name" => totranslate("Number of region tokens"),
+            "type" => "int"
+        ],
+        STAT_WOLVES_ON_BOARD => [
+            "id" => 19,
+            "name" => totranslate("Number of wolves on the board"),
+            "type" => "int"
+        ]
     
 /*
         Examples:    
