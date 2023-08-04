@@ -1020,7 +1020,7 @@ class Wolves extends Table {
         ]);
 
         $stat = [STAT_HOWL_SCORE, STAT_PACK_SCORE, STAT_SPEED_SCORE][$denType];
-        $numPlayers = self::getPlayersNumber()
+        $numPlayers = self::getPlayersNumber();
         $statVal = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$numDens + 1];
         self::setStat($statVal, $stat, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1140,7 +1140,7 @@ class Wolves extends Table {
 
 
             $stat = [STAT_HOWL_SCORE, STAT_PACK_SCORE, STAT_SPEED_SCORE][$denType];
-            $numPlayers = self::getPlayersNumber()
+            $numPlayers = self::getPlayersNumber();
             $statVal = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$numDens + 1];
             $award = $this->getDenAwards($denType, $numDens);
             $rewardString = "";
