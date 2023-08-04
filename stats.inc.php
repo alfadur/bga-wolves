@@ -46,6 +46,7 @@
     * Statistic name is the English description of the statistic as shown to players
     
 */
+require_once('modules/constants.inc.php');
 
 $stats_type = array(
 
