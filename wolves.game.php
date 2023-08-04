@@ -233,20 +233,6 @@ class Wolves extends Table {
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
 
-    function getMoonPhases(int $regionId): array {
-        $phase = (int)self::getUniqueValueFromDB("SELECT moon_phase from regions WHERE region_id=$regionId");
-        $phases = [];
-        if($phase == NULL){
-            return $phases;
-        }
-        for($i = 0b1; $i<0b1000; $i *= 2){
-            if($phase & $i > 0){
-                $phases[] = $i;
-            }
-        }
-        return $phases;
-    }
-
     static function sql_hex_range($x1, $y1, $x2, $y2) {
         return "(ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1)) / 2";
     }
@@ -271,13 +257,6 @@ class Wolves extends Table {
         $home_terrain = (int)self::getUniqueValueFromDB("SELECT `home_terrain` FROM `player_status` WHERE player_id=$player_id");
         $tiles[] = $home_terrain;
         return $tiles;
-    }
-
-    function validityCheck($x, $y){
-        $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-        if($hex == NULL){
-            throw new BgaUserException(_("Invalid path!"));
-        }
     }
 
     function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array {
@@ -342,26 +321,6 @@ class Wolves extends Table {
         }
 
         return $terrain;
-    }
-
-    function getPossibleHexes(int $playerId, int $action, int $terrain): array {
-        //TODO: Implement this method
-    }
-
-    function canDisplaceWolf(int $x, int $y, $playerId): boolean {
-        $query = <<<EOF
-                    SELECT land.terrain as terrain, COUNT(SELECT * FROM pieces WHERE x=$x AND y=$y) as pieces_count, GROUP_CONCAT(pieces.kind) as kinds, GROUP_CONCAT(pieces.owner) as owners
-                    FROM land
-                    LEFT JOIN pieces ON pieces.x = land.x AND pieces.y = land.y
-                    GROUP BY land.x, land.y
-                    HAVING land.x=$x AND land.y=$y
-                    EOF;
-        $validityCheck = self::getObjectFromDB($query);
-        return !isImpassableTerrain($validityCheck['terrain'])
-        && $validityCheck['pieces_count'] < 2 
-        && ($validityCheck['pieces_count'] == 0 
-            || $validityCheck['kinds'][0] === P_DEN 
-            || $validityCheck['owners'][0] === $playerId);
     }
 
     function getDenAwards(int $denType, int $deployedDens): ?int {
