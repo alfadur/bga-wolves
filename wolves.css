@@ -8,6 +8,11 @@
  * -----
  */
 
+html {
+    background-color: #18A7AA;
+    background-image: unset;
+}
+
 :root {
     --hex-width: 119px;
     --hex-height: 103px;
@@ -21,6 +26,7 @@
 #wolves-land {
     position: relative;
     transform-origin: top left;
+    margin: auto;
 }
 
 .wolves-region {
@@ -95,12 +101,6 @@
     background-color: blueviolet !important;
 }
 
-.wolves-piece {
-    position: relative;
-    width: var(--hex-width);
-    height: var(--hex-height);
-}
-
 .wolves-piece-selector {
     position: absolute;
     width: 100%;
@@ -115,24 +115,41 @@
 }
 
 .wolves-piece-top > .wolves-piece-selector {
-    clip-path: polygon(0 100%, 25% 0, 75% 0, 100% 100%);
+    clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%);
 }
 
 .wolves-piece-bottom > .wolves-piece-selector {
-    clip-path: polygon(0 0, 25% 100%, 75% 100%, 100% 0);
-}
-
-
-.wolves-piece-top, .wolves-piece-bottom {
-    height: var(--hex-half-height) !important;
+    clip-path: polygon(0 50%, 25% 100%, 75% 100%, 100% 50%);
 }
 
 .wolves-piece-sprite {
+    --piece-scale: 1.5;
+    position: absolute;
+    width: var(--piece-width);
+    height: var(--piece-height);
+    margin: auto;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
     background-color: transparent;
     background-image: url("img/wolves.png");
     background-origin: content-box;
     background-clip: content-box;
+    background-position: 0 calc(var(--piece-sprite-y) * -1);
+
     pointer-events: none;
+    transform: scale(var(--piece-scale)) translateY(-35%);
+    transform-origin: center;
+    transition: transform 400ms ease-out;
+}
+
+.wolves-piece-top > .wolves-piece-sprite {
+    transform: scale(var(--piece-scale)) translateY(-60%);
+}
+
+.wolves-piece-bottom > .wolves-piece-sprite {
+    transform: scale(var(--piece-scale)) translateY(10%);
 }
 
 .wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite {
@@ -146,16 +163,6 @@
 @keyframes pulse {
     from { opacity: 100% }
     to { opacity: 20% }
-}
-
-.wolves-piece-sprite {
-    width: var(--piece-width);
-    height: var(--piece-height);
-    transform: scale(150%);
-    transform-origin: center;
-    background-position: 0 calc(var(--piece-sprite-y) * -1);
-    padding-left: calc((var(--hex-width) - var(--piece-width)) / 2);
-    padding-top: calc((var(--hex-height) - var(--piece-height)) / 2);
 }
 
 .wolves-piece[data-kind="0"] > .wolves-piece-sprite {
@@ -222,7 +229,8 @@
 
 #wolves-boards {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
 }
 
 #wolves-calendar {
@@ -240,10 +248,11 @@
 }
 
 .wolves-calendar-space .wolves-piece-sprite {
-    padding: 0;
+    transform: scale(var(--piece-scale));
 }
 
 .wolves-moving {
+    offset-rotate: 0deg;
     animation-name: follow-path;
     animation-duration: 1500ms;
     animation-timing-function: ease;
@@ -252,8 +261,8 @@
 }
 
 @keyframes follow-path {
-    from { offset-distance: 0; }
-    to { offset-distance: 100%; }
+    from { offset-distance: 100%; }
+    to { offset-distance: 0; }
 }
 
 .wolves-player-container {

@@ -421,11 +421,23 @@ define([
         console.log( "Starting game setup" );
 
         for (const status of gameData.status) {
+            const playerId = status.player_id;
             const attributes = new Attributes(status)
-            this.attributes[status.player_id] = attributes;
+            this.attributes[playerId] = attributes;
 
-            const node = document.getElementById(`player_board_${status.player_id}`);
+            const node = document.getElementById(`player_board_${playerId}`);
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
+
+            function removeSpaces(groupName, count) {
+                Array.from(document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group > *`))
+                    .slice(0, count).forEach(s => s.classList.add("hidden"));
+            }
+
+            removeSpaces("pack", attributes.deployedPackDens);
+            removeSpaces("speed", attributes.deployedSpeedDens);
+            removeSpaces("howl", attributes.deployedHowlDens);
+            removeSpaces("lair", attributes.deployedLairs);
+            removeSpaces("wolf", attributes.deployedWolves);
         }
 
         gameData.pieces.forEach(this.addPiece, this);
@@ -519,13 +531,12 @@ define([
                     const end = calendarNode.getBoundingClientRect();
 
                     const [dX, dY] = [end.left - start.left, end.top - start.top];
-                    newNode.style.offsetPath = `path("M ${-dX} ${-dY} Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} 0 0")`;
+                    newNode.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
                     newNode.classList.add("wolves-moving");
-                    const timeMs = Math.floor(1000 * parseFloat(getComputedStyle(newNode).animationDuration));
-                    setTimeout(() => {
+                    newNode.addEventListener("animationend", () => {
                         newNode.classList.remove("wolves-moving");
                         newNode.style.offsetPath = "unset";
-                    }, timeMs)
+                    }, {once: true});
                 }
             }
             dojo.destroy(node);
@@ -865,7 +876,7 @@ define([
         const container = document.getElementById("wolves-land-container");
         const land = document.getElementById("wolves-land");
         const areaWidth = container.getBoundingClientRect().width;
-        const scale = areaWidth / parseInt(land.style.width);
+        const scale = Math.min(1.0, areaWidth / parseInt(land.style.width));
         container.style.height = `${parseInt(land.style.height) * scale}px`;
         land.style.transform = `scale(${scale})`;
     }
