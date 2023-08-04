@@ -416,12 +416,18 @@ class Wolves extends Table {
                     'player_name' => $playerName,
                     'prey_type' => PREY_NAMES[$preyData]
                 ]);
+                $preyCount = $this->getPreyCount($playerId);
+                $numPlayers = self::getPlayersNumber();
+                $newVal = match($numPlayers){
+                    2 => array_sum(range(1, $preyCount)),
+                    default => pow($preyCount, 2)
+                };
+                self::setStat($newVal, STAT_PREY_SCORE, $playerId);
             }
-
         }
     }
 
-    function regionScoring(): bool {
+    function regionScoring(): int {
         //Scoring
         $numPlayers = self::getPlayersNumber();
         $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
@@ -488,6 +494,7 @@ class Wolves extends Table {
                         $playerStates[$winner]["second_place"] += $score / 2;
                         self::debug("Player $winner scored second place");
                         self::DbQuery("UPDATE player SET player_score = player_score + ($score / 2) WHERE player_id=$winner");
+                        self::incStat($score / 2, STAT_MOON_SCORE, $winner);
                     }
                 }
                 //If one winner, maybe second place?
@@ -500,12 +507,15 @@ class Wolves extends Table {
                     self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$firstPlace");
                     self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($firstPlace, $currentPhase)");
 
+                    self::incStat(1, STAT_SCORE_TOKENS, $firstPlace);
+                    self::incStat($score, STAT_MOON_SCORE, $firstPlace);
                     //Only 2 people in region, second place is guaranteed
                     if(count($presence) === 2){
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"] += $score / 2;
                         self::debug("Player $secondPlace scored second place");
                         self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
+                        self::incStat($score / 2, STAT_MOON_SCORE, $secondPlace);
                     }
                     //Otherwise, there can only be one player who wins second place
                     else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
@@ -513,6 +523,7 @@ class Wolves extends Table {
                         $playerStates[$secondPlace]["second_place"] += $score / 2;
                         self::debug("Player $secondPlace scored second place");
                         self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
+                        self::incStat($score / 2, STAT_MOON_SCORE, $secondPlace);
                     }
                 }
             }
@@ -520,9 +531,11 @@ class Wolves extends Table {
             else{
                 $winner = $presence[0]['owner'];
                 $playerStates[$winner]["first_place"] += $score;
+                self::incStat(1, STAT_SCORE_TOKENS, $winner);
                 self::debug("Player $winner scored first place");
                 self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$winner");
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
+                self::incStat($score, STAT_MOON_SCORE, $winner);
             }
             
         }
@@ -570,6 +583,16 @@ class Wolves extends Table {
             'closing' => clienttranslate('Okay')
         ]);
         return $currentPhase + 1;
+    }
+
+    function getPreyCount(int $playerId){
+        $preyVal = (int)self::getUniqueValueFromDB("SELECT prey_data FROM player_status WHERE player_id=$playerId");
+        $numPrey = 0;
+        while($preyVal > 0){
+            $numPrey += $preyVal & 1;
+            $preyVal = $preyVal >> 1;
+        }
+        return $numPrey;
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -909,6 +932,10 @@ class Wolves extends Table {
                 'progress' => true
             ]
         ]);
+
+
+        self::setStat(DEPLOYED_WOLF_SCORE[$wolfIndex + 1], STAT_WOLF_SCORE, $playerId);
+        self::incStat(1, STAT_WOLVES_ON_BOARD, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
         /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
@@ -994,6 +1021,18 @@ class Wolves extends Table {
             ],
             'den_type' => DEN_COLS[$denType],
         ]);
+
+        $stat = match ($denType) {
+            0 => STAT_HOWL_SCORE,
+            1 => STAT_PACK_SCORE,
+            2 => STAT_SPEED_SCORE
+        };
+        $numPlayers = self::getPlayersNumber()
+        $statVal = match ($numPlayers) {
+            2 => DEN_SCORE_2P,
+            default => DEN_SCORE
+        }[$numDens + 1];
+        self::setStat($statVal, $stat, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -1061,6 +1100,7 @@ class Wolves extends Table {
                 'progress' => true
             ]
         ]);
+        self::incStat(5, STAT_LAIR_SCORE, $playerId);
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
             $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
@@ -1098,6 +1138,7 @@ class Wolves extends Table {
         }
 
         if((int)$target['kind'] === P_DEN){
+            
             if(!array_key_exists($denType, DEN_COLS)){
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
             }
@@ -1107,6 +1148,16 @@ class Wolves extends Table {
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
 
+            $stat = match ($denType) {
+                0 => STAT_HOWL_SCORE,
+                1 => STAT_PACK_SCORE,
+                2 => STAT_SPEED_SCORE
+            };
+            $numPlayers = self::getPlayersNumber()
+            $statVal = match ($numPlayers) {
+                2 => DEN_SCORE_2P,
+                default => DEN_SCORE
+            }[$numDens + 1];
             $award = $this->getDenAwards($denType, $numDens);
             $rewardString = "";
             switch($award){
@@ -1121,10 +1172,12 @@ class Wolves extends Table {
             self::DbQuery("UPDATE player_status SET $denName=$denName + 1$rewardString WHERE player_id=$playerId");
             $newKind = P_DEN;
         } else {
+            $stat = STAT_WOLF_SCORE;
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             if($numWolves >= count(WOLF_DEPLOYMENT)){
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
+            $statVal = DEPLOYED_WOLVES_SCORE[$numWolves + 1];
             $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
             $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
@@ -1133,7 +1186,7 @@ class Wolves extends Table {
 
         self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$newKind WHERE id=$targetId");
         self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$target['owner']}, {$target['kind']})");
-
+        self::setStat($statVal, $stat, $playerId);
         self::notifyAllPlayers('update', clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
             [
                 "player_id" => $playerId,
@@ -1148,6 +1201,17 @@ class Wolves extends Table {
                 ],
                 "target_player" => self::getPlayerNameById($target['owner'])
             ]);
+
+        // Set wolves on board stat for attacker & defender in case that was updated
+        $alpha = P_ALPHA;
+        $pack = P_PACK;
+        $attackerWolves = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE kind IN ($alpha, $pack) AND owner=$playerId");
+        $targetWolves = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE kind IN ($alpha, $pack) AND owner=$targetId");
+
+        self::setStat($attackerWolves, STAT_WOLVES_ON_BOARD, $playerId);
+        self::setStat($targetWolves, STAT_WOLVES_ON_BOARD, $targetId);
+
+        
         $this->gamestate->nextState(TR_POST_ACTION);
 
         /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range, $target){
@@ -1286,6 +1350,8 @@ class Wolves extends Table {
     }
 
     function stPostAction(): void {
+        $playerId = self::getActivePlayerId();
+        self::incStat(1, STAT_ACTIONS_TAKEN, $playerId);
         $remainingActions = $this->incGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
         $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);

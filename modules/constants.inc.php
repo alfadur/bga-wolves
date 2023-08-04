@@ -385,6 +385,18 @@ const MOON_SCORES = [
     4, 6, 8
 ];
 
+const DEPLOYED_WOLF_SCORE = [
+    0, 1, 2, 3, 4, 6, 8, 10, 12
+];
+
+const DEN_SCORE = [
+    0, 0, 0, 3, 7
+];
+
+const DEN_SCORE_2P = [
+    0, 0, 0, 2, 5
+];
+
 // Stats
 
 const STAT_ACTIONS_TAKEN = "actions_taken";
