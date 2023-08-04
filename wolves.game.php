@@ -13,7 +13,6 @@ require_once(APP_GAMEMODULE_PATH.'module/table/table.game.php');
 require_once('modules/constants.inc.php');
 
 class Wolves extends Table {
-    const CALENDAR_PROGRESS = 20;
 
     function __construct() {
         // Your global variables labels:
@@ -25,7 +24,6 @@ class Wolves extends Table {
         parent::__construct();
         
         self::initGameStateLabels([
-            'calendar' => self::CALENDAR_PROGRESS,
             G_SELECTED_TERRAIN => 10,
             G_ACTIONS_REMAINING => 11,
             G_MOVES_REMAINING => 12,
@@ -99,7 +97,7 @@ class Wolves extends Table {
         $this->generateLand(count($players));
         $this->generatePieces($players);
 
-        self::setGameStateInitialValue('calendar', 0);
+        self::setGameStateInitialValue(G_CALENDAR_PROGRESS, 0);
         self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
         self::setGameStateInitialValue(G_ACTIONS_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
