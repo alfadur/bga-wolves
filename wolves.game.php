@@ -97,7 +97,6 @@ class Wolves extends Table {
         $this->generateLand(count($players));
         $this->generatePieces($players);
 
-        self::setGameStateInitialValue(G_CALENDAR_PROGRESS, 0);
         self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
         self::setGameStateInitialValue(G_ACTIONS_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
