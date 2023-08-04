@@ -273,49 +273,6 @@ class Wolves extends Table {
         return $tiles;
     }
 
-    function getPiecesInRange(int $x, int $y, int $range, int $terrain, $kinds, ?int $sourcePlayerId = null): array {
-        [$xMin, $xMax] = [$x - $range, $x + $range];
-        [$yMin, $yMax] = [$y - $range, $y + $range];
-        $playerCheck = $sourcePlayerId === null ? '' : <<<EOF
-                AND pieces.owner IS NOT NULL
-                AND pieces.owner <> $sourcePlayerId
-            GROUP BY x, y, owner
-            HAVING COUNT(*) = 1
-            ORDER BY NULL
-            EOF;
-        $kindCheck = is_int($kinds) ? "kind = $kinds" : 'kind IN (' . implode(', ', $kinds) . ')';
-
-        $query = <<<EOF
-            SELECT x, y FROM pieces NATURAL JOIN land
-            WHERE x BETWEEN $xMin AND $xMax
-                AND y BETWEEN $yMin AND $yMax
-                AND terrain = $terrain
-                AND $kindCheck
-                AND {$this->sql_hex_in_range('x', 'y', $x, $y, $range)}
-            $playerCheck
-            EOF;
-        return self::getObjectListFromDb($query);
-    }
-
-    function getValidLandInRange(int $x, int $y, int $kind, int $player_id, int $range, int $terrain): array {
-        [$xMin, $xMax] = [$x - $range, $x + $range];
-        [$yMin, $yMax] = [$y - $range, $y + $range];
-        $pack = P_PACK;
-        $kinds = implode(", ", [P_ALPHA, P_LAIR, P_LONE, P_PREY]);
-        $query = <<<EOF
-            SELECT l.*
-            FROM land l NATURAL LEFT JOIN pieces p
-            WHERE l.x BETWEEN $xMin AND $xMax
-                AND l.y BETWEEN $yMin AND $yMax
-                AND l.terrain = $terrain
-                AND {$this->sql_hex_in_range('l.x', 'l.y', $x, $y, $range)}
-                AND (p.id IS NULL OR (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2)
-                AND (p.kind IS NULL OR $kind != $pack OR p.kind != $pack OR p.owner = $player_id)
-                AND (p.kind IS NULL OR p.kind NOT IN ($kinds) OR p.owner = $player_id)
-            EOF;
-        return self::getObjectListFromDB($query);
-    }
-
     function validityCheck($x, $y){
         $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
         if($hex == NULL){
