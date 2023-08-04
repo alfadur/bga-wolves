@@ -434,7 +434,7 @@ class Wolves extends Table {
                     COUNT(CASE WHEN p.kind=$alpha THEN 1 END) as alphas
                     FROM land l
                     NATURAL LEFT JOIN pieces p
-                    WHERE l.region_id=$regionId
+                    WHERE l.region_id=$regionId AND p.owner IS NOT NULL
                     GROUP BY p.owner
                     ORDER BY score, alphas
                     EOF;
@@ -497,11 +497,14 @@ class Wolves extends Table {
         $numPlayers = self::getPlayersNumber();
         $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
-        $phaseDate = PHASES[$currentPhase];
+        $phaseDate = PHASES[$currentPhase][$numPlayers];
 
         if($currentDate < $phaseDate){
+            self::debug("$currentDate/$phaseDate");
             return $currentPhase;
         }
+
+        self::debug("Region scoring");
         $this->incGameStateValue(G_MOON_PHASE, 1);
 
         // init player score states
@@ -547,33 +550,40 @@ class Wolves extends Table {
                 $firstWinner = $presence[0];
                 $winners = array_filter($presence, fn($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
 
+                self::dump('presence', $presence);
+                self::dump('winners', $winners);
                 //multiple winners, no second place, and everyone gets half score
                 if(count($winners) > 1){
                     foreach($winners as $winner){
-                        $playerStates[$winner]["second_place"]++;
-                        self::DbQuery("UPDATE player SET score = score + $score / 2 WHERE player_id=$winner");
+                        $winner = $winner['owner'];
+                        $playerStates[$winner]["second_place"] += $score / 2;
+                        self::debug("Player $winner scored second place");
+                        self::DbQuery("UPDATE player SET player_score = player_score + ($score / 2) WHERE player_id=$winner");
                     }
                 }
                 //If one winner, maybe second place?
+                
                 else{
-
                     //Set first player points/score token
                     $firstPlace = $presence[0]['owner'];
                     $playerStates[$firstPlace]["first_place"] += $score;
-                    self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$firstPlace");
+                    self::debug("Player $firstPlace scored first place");
+                    self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$firstPlace");
                     self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($firstPlace, $currentPhase)");
 
                     //Only 2 people in region, second place is guaranteed
                     if(count($presence) === 2){
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"] += $score / 2;
-                        self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id=$secondPlace");
+                        self::debug("Player $secondPlace scored second place");
+                        self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
                     }
                     //Otherwise, there can only be one player who wins second place
                     else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"] += $score / 2;
-                        self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id=$secondPlace");
+                        self::debug("Player $secondPlace scored second place");
+                        self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
                     }
                 }
             }
@@ -581,7 +591,8 @@ class Wolves extends Table {
             else{
                 $winner = $presence[0]['owner'];
                 $playerStates[$winner]["first_place"] += $score;
-                self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$winner");
+                self::debug("Player $winner scored first place");
+                self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$winner");
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
             }
             
@@ -1468,4 +1479,31 @@ class Wolves extends Table {
                 ]
             ]);
     }
+
+    function ___debugRegionScoring(int $phase){
+        if($phase > 2 || $phase < 0){
+            throw new BgaUserException(_("This aint it"));
+        }
+
+        $numPlayers = $this->getPlayersNumber();
+
+        $this->setGameStateValue(G_MOON_PHASE, $phase);
+        self::DbQuery("DELETE FROM moonlight_board");
+        $entries = [];
+        $loneWolfKind = P_LONE;
+        for($i = 0; $i<PHASES[$phase][$numPlayers]; $i++){
+            $entries[] = "($loneWolfKind)";
+        }
+        $args = implode(",", $entries);
+
+        $query = "INSERT INTO moonlight_board (kind) VALUES $args";
+
+        self::debug("QUERY IS $query");
+
+        self::DbQuery($query);
+
+        $this->regionScoring();
+
+    }
 }
+
