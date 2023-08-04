@@ -384,3 +384,16 @@ const START_MOON_PHASES = [
 const MOON_SCORES = [
     4, 6, 8
 ];
+
+// Stats
+
+const STAT_ACTIONS_TAKEN = "actions_taken";
+const STAT_WOLF_SCORE = "wolf_score";
+const STAT_PREY_SCORE = "prey_score";
+const STAT_LAIR_SCORE = "lair_score";
+const STAT_PACK_SCORE = "pack_score";
+const STAT_SPEED_SCORE = "speed_score";
+const STAT_HOWL_SCORE = "howl_score";
+const STAT_MOON_SCORE = "star_score";
+const STAT_SCORE_TOKENS = "score_tokens";
+const STAT_WOLVES_ON_BOARD = "wolves_on_board";
