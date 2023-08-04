@@ -492,6 +492,146 @@ class Wolves extends Table {
         }
     }
 
+    function regionScoring(): bool {
+        //Scoring
+        $numPlayers = self::getPlayersNumber();
+        $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
+        $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
+        $phaseDate = PHASES[$currentPhase];
+
+        if($currentDate < $phaseDate){
+            return $currentPhase;
+        }
+        $this->incGameStateValue(G_MOON_PHASE, 1);
+
+        // init player score states
+
+        $player_ids =  array_keys($this->loadPlayersBasicInfos());  
+        $playerStates = [];
+        foreach($player_ids as $playerId){
+            $playerStates[$playerId] = [
+                "first_place" => 0,
+                "second_place" => 0
+            ];
+        }
+
+        //Determine condition for region
+        $phaseBitMask = [M_CRESCENT, M_QUARTER, M_FULL][$currentPhase];
+
+        $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE moon_phase & $phaseBitMask > 0");
+        $score = ($currentPhase * 2) + 4;
+        $winners = [];
+        foreach($scoringRegions as $region){
+
+            //Gather region presence and sort based off most score, then most alphas
+            $presence = $this->getRegionPresence($region['region_id']);
+
+            //If no one is in the region, no one scores
+            if(count($presence) == 0){
+                continue;
+            }
+            $cmp = function($a, $b) {
+                if($a['score'] === $b['score']){
+                    return ($a['alphas'] > $b['alphas']) ? -1 : 1;
+                }
+                return ($a['score'] > $b['score']) ? -1 : 1;
+            };
+            usort($presence, $cmp);
+
+            //Determine who won
+
+            //At least 2 people in region
+            if(count($presence) > 1){
+
+                //Determine how many players won first place
+                $firstWinner = $presence[0];
+                $winners = array_filter($presence, fn($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
+
+                //multiple winners, no second place, and everyone gets half score
+                if(count($winners) > 1){
+                    foreach($winners as $winner){
+                        $playerStates[$winner]["second_place"]++;
+                        self::DbQuery("UPDATE player SET score = score + $score / 2 WHERE player_id=$winner");
+                    }
+                }
+                //If one winner, maybe second place?
+                else{
+
+                    //Set first player points/score token
+                    $firstPlace = $presence[0]['owner'];
+                    $playerStates[$firstPlace]["first_place"] += $score;
+                    self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$firstPlace");
+                    self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($firstPlace, $currentPhase)");
+
+                    //Only 2 people in region, second place is guaranteed
+                    if(count($presence) === 2){
+                        $secondPlace = $presence[1]['owner'];
+                        $playerStates[$secondPlace]["second_place"] += $score / 2;
+                        self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id=$secondPlace");
+                    }
+                    //Otherwise, there can only be one player who wins second place
+                    else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
+                        $secondPlace = $presence[1]['owner'];
+                        $playerStates[$secondPlace]["second_place"] += $score / 2;
+                        self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id=$secondPlace");
+                    }
+                }
+            }
+            //Only 1 person with presence in region, so they win first place
+            else{
+                $winner = $presence[0]['owner'];
+                $playerStates[$winner]["first_place"] += $score;
+                self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$winner");
+                self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
+            }
+            
+        }
+
+        $firstRow = [clienttranslate('Player')];
+        $firstPlace = [clienttranslate('First Place Score')];
+        $secondPlace = [clienttranslate('Second Place Score')];
+        $total = [clienttranslate('Total')];
+
+        foreach($player_ids as $player_id){
+            $playerName = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player_id");
+            $firstRow[] = [
+                "str" => '${player_name}',
+                'args' => ['player_name' => $playerName],
+                'type' => 'header'
+            ];
+
+            $firstPlace[] = [
+                "str" => '${points}',
+                'args' => ['points' => $playerStates[$player_id]['first_place']],
+                'type' => 'footer'
+            ];
+
+            $secondPlace[] = [
+                "str" => '${points}',
+                'args' => ['points' => $playerStates[$player_id]['second_place']],
+                'type' => 'footer'
+            ];
+
+            $total[] = [
+                "str" => '${points}',
+                'args' => ['points' => array_sum($playerStates[$player_id])]
+            ];
+        }
+
+        $this->notifyAllPlayers("tableWindow", '', [
+            'id' => 'scoreTable',
+            'title' => clienttranslate('Region Scoring'),
+            'table' => [
+                $firstRow,
+                $firstPlace,
+                $secondPlace,
+                $total
+            ],
+            'closing' => clienttranslate('Okay')
+        ]);
+        return $currentPhase + 1;
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
@@ -1214,82 +1354,9 @@ class Wolves extends Table {
 
     function stNextTurn(): void {
 
-        //Scoring
-        $numPlayers = self::getPlayersNumber();
-        $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
-        $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
-        $phaseDate = PHASES[$currentPhase];
-
-        if($currentDate >= $phaseDate){
-            $this->incGameStateValue(G_MOON_PHASE, 1);
-
-            //Determine condition for region
-            $phaseBitMask = [M_CRESCENT, M_QUARTER, M_FULL][$currentPhase];
-
-            $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE moon_phase & $phaseBitMask > 0");
-            $score = ($currentPhase * 2) + 4;
-            $winners = [];
-            foreach($scoringRegions as $region){
-
-                //Gather region presence and sort based off most score, then most alphas
-                $presence = $this->getRegionPresence($region['region_id']);
-
-                //If no one is in the region, no one scores
-                if(count($presence) == 0){
-                    continue;
-                }
-                $cmp = function($a, $b) {
-                    if($a['score'] === $b['score']){
-                        return ($a['alphas'] > $b['alphas']) ? -1 : 1;
-                    }
-                    return ($a['score'] > $b['score']) ? -1 : 1;
-                };
-                usort($presence, $cmp);
-
-                //Determine who won
-
-                //At least 2 people in region
-                if(count($presence) > 1){
-
-                    //Determine how many players won first place
-                    $firstWinner = $presence[0];
-                    $winners = array_filter($presence, fn($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
-
-                    //multiple winners, no second place, and everyone gets half score
-                    if(count($winners) > 1){
-                        foreach($winners as $winner){
-                            self::DbQuery("UPDATE player SET score = score + $score / 2 WHERE player_id=$winner");
-                        }
-                    }
-                    //If one winner, maybe second place?
-                    else{
-
-                        //Set first player points/score token
-                        self::DbQuery("UPDATE player SET score=score+$score WHERE player_id={$presence[0]['owner']}");
-                        self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ({$presence[0]['owner']}, $currentPhase)");
-
-                        //Only 2 people in region, second place is guaranteed
-                        if(count($presence) === 2){
-                            self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id={$presence[1]['owner']}");
-                        }
-                        //Otherwise, there can only be one player who wins second place
-                        else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
-                            self::DbQuery("UPDATE player SET score=score + $score / 2 WHERE player_id={$presence[1]['owner']}");
-                        }
-                    }
-                }
-                //Only 1 person with presence in region, so they win first place
-                else{
-                    $winner = $presence[0]['owner'];
-                    self::DbQuery("UPDATE player SET score=score+$score WHERE player_id=$winner");
-                    self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
-                }
-                
-            }
-        }
-
+        $currentPhase = $this->regionScoring();
         //Determine if the game should end
-        if($currentPhase == 2){
+        if($currentPhase > 2){
             $this->gamestate->nextState(TR_END_GAME);
         }
         else{
