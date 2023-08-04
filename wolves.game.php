@@ -418,10 +418,7 @@ class Wolves extends Table {
                 ]);
                 $preyCount = $this->getPreyCount($playerId);
                 $numPlayers = self::getPlayersNumber();
-                $newVal = match($numPlayers){
-                    2 => array_sum(range(1, $preyCount)),
-                    default => pow($preyCount, 2)
-                };
+                $newVal = $numPlayers === 2 ? array_sum(range(1, $preyCount)) : pow($preyCount, 2);
                 self::setStat($newVal, STAT_PREY_SCORE, $playerId);
             }
         }
@@ -1022,16 +1019,9 @@ class Wolves extends Table {
             'den_type' => DEN_COLS[$denType],
         ]);
 
-        $stat = match ($denType) {
-            0 => STAT_HOWL_SCORE,
-            1 => STAT_PACK_SCORE,
-            2 => STAT_SPEED_SCORE
-        };
+        $stat = [STAT_HOWL_SCORE, STAT_PACK_SCORE, STAT_SPEED_SCORE][$denType];
         $numPlayers = self::getPlayersNumber()
-        $statVal = match ($numPlayers) {
-            2 => DEN_SCORE_2P,
-            default => DEN_SCORE
-        }[$numDens + 1];
+        $statVal = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$numDens + 1];
         self::setStat($statVal, $stat, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -1148,16 +1138,10 @@ class Wolves extends Table {
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
 
-            $stat = match ($denType) {
-                0 => STAT_HOWL_SCORE,
-                1 => STAT_PACK_SCORE,
-                2 => STAT_SPEED_SCORE
-            };
+
+            $stat = [STAT_HOWL_SCORE, STAT_PACK_SCORE, STAT_SPEED_SCORE][$denType];
             $numPlayers = self::getPlayersNumber()
-            $statVal = match ($numPlayers) {
-                2 => DEN_SCORE_2P,
-                default => DEN_SCORE
-            }[$numDens + 1];
+            $statVal = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$numDens + 1];
             $award = $this->getDenAwards($denType, $numDens);
             $rewardString = "";
             switch($award){
