@@ -74,52 +74,57 @@ $stats_type = array(
     // Statistics existing for each player
     "player" => array(
 
-        STAT_ACTIONS_TAKEN => array("id"=> 10,
-                    "name" => totranslate("Number of actions"),
+        STAT_PLAYER_TURNS_PLAYED => array("id"=> 10,
+                    "name" => totranslate("Turns played"),
                     "type" => "int" ),
-        STAT_WOLF_SCORE => [
+        STAT_PLAYER_FIRST_PLACE => [
             "id" => 11,
-            "name" => totranslate("Score from deployed wolves"),
+            "name" => totranslate("Regions scored (First Place)"),
             "type" => "int"
         ],
-        STAT_PREY_SCORE => [
+        STAT_PLAYER_SECOND_PLACE => [
             "id" => 12,
-            "name" => totranslate("Score from prey tokens"),
+            "name" => totranslate("Regions scored (Second Place)"),
             "type" => "int"
         ],
-        STAT_PACK_SCORE => [
+        STAT_PLAYER_LONE_WOLVES_CONVERTED => [
             "id" => 13,
-            "name" => totranslate("Score from pack spread dens"),
+            "name" => totranslate("Lone wolves converted"),
             "type" => "int"
         ],
-        STAT_SPEED_SCORE => [
+        STAT_PLAYER_DENS_PLACED => [
             "id" => 14,
-            "name" => totranslate("Score from wolf speed dens"),
+            "name" => totranslate("Dens placed"),
             "type" => "int"
         ],
-        STAT_HOWL_SCORE => [
+        STAT_PLAYER_DENS_UPGRADED => [
             "id" => 15,
-            "name" => totranslate("Score from howl range dens"),
+            "name" => totranslate("Dens upgraded to lairs"),
             "type" => "int"
         ],
-        STAT_LAIR_SCORE => [
+        STAT_PLAYER_WOLVES_DOMINATED => [
             "id" => 16,
-            "name" => totranslate("Score from lairs"),
+            "name" => totranslate("Wolves dominated"),
             "type" => "int"
         ],
-        STAT_MOON_SCORE => [
+        STAT_PLAYER_DENS_DOMINATED => [
             "id" => 17,
-            "name" => totranslate("Score from regions"),
+            "name" => totranslate("Dens dominated"),
             "type" => "int"
         ],
-        STAT_SCORE_TOKENS => [
+        STAT_PLAYER_WOLVES_MOVED => [
             "id" => 18,
-            "name" => totranslate("Number of region tokens"),
+            "name" => totranslate("Wolves moved"),
             "type" => "int"
         ],
-        STAT_WOLVES_ON_BOARD => [
+        STAT_PLAYER_PREY_HUNTED => [
             "id" => 19,
-            "name" => totranslate("Number of wolves on the board"),
+            "name" => totranslate("Bonus actions taken"),
+            "type" => "int"
+        ],
+        STAT_PLAYER_BONUS_ACTIONS_TAKEN => [
+            "id" => 20,
+            "name" => totranslate("Bonus actions taken"),
             "type" => "int"
         ]
     

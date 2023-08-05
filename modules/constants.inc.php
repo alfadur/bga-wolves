@@ -397,15 +397,21 @@ const DEN_SCORE_2P = [
     0, 0, 0, 2, 5
 ];
 
-// Stats
 
-const STAT_ACTIONS_TAKEN = "actions_taken";
-const STAT_WOLF_SCORE = "wolf_score";
-const STAT_PREY_SCORE = "prey_score";
-const STAT_LAIR_SCORE = "lair_score";
-const STAT_PACK_SCORE = "pack_score";
-const STAT_SPEED_SCORE = "speed_score";
-const STAT_HOWL_SCORE = "howl_score";
-const STAT_MOON_SCORE = "star_score";
-const STAT_SCORE_TOKENS = "score_tokens";
-const STAT_WOLVES_ON_BOARD = "wolves_on_board";
+// Table Stats
+
+const STAT_TABLE_TURNS_PLAYED
+
+// Player Stats
+
+const STAT_PLAYER_TURNS_PLAYED = "turns_played";
+const STAT_PLAYER_FIRST_PLACE = "first_place";
+const STAT_PLAYER_SECOND_PLACE = "second_place";
+const STAT_PLAYER_LONE_WOLVES_CONVERTED = "howled_wolves";
+const STAT_PLAYER_DENS_PLACED = "dens_placed";
+const STAT_PLAYER_DENS_UPGRADED = "dens_upgraded";
+const STAT_PLAYER_WOLVES_DOMINATED = "wolves_dominated";
+const STAT_PLAYER_DENS_DOMINATED = "dens_dominated";
+const STAT_PLAYER_WOLVES_MOVED = "wolves_moved";
+const STAT_PLAYER_BONUS_ACTIONS_TAKEN = "bonus_actions_taken";
+const STAT_PLAYER_PREY_HUNTED = "prey_hunted";
