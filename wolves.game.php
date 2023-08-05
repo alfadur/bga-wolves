@@ -178,8 +178,7 @@ class Wolves extends Table {
         if($player_count === 2){
             $this->generateAIPieces();
             $currentPlayer = self::getActivePlayerId();
-            $secondPlayer = self::getPlayerAfter($currentPlayer);
-            self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id=$secondPlayer");
+            self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id <> $currentPlayer");
         }
     }
 
