@@ -88,57 +88,57 @@ $stats_type = array(
                     "name" => totranslate("Turns played"),
                     "type" => "int" ),
         STAT_PLAYER_FIRST_PLACE => [
-            "id" => 11,
+            "id" => 13,
             "name" => totranslate("Regions scored (First Place)"),
             "type" => "int"
         ],
         STAT_PLAYER_SECOND_PLACE => [
-            "id" => 12,
+            "id" => 14,
             "name" => totranslate("Regions scored (Second Place)"),
             "type" => "int"
         ],
         STAT_PLAYER_LONE_WOLVES_CONVERTED => [
-            "id" => 13,
+            "id" => 15,
             "name" => totranslate("Lone wolves converted"),
             "type" => "int"
         ],
         STAT_PLAYER_DENS_PLACED => [
-            "id" => 14,
+            "id" => 16,
             "name" => totranslate("Dens placed"),
             "type" => "int"
         ],
         STAT_PLAYER_DENS_UPGRADED => [
-            "id" => 15,
+            "id" => 17,
             "name" => totranslate("Dens upgraded to lairs"),
             "type" => "int"
         ],
         STAT_PLAYER_WOLVES_DOMINATED => [
-            "id" => 16,
+            "id" => 18,
             "name" => totranslate("Wolves dominated"),
             "type" => "int"
         ],
         STAT_PLAYER_DENS_DOMINATED => [
-            "id" => 17,
+            "id" => 19,
             "name" => totranslate("Dens dominated"),
             "type" => "int"
         ],
         STAT_PLAYER_WOLVES_MOVED => [
-            "id" => 18,
+            "id" => 20,
             "name" => totranslate("Wolves moved"),
             "type" => "int"
         ],
         STAT_PLAYER_PREY_HUNTED => [
-            "id" => 19,
+            "id" => 21,
             "name" => totranslate("Bonus actions taken"),
             "type" => "int"
         ],
         STAT_PLAYER_BONUS_ACTIONS_TAKEN => [
-            "id" => 20,
+            "id" => 11,
             "name" => totranslate("Bonus actions taken"),
             "type" => "int"
         ],
         STAT_PLAYER_TERRAIN_TOKENS_SPENT => [
-            "id" => 21,
+            "id" => 12,
             "name" => totranslate("Bonus terrain tokens spent"),
             "type" => "int"
         ]
