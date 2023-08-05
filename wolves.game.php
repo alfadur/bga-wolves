@@ -177,6 +177,9 @@ class Wolves extends Table {
 
         if($player_count === 2){
             $this->generateAIPieces();
+            $currentPlayer = self::getActivePlayerId();
+            $secondPlayer = self::getPlayerAfter($currentPlayer);
+            self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id=$secondPlayer");
         }
     }
 
@@ -683,8 +686,8 @@ class Wolves extends Table {
 
         $numPlayers = self::getPlayersNumber();
         
+        $selectedRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
         if($numPlayers > 2){
-            $selectedRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
             $chasmType = T_CHASM;
             $chasmRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
         
@@ -701,6 +704,12 @@ class Wolves extends Table {
                 if($hasDraftedTop === $isChoosingTop){
                     throw new BgaUserException(_('Second draft location must be on the opposite side of the chasm!'));
                 }
+            }
+        }
+        else{
+            $regionPhase = (int)self::getUniqueValueFromDB("SELECT moon_phase FROM regions WHERE region_id=$selectedRegion");
+            if($regionPhase & M_CRESCENT > 0){
+                throw new BgaUserException(_("You cannot draft to a region with a crescent moon!"));
             }
         }
 
