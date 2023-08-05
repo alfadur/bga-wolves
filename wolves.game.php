@@ -181,14 +181,12 @@ class Wolves extends Table {
     }
 
     function generateAIPieces(){
-        $regions = self::getObjectListFromDB("SELECT region_id, moon_phase FROM regions");
+        $regions = self::getObjectListFromDB("SELECT region_id, moon_phase, center_x, center_y FROM regions");
         $values = [];
-        foreach($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase]){
+        foreach($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase, "center_x" => $x, "center_y" => $y]){
             $regionId = (int)$regionId;
             $moonPhase = (int)$moonPhase;
             $water = T_WATER;
-
-            ["x" => $x, "y" => $y] = self::getObjectFromDB("SELECT x, y FROM land WHERE region_id=$regionId AND terrain=$water");
 
             $x = (int)$x;
             $y = (int)$y;
