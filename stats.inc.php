@@ -53,9 +53,19 @@ $stats_type = array(
     // Statistics global to table
     "table" => array(
 
-        "turns_number" => array("id"=> 10,
+        STAT_TURNS_TAKEN => array("id"=> 10,
                     "name" => totranslate("Number of turns"),
                     "type" => "int" ),
+        STAT_BONUS_ACTIONS_TAKEN => [
+            "id" => 11,
+            "name" => totranslate("Number of bonus actions taken"),
+            "type" => "int"
+        ],
+        STAT_TERRAIN_TOKENS_SPEND => [
+            "id" => 12,
+            "name" => totranslate("Number of bonus terrain tokens spent"),
+            "type" => "int"
+        ]
 
 /*
         Examples:
@@ -125,6 +135,11 @@ $stats_type = array(
         STAT_PLAYER_BONUS_ACTIONS_TAKEN => [
             "id" => 20,
             "name" => totranslate("Bonus actions taken"),
+            "type" => "int"
+        ],
+        STAT_PLAYER_TERRAIN_TOKENS_SPENT => [
+            "id" => 21,
+            "name" => totranslate("Bonus terrain tokens spent"),
             "type" => "int"
         ]
     

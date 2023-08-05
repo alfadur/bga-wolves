@@ -106,7 +106,7 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
         self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
 
-        $stats = [
+        $playerStats = [
             STAT_PLAYER_ACTIONS_TAKEN,
             STAT_PLAYER_PREY_HUNTED,
             STAT_PLAYER_TURNS_PLAYED,
@@ -118,10 +118,20 @@ class Wolves extends Table {
             STAT_PLAYER_WOLVES_DOMINATED,
             STAT_PLAYER_BONUS_ACTIONS_TAKEN,
             STAT_PLAYER_FIRST_PLACE,
-            STAT_PLAYER_SECOND_PLACE
+            STAT_PLAYER_SECOND_PLACE,
+            STAT_PLAYER_TERRAIN_TOKENS_SPENT
         ];
-        foreach($stats as $stat){
+        foreach($playerStats as $stat){
             self::initStat("player", $stat, 0);
+        }
+
+        $tableStats = [
+            STAT_TURNS_TAKEN,
+            STAT_BONUS_ACTIONS_TAKEN,
+            STAT_TERRAIN_TOKENS_SPENT
+        ];
+        foreach($tableStats as $stat){
+            self::initStat("table", $stat, 0);
         }
 
         // Activate first player (which is in general a good idea :) )
@@ -720,6 +730,8 @@ class Wolves extends Table {
         ]);
 
 
+        self::incStat($bonusTerrain, STAT_PLAYER_TERRAIN_TOKENS_SPENT);
+        self::incStat($bonusTerrain, STAT_TERRAIN_TOKENS_SPENT);
         $this->gamestate->nextState( $actionName . "Select");
     }
 
@@ -1219,6 +1231,7 @@ class Wolves extends Table {
             "active_player" => self::getActivePlayerName()
         ]);
         self::incStat(1, STAT_PLAYER_BONUS_ACTIONS_TAKEN, $playerId);
+        self::incStat(1, STAT_BONUS_ACTIONS_TAKEN);
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
 
@@ -1325,6 +1338,7 @@ class Wolves extends Table {
 
         $currentPlayer = self::getActivePlayerId();
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $currentPlayer);
+        self::incStat(1, STAT_TURNS_TAKEN);
         $currentPhase = $this->regionScoring();
         //Determine if the game should end
         if($currentPhase > 2){
