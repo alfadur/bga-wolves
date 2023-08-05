@@ -61,7 +61,7 @@ $stats_type = array(
             "name" => totranslate("Number of bonus actions taken"),
             "type" => "int"
         ],
-        STAT_TERRAIN_TOKENS_SPEND => [
+        STAT_TERRAIN_TOKENS_SPENT => [
             "id" => 12,
             "name" => totranslate("Number of bonus terrain tokens spent"),
             "type" => "int"
