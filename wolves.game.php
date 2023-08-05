@@ -988,7 +988,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
-        $updateId = (int)self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
+        $updateId = self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
 
         self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
         self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
@@ -1135,10 +1135,7 @@ class Wolves extends Table {
                         AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND terrain=$water) > 0
             EOF;
-        $updateId = (int)self::getUniqueValueFromDB($query);
-        if($updateId === NULL){
-            throw new BgaUserException(_('Invalid hex selected!'));
-        }
+        $updateId = self::getUniqueValueFromDB($query);
 
         $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
