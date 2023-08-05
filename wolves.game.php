@@ -107,7 +107,6 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
 
         $playerStats = [
-            STAT_PLAYER_ACTIONS_TAKEN,
             STAT_PLAYER_PREY_HUNTED,
             STAT_PLAYER_TURNS_PLAYED,
             STAT_PLAYER_WOLVES_MOVED,
@@ -148,6 +147,7 @@ class Wolves extends Table {
         shuffle($region_palettes);
 
         $moonPhases = START_MOON_PHASES[$player_count];
+        shuffle($moonPhases);
 
         $phase_num = 0;
         $region_id = 1;
@@ -174,6 +174,52 @@ class Wolves extends Table {
         self::DbQuery("INSERT INTO regions (tile_number, center_x, center_y, rotated, moon_phase) VALUES $args");
         $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
+
+        if($player_count === 2){
+            $this->generateAIPieces();
+        }
+    }
+
+    function generateAIPieces(){
+        $regions = self::getObjectListFromDB("SELECT region_id, moon_phase FROM regions");
+        $values = [];
+        foreach($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase]){
+            $regionId = (int)$regionId;
+            $moonPhase = (int)$moonPhase;
+            $water = T_WATER;
+
+            ["x" => $x, "y" => $y] = self::getObjectFromDB("SELECT x, y FROM land WHERE region_id=$regionId AND terrain=$water");
+
+            $x = (int)$x;
+            $y = (int)$y;
+            $topRight = [$x + TOP_RIGHT[0], $y + TOP_RIGHT[1]];
+            $bottomRight = [$x + BOTTOM_RIGHT[0], $y + BOTTOM_RIGHT[1]];
+            $piecesToAdd = [];
+            switch($moonPhase){
+                case M_CRESCENT:
+                    $piecesToAdd[] = ["kind" => P_PACK, "loc" => $topRight, "num" => 2];
+                    break;
+                case M_CRES_HALF:
+                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
+                    break;
+                case M_FULL:
+                    $piecesToAdd[] = ["kind" => P_ALPHA, "loc" => $topRight, "num" => 1];
+                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1]; 
+                    break;
+                case M_QUARTER_FULL:
+                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
+                    $piecesToAdd[] = ["kind" => P_ALPHA, "loc" => $bottomRight, "num" => 2];
+                default:
+                    break;
+            }
+            foreach($piecesToAdd as ["kind" => $kind, "loc" => [$pieceX, $pieceY], "num" => $num]){
+                for(int $i = 0; $i<$num; $i++){
+                    $values[] = "($kind, $pieceX, $pieceY, TRUE)";
+                }
+            }
+        }
+        $args = implode(",", $values);
+        self::DbQuery("INSERT INTO pieces (kind, x, y, ai) VALUES $args");
     }
 
     protected function generatePieces(array $players): void {
@@ -379,7 +425,23 @@ class Wolves extends Table {
                     GROUP BY p.owner
                     ORDER BY score, alphas
                     EOF;
-        return self::getObjectListFromDB($query);
+        $playerPieces = self::getObjectListFromDB($query);
+        $aiQuery = <<<EOF
+                        "ai" as owner,
+                        SELECT ((COUNT(CASE WHEN p.kind=$lair THEN 1 END) * 3) + COUNT(CASE WHEN p.kind=$den OR p.kind=$pack OR p.kind=$alpha THEN 1 END)) as score,
+                        COUNT(CASE WHEN p.kind=$alpha THEN 1 END) as alphas
+                        FROM land l
+                        NATURAL LEFT JOIN pieces p
+                        WHERE l.region_id=$regionId AND ai IS TRUE
+                        GROUP BY owner
+                      EOF;
+        $aiPieces = self::getObjectFromDB($aiQuery);
+        if(!is_null($aiPieces)){
+            self::dump("AI Pieces", $aiPieces);
+            $playerPieces[] = $aiPieces;
+        }
+        
+        return $playerPieces;
     }
 
     function doHunt(): void {
@@ -458,6 +520,12 @@ class Wolves extends Table {
                 "second_place" => 0
             ];
         }
+        if(count($player_ids) === 2){
+            $playerStates["ai"] = [
+                "first_place" => 0,
+                "second_place" => 0
+            ];
+        }
 
         //Determine condition for region
         $phaseBitMask = [M_CRESCENT, M_QUARTER, M_FULL][$currentPhase];
@@ -495,12 +563,8 @@ class Wolves extends Table {
                 self::dump('winners', $winners);
                 //multiple winners, no second place, and everyone gets half score
                 if(count($winners) > 1){
-                    foreach($winners as $winner){
-                        $winner = $winner['owner'];
-                        $playerStates[$winner]["second_place"] += $score / 2;
-                        self::debug("Player $winner scored second place");
-                        self::DbQuery("UPDATE player SET player_score = player_score + ($score / 2) WHERE player_id=$winner");
-                        self::incStat(1, STAT_PLAYER_SECOND_PLACE, $winner);
+                    foreach($winners as ["owner" => $winner]){
+                        $playerStates[$winner]["second_place"]++;
                     }
                 }
                 //If one winner, maybe second place?
@@ -508,40 +572,43 @@ class Wolves extends Table {
                 else{
                     //Set first player points/score token
                     $firstPlace = $presence[0]['owner'];
-                    $playerStates[$firstPlace]["first_place"] += $score;
-                    self::debug("Player $firstPlace scored first place");
-                    self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$firstPlace");
-                    self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($firstPlace, $currentPhase)");
+                    $playerStates[$firstPlace]["first_place"]++;
 
-                    self::incStat(1, STAT_PLAYER_FIRST_PLACE, $firstPlace);
                     //Only 2 people in region, second place is guaranteed
                     if(count($presence) === 2){
                         $secondPlace = $presence[1]['owner'];
-                        $playerStates[$secondPlace]["second_place"] += $score / 2;
-                        self::debug("Player $secondPlace scored second place");
-                        self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
-                        self::incStat(1, STAT_PLAYER_SECOND_PLACE, $secondPlace);
+                        $playerStates[$secondPlace]["second_place"]++;
                     }
                     //Otherwise, there can only be one player who wins second place
                     else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
                         $secondPlace = $presence[1]['owner'];
-                        $playerStates[$secondPlace]["second_place"] += $score / 2;
-                        self::debug("Player $secondPlace scored second place");
-                        self::DbQuery("UPDATE player SET player_score=player_score + ($score / 2) WHERE player_id=$secondPlace");
-                        self::incStat(1, STAT_PLAYER_SECOND_PLACE, $secondPlace);
+                        $playerStates[$secondPlace]["second_place"]++;
                     }
                 }
             }
             //Only 1 person with presence in region, so they win first place
             else{
                 $winner = $presence[0]['owner'];
-                $playerStates[$winner]["first_place"] += $score;
-                self::debug("Player $winner scored first place");
-                self::DbQuery("UPDATE player SET player_score=player_score+$score WHERE player_id=$winner");
-                self::DbQuery("INSERT INTO score_token (player_id, type) VALUES ($winner, $currentPhase)");
-                self::incStat(1, STAT_PLAYER_FIRST_PLACE, $winner);
+                $playerStates[$winner]["first_place"]++;
             }
             
+        }
+
+        if(isset($playerStates["ai"])){
+            unset($playerStates["ai"]);
+        }
+        
+        foreach($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]){
+            self::DbQuery("UPDATE player SET player_score=player_score + ($score * $firstPlace) + (($score/2) * $secondPlace)");
+            if($firstPlace > 0){
+                $args = implode(",", array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
+                self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
+            }
+
+            self::incStat($firstPlace, STAT_PLAYER_FIRST_PLACE, $playerId);
+            self::incStat($secondPlace, STAT_PLAYER_SECOND_PLACE, $playerId);
+
+            self::debug("Player ($playerId) has scored first place $firstPlace times, and second place $secondPlace times");
         }
 
         $firstRow = [clienttranslate('Player')];
