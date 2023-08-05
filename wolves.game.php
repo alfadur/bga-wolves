@@ -211,7 +211,7 @@ class Wolves extends Table {
                     break;
             }
             foreach($piecesToAdd as ["kind" => $kind, "loc" => [$pieceX, $pieceY], "num" => $num]){
-                for(int $i = 0; $i<$num; $i++){
+                for($i = 0; $i<$num; $i++){
                     $values[] = "($kind, $pieceX, $pieceY, TRUE)";
                 }
             }
