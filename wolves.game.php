@@ -192,8 +192,8 @@ class Wolves extends Table {
 
             $x = (int)$x;
             $y = (int)$y;
-            $topRight = [$x + TOP_RIGHT[0], $y + TOP_RIGHT[1]];
-            $bottomRight = [$x + BOTTOM_RIGHT[0], $y + BOTTOM_RIGHT[1]];
+            $topRight = [$x + HD_TOP_RIGHT[0], $y + HD_TOP_RIGHT[1]];
+            $bottomRight = [$x + HD_BOTTOM_RIGHT[0], $y + HD_BOTTOM_RIGHT[1]];
             $piecesToAdd = [];
             switch($moonPhase){
                 case M_CRESCENT:
