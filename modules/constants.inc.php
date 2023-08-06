@@ -232,15 +232,15 @@ const ACTION_COSTS = [
 
 const TILE_TERRAIN_TYPES = 5;
 
+const HD_TOP = [0, -1];
 const HD_TOP_RIGHT = [1, 0];
 const HD_BOTTOM_RIGHT = [1, 1];
-const HD_TOP = [0, -1];
-const HD_BOTTOM_LEFT = [-1, 0];
-const HD_TOP_RIGHT = [-1, -1];
 const HD_BOTTOM = [0, 1];
+const HD_BOTTOM_LEFT = [-1, 0];
+const HD_TOP_LEFT = [-1, -1];
 
 const HEX_DIRECTIONS = [
-    HD_BOTTOM, HD_TOP_RIGHT, HD_BOTTOM_RIGHT, HD_TOP, HD_BOTTOM_LEFT, HD_TOP_RIGHT
+    HD_TOP, HD_TOP_RIGHT, HD_BOTTOM_RIGHT, HD_BOTTOM, HD_BOTTOM_LEFT, HD_TOP_LEFT
 ];
 
 const WOLF_DEPLOYMENT = [
