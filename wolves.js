@@ -657,18 +657,13 @@ define([
         if (this.isCurrentPlayerActive()) {
             switch (stateName) {
                 case "actionSelection":
-                    const buttons = {
-                        move: "🐾 Move",
-                        howl: "🌕 Howl",
-                        den: "🕳 Den",
-                        lair: "🪨 Lair",
-                        dominate: "🐺 Dominate"
-                    }
-                    Object.keys(buttons).forEach(name => {
-                        this.ensureButton(`button_${name}`, _(buttons[name]), () => {
-                            this.onSelectAction(name);
-                        });
-                    })
+                    this.ensureButtonSet({
+                        move: _("🐾 Move"),
+                        howl: _("🌕 Howl"),
+                        den: _("🕳 Den"),
+                        lair: _("🪨 Lair"),
+                        dominate: _("🐺 Dominate")
+                    }, this.onSelectAction);
                     break;
                 case "moveSelection":
                     this.ensureButton("wolves-skip-move", "Skip", "onSkipAction", null, null, "red");
@@ -688,6 +683,14 @@ define([
                             this.ensureButton(`wolves-action-select-${terrain}`, terrain, "onSubmitTerrain");
                         }
                     }
+                    this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
+                    break;
+                case "clientSelectDenType":
+                    this.ensureButtonSet({
+                        howl: _("Howl Range"),
+                        pack: _("Pack Spread"),
+                        speed: _("Wolf Speed")
+                    }, this.onSelectDen);
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "confirmEnd":
@@ -710,6 +713,13 @@ define([
         }
     },
 
+    ensureButtonSet(buttons, method) {
+        Object.keys(buttons).forEach(name => {
+            this.ensureButton(`button_${name}`, buttons[name],
+                () => { method.call(this, name); });
+        });
+    },
+
     placeStructure(playerId, x, y, kind, extraArgs) {
         const wolf = this.pieces.getByOwner(playerId, p =>
             p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 1).next().value;
@@ -724,6 +734,20 @@ define([
         this.ajaxcall(`/wolves/wolves/${kind}.html`, args, this, () => {
             console.log(`${kind} placement completed`)
         });
+    },
+
+    dominatePiece(playerId, target, attribute) {
+        const howlRange = this.activeAttributes().howlRange;
+        const wolfId = this.pieces.getByOwner(playerId, p =>
+            p.kind === PieceKind.Alpha && hexDistance(p, target) <= howlRange).next().value.id;
+
+        this.ajaxcall("/wolves/wolves/dominate.html", {
+            lock: true,
+            wolfId,
+            targetId: target.id,
+            denType: attribute,
+            path: ""
+        }, () => {});
     },
 
     ///////////////////////////////////////////////////
@@ -743,9 +767,46 @@ define([
                 document
                     .getElementById("wolves-svg-path")
                     .setAttribute("d", buildPath(path.path, 0.3));
+                return true;
             }
+        }
+        document
+            .getElementById("wolves-svg-path")
+            .setAttribute("d", "");
+        return false;
+    },
 
-            return true;
+    onPieceClick(id) {
+        console.log(`Click piece(${id})`);
+        const piece = getPieceNode(id);
+        if (piece.classList.contains("wolves-selectable")) {
+            let playerId = this.getActivePlayerId();
+            if (this.checkAction("move", false)) {
+                const predicate = moveStopPredicate(playerId, this.pieces, this.pieces.getById(id).kind);
+                const moveRange = this.activeAttributes().moveRange;
+                this.paths = selectWolf(id, predicate, moveRange, this.selectedTerrain);
+                if (this.paths) {
+                    this.selectedPiece = id;
+                    this.setClientState("clientSelectMoveTarget", {
+                        descriptionmyturn: _("${you} must select the destination hex"),
+                        possibleactions: ["clientMove"]
+                    });
+                    return true;
+                }
+            } else if (this.checkAction("dominate")) {
+                const target = this.pieces.getById(id);
+
+                if (target.kind === PieceKind.Den) {
+                    this.selectedPiece = id;
+                    this.setClientState("clientSelectDenType", {
+                        descriptionmyturn: _("${you} must select the den type"),
+                        possibleactions: ["clientDominate"]
+                    });
+                } else {
+                    this.dominatePiece(playerId, target);
+                }
+                return true;
+            }
         }
         return false;
     },
@@ -781,7 +842,11 @@ define([
                 lock: true, wolfId, x, y
             }, this, () => { console.log("howl completed") });
         } else if (this.checkAction("den", true)) {
-            this.placeStructure(playerId, x, y, "den", {denType: 0});
+            this.selectedHex = {x, y};
+            this.setClientState("clientSelectDenType", {
+                descriptionmyturn: _("${you} must select the den type"),
+                possibleactions: ["clientDen"]
+            });
         } else if (this.checkAction("lair", true)) {
             this.placeStructure(playerId, x, y, "lair");
         } else if (this.checkAction('displace')) {
@@ -790,42 +855,6 @@ define([
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
             }, () => {});
         }
-    },
-
-    onPieceClick(id) {
-        console.log(`Click piece(${id})`);
-        const piece = getPieceNode(id);
-        if (piece.classList.contains("wolves-selectable")) {
-            let playerId = this.getActivePlayerId();
-            if (this.checkAction("move", false)) {
-                const predicate = moveStopPredicate(playerId, this.pieces, this.pieces.getById(id).kind);
-                const moveRange = this.activeAttributes().moveRange;
-                this.paths = selectWolf(id, predicate, moveRange, this.selectedTerrain);
-                if (this.paths) {
-                    this.selectedPiece = id;
-                    this.setClientState("clientSelectMoveTarget", {
-                        descriptionmyturn: _("${you} must select the destination hex"),
-                        possibleactions: ["clientMove"]
-                    });
-                    return true;
-                }
-            } else if (this.checkAction("dominate")) {
-                const target  = this.pieces.getById(id);
-                const howlRange = this.activeAttributes().howlRange;
-                const wolfId = this.pieces.getByOwner(playerId, p =>
-                    p.kind === PieceKind.Alpha && hexDistance(p, target) <= howlRange).next().value.id;
-
-                this.ajaxcall("/wolves/wolves/dominate.html", {
-                    lock: true,
-                    wolfId,
-                    targetId: target.id,
-                    denType: 0,
-                    path: ""
-                }, () => {});
-                return true;
-            }
-        }
-        return false;
     },
 
     onSelectAction(action) {
@@ -882,6 +911,17 @@ define([
             force_terrain: terrainNames.indexOf(event.target.innerText),
             tiles: ""
         }, this, () => this.selectedAction = {});
+    },
+
+    onSelectDen(attributeName) {
+        const attribute = ["howl", "pack", "speed"].indexOf(attributeName);
+        const playerId = this.getActivePlayerId();
+        if (this.checkAction("clientDen", true)) {
+            const hex = this.selectedHex;
+            this.placeStructure(playerId, hex.x, hex.y, "den", {denType: attribute});
+        } else if (this.checkAction("clientDominate", true)) {
+            this.dominatePiece(playerId, this.pieces.getById(this.selectedPiece), attribute);
+        }
     },
 
     onCancel(event) {
