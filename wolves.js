@@ -694,6 +694,9 @@ define([
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "confirmEnd":
+                    if (this.activeAttributes().turnTokens > 0) {
+                        this.ensureButton("button_action", _("Use bonus action token"), "onBonusAction");
+                    }
                     this.ensureButton("button_end", _("End turn"), "onEndTurn", null, null, "red");
                     break;
             }
@@ -715,8 +718,10 @@ define([
 
     ensureButtonSet(buttons, method) {
         Object.keys(buttons).forEach(name => {
-            this.ensureButton(`button_${name}`, buttons[name],
-                () => { method.call(this, name); });
+            this.ensureButton(`button_${name}`, buttons[name], event => {
+                dojo.stopEvent(event);
+                method.call(this, name);
+            });
         });
     },
 
@@ -928,6 +933,11 @@ define([
         dojo.stopEvent(event);
         console.log("cancelled");
         this.restoreServerGameState();
+    },
+
+    onBonusAction(event) {
+        dojo.stopEvent(event);
+        this.ajaxcall("/wolves/wolves/extraTurn.html", {lock: true}, () => {});
     },
 
     onEndTurn(event) {

@@ -1510,11 +1510,11 @@ class Wolves extends Table {
 //
     }
 
-    function ___debugAddTerrain(): void {
+    function ___debugAddTokens($type): void {
         $playerId = self::getActivePlayerId();
         $tokens = 100;
-        self::DbQuery("UPDATE player_status SET terrain_tokens = $tokens WHERE player_id = $playerId");
-        self::notifyAllPlayers('update', '${player_name} gained bonus terrain tokens by cheating',
+        self::DbQuery("UPDATE player_status SET ${type}_tokens = $tokens WHERE player_id = $playerId");
+        self::notifyAllPlayers('update', '${player_name} gained bonus tokens by cheating',
             [
                 'player_name' => self::getActivePlayerName(),
                 'newAttributes' => [
@@ -1526,7 +1526,7 @@ class Wolves extends Table {
 
     function ___debugRegionScoring(int $phase){
         if($phase > 2 || $phase < 0){
-            throw new BgaUserException(_("This aint it"));
+            throw new BgaUserException("This ain't it");
         }
 
         $numPlayers = $this->getPlayersNumber();

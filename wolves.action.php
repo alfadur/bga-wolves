@@ -107,6 +107,12 @@ class action_wolves extends APP_GameAction {
         self::ajaxResponse();
     }
 
+    function extraTurn(){
+        self::setAjaxMode();
+        $this->game->extraTurn();
+        self::ajaxResponse();
+    }
+
     function endTurn(){
         self::setAjaxMode();
         $this->game->endTurn();
