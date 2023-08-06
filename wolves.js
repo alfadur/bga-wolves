@@ -30,6 +30,9 @@ const PieceKind = Object.freeze({
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
     .map(([x, y]) => Object.freeze({x, y})));
 
+const hexOffsets = Object.freeze(hexDirections
+    .map(({x, y}) => ({x: x * 89.75, y: y * 103 - x * 51.5})))
+
 const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
 const actionNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
@@ -246,6 +249,13 @@ function hexAdd(hex1, hex2) {
     };
 }
 
+function lerp(point1, point2, coef) {
+    return {
+        x: point1.x + coef * (point2.x - point1.x) ,
+        y: point1.y + coef * (point2.y - point1.y)
+    };
+}
+
 function hexDistance(from, to) {
     return Math.round(Math.abs(from.x - to.x) + Math.abs(from.y - to.y) + Math.abs(from.x - from.y - to.x + to.y)) / 2;
 }
@@ -271,7 +281,7 @@ function collectPaths(from, range, terrain, canStopPredicate) {
 
                 if (!visited.has(value)) {
                     const node = getHexNode(newHex);
-                    if (node) {
+                    if (node && !node.classList.contains("wolves-hex-water")) {
                         const terrainMatch = terrain === undefined
                             || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)
                         queue.enqueue({
@@ -389,6 +399,40 @@ function selectWolf(id, canStopPredicate, range, terrain) {
     }
 }
 
+function buildPath(path, fillet) {
+    const svg = ["M "];
+    let point = {x: 0, y: 0};
+    let center = point;
+    let extend = false;
+
+    for (let i = 0; i < path.length - 1; ++i) {
+        if (!extend) {
+            svg.push(`${point.x} ${point.y} `);
+        }
+        const nextPoint = hexAdd(center, hexOffsets[path[i]]);
+
+        if (path[i + 1] === path[i]) {
+            point = nextPoint;
+            center = nextPoint;
+            extend = true;
+        } else {
+            const filletStart = lerp(nextPoint, point, fillet );
+            svg.push(`L ${filletStart.x} ${filletStart.y} Q ${nextPoint.x} ${nextPoint.y} `);
+            extend = false;
+            center = nextPoint;
+            point = lerp(nextPoint,
+                hexAdd(nextPoint, hexOffsets[path[i + 1]]),
+                fillet);
+        }
+    }
+    if (!extend) {
+        svg.push(`${point.x} ${point.y} `);
+    }
+    const end = hexAdd(center, hexOffsets[path[path.length - 1]]);
+    svg.push(`L ${end.x} ${end.y}`);
+    return svg.join("");
+}
+
 define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
@@ -463,6 +507,11 @@ define([
                     dojo.stopEvent(e);
                     this.onHexClick(x, y)
                 });
+                dojo.connect(hex.children[0], "mouseenter", e => {
+                    if (this.onHexEnter(x, y)) {
+                        dojo.stopEvent(e);
+                    }
+                })
             }
         });
 
@@ -679,6 +728,27 @@ define([
 
     ///////////////////////////////////////////////////
     //// Player's action
+
+    onHexEnter(x, y) {
+        if (this.checkAction("clientMove", true)) {
+            const path = this.paths.filter(({hex, canStop}) => hex.x === x && hex.y === y && canStop)[0];
+            if (path && this.selectedPiece) {
+                const src = getPieceHexNode(this.selectedPiece)
+                const from = {
+                    x: parseInt(src.style.left) + 51,
+                    y: parseInt(src.style.top) + 56
+                };
+                const svg = document.getElementById("wolves-svg");
+                svg.style = `left: ${from.x - 500}px; top: ${from.y - 500}px; position: absolute; z-index: 100; pointer-events: none; width: 1000px; height: 1000px`;
+                document
+                    .getElementById("wolves-svg-path")
+                    .setAttribute("d", buildPath(path.path, 0.3));
+            }
+
+            return true;
+        }
+        return false;
+    },
 
     onHexClick(x, y) {
         console.log(`Click hex(${x}, ${y})`);
