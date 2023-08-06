@@ -425,4 +425,4 @@ const STAT_PLAYER_DENS_DOMINATED = "dens_dominated";
 const STAT_PLAYER_WOLVES_MOVED = "wolves_moved";
 const STAT_PLAYER_BONUS_ACTIONS_TAKEN = "bonus_actions_taken";
 const STAT_PLAYER_PREY_HUNTED = "prey_hunted";
-const STAT_PLAYER_TERRAIN_TOKENS_SPENT = "terrain_tonkens";
+const STAT_PLAYER_TERRAIN_TOKENS_SPENT = "terrain_tokens";
