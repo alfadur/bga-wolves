@@ -98,7 +98,7 @@ class Wolves extends Table {
         $this->generatePieces($players);
 
         self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
-        self::setGameStateInitialValue(G_ACTIONS_REMAINING, -1);
+        self::setGameStateInitialValue(G_ACTIONS_REMAINING, 2);
         self::setGameStateInitialValue(G_MOVES_REMAINING, -1);
         self::setGameStateInitialValue(G_MOVED_WOLVES, 0);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
@@ -1392,7 +1392,9 @@ class Wolves extends Table {
                 $this->activeNextPlayer();
             }
         }
-
+        if($draftCompleted){
+            self::DbQuery("INSERT INTO turn_log VALUES ()");
+        }
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
@@ -1410,6 +1412,7 @@ class Wolves extends Table {
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $currentPlayer);
         self::incStat(1, STAT_TURNS_TAKEN);
         $currentPhase = $this->regionScoring();
+        self::DbQuery("INSERT INTO turn_log VALUES ()");
         //Determine if the game should end
         if($currentPhase > 2){
             $this->gamestate->nextState(TR_END_GAME);
