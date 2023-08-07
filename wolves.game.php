@@ -177,7 +177,7 @@ class Wolves extends Table {
 
         if($player_count === 2){
             $this->generateAIPieces();
-            $currentPlayer = self::getActivePlayerId();
+            $currentPlayer = self::getNextPlayerTable()[0];
             self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id <> $currentPlayer");
         }
     }
@@ -1172,7 +1172,7 @@ class Wolves extends Table {
             return;
         }
         
-        self::incStat(1, STAT_PLAyeR_DENS_UPGRADED, $playerId);
+        self::incStat(1, STAT_PLAYER_DENS_UPGRADED, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
