@@ -78,12 +78,6 @@ CREATE TABLE IF NOT EXISTS `score_token`(
 
 CREATE TABLE IF NOT EXISTS `turn_log`(
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    `turn_id` INT UNSIGNED NOT NULL,
-    `prev_move_id` INT UNSIGNED NOT NULL,
-    `next_move_id` INT UNSIGNED NOT NULL,
-    `action_info` JSON NOT NULL,
-    PRIMARY KEY (`id`),
-    INDEX `turn_id` (`turn_id`),
-    FOREIGN KEY (`prev_move_id`) REFERENCES `turn_log`(`id`),
-    FOREIGN KEY (`next_move_id`) REFERENCES `turn_log`(`id`)
+    `data` JSON NOT NULL DEFAULT '[]',
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

@@ -65,7 +65,7 @@ $machinestates = [
         'type' => 'game',
         'action' => 'stDraftResolution',
         'updateGameProgression' => true,
-        'transitions' => [TR_DRAFT_CONTINUE => ST_DRAFT_WOLVES, TR_DRAFT_END => ST_NEXT_TURN]
+        'transitions' => [TR_DRAFT_CONTINUE => ST_DRAFT_WOLVES, TR_DRAFT_END => ST_ACTION_SELECTION]
     ],
 
     ST_DRAFT_WOLVES => [
