@@ -671,8 +671,15 @@ define([
                 case "clientSelectTiles":
                     const flippedTiles = this.selectedAction.tiles.size;
                     const cost = this.selectedAction.cost - flippedTiles;
-                    const text = _(`Flip ${flippedTiles} tiles (${cost} tokens)`);
+
+                    let hasTokens = this.activeAttributes().terrainTokens >= cost;
+                    const text = hasTokens ?
+                        _(`Flip ${flippedTiles} tiles (${cost} tokens)`) :
+                        _(`Flip ${flippedTiles} tiles`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
+                    if (!hasTokens) {
+                        dojo.addClass("wolves-action-flip", "disabled");
+                    }
                 //fallthrough
                 case "clientSelectMoveTarget":
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
