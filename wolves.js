@@ -56,6 +56,13 @@ class Attributes {
             terrainTokens: parseInt(data.terrain_tokens),
             turnTokens: parseInt(data.turn_tokens),
             preyData: parseInt(data.prey_data),
+            tiles: ["home_terrain", 0, 1, 2, 3, 4].map(p =>
+                typeof p === "string" ? {
+                        front: parseInt(data[p])
+                    } : {
+                        front: (p + parseInt(data[`tile_${p}`])) % 5,
+                        flipped: parseInt(data[`tile_${p}`])
+                    })
         })
     }
 
@@ -499,6 +506,14 @@ define([
             dojo.place(this.format_block("jstpl_hex_content", args), node);
         }, this);
 
+        document.querySelectorAll(".wolves-active-tile").forEach(tile => {
+            const index = tile.dataset.index;
+            dojo.connect(tile, 'onclick', e => {
+                dojo.stopEvent(e);
+                this.onTileClick(index, tile);
+            })
+        });
+
         document.querySelectorAll(".wolves-hex").forEach(hex => {
             if (!hex.classList.contains("wolves-hex-water")) {
                 const x = parseInt(hex.dataset.x);
@@ -514,15 +529,6 @@ define([
                 })
             }
         });
-
-        document.querySelectorAll(".player-tile").forEach(tile => {
-            const match = tile.id.match(/player-tile-(\d+)/);
-            const index = match[1];
-            dojo.connect(tile, 'onclick', e => {
-                dojo.stopEvent(e);
-                this.onTileClick(index);
-            })
-        })
 
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
@@ -612,6 +618,7 @@ define([
             switch (stateName) {
                 case "actionSelection":
                     this.selectedAction = {};
+                    clearTag("wolves-selected");
                     break;
                 case "howlSelection":
                     prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
@@ -633,6 +640,14 @@ define([
                 case "dominateSelection":
                     prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
                     break;
+                case "clientSelectTiles":
+                    const tiles = document.querySelectorAll(".wolves-active-tile");
+                    this.activeAttributes().tiles.forEach((tile, index) => {
+                        tiles[index].dataset.x = tile.front
+                        tiles[index].dataset.y = "flipped" in tile ? tile.flipped + 1 : 0;
+                    });
+                    document.getElementById("wolves-active-tiles").classList.remove("hidden");
+                    break;
             }
         }
     },
@@ -647,6 +662,9 @@ define([
             case "lairSelection":
             case "dominateSelection":
                 clearTag("wolves-selectable");
+                break;
+            case "clientSelectTiles":
+                document.getElementById("wolves-active-tiles").classList.add("hidden");
                 break;
         }
     },
@@ -881,18 +899,21 @@ define([
         });
     },
 
-    onTileClick(tile) {
-        console.log(`Clicked tile (${tile})`);
+    onTileClick(index, tile) {
+        console.log(`Clicked tile (${index})`);
         if (!this.checkAction("clientSelectTile")) {
             return;
         }
         console.log(this.selectedAction);
 
-        if (!this.selectedAction.tiles.delete(tile) && this.selectedAction.tiles.size < this.selectedAction.cost) {
-            this.selectedAction.tiles.add(tile);
+        if (!this.selectedAction.tiles.delete(index) && this.selectedAction.tiles.size < this.selectedAction.cost) {
+            this.selectedAction.tiles.add(index);
+            tile.classList.add("wolves-selected");
             this.setClientState("clientSelectTiles", {
-                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost - this.selectedAction.tiles.size} matching tiles`)
+                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
             });
+        } else {
+            tile.classList.remove("wolves-selected");
         }
     },
 

@@ -17,6 +17,57 @@ html {
     --hex-width: 119px;
     --hex-height: 103px;
     --hex-half-height: 51px;
+
+    --tile-width: 194px;
+    --tile-height: 297px;
+}
+
+#wolves-active-tiles {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+#wolves-active-tiles.hidden {
+    display: none;
+}
+
+.wolves-active-tile {
+    width: var(--tile-width);
+    height: var(--tile-height);
+    border-radius: 52px;
+    flex-shrink: 0;
+    background-image: url("img/tiles.jpg");
+    background-clip: content-box;
+    background-repeat: no-repeat;
+}
+
+.wolves-active-tile.wolves-selected {
+    box-shadow: inset 0 0 5px 4px red;
+}
+
+.wolves-active-tile[data-x="1"] {
+    background-position-x: calc(var(--tile-width) * -1);
+}
+
+.wolves-active-tile[data-x="2"] {
+    background-position-x: calc(var(--tile-width) * -2);
+}
+
+.wolves-active-tile[data-x="3"] {
+    background-position-x: calc(var(--tile-width) * -3);
+}
+
+.wolves-active-tile[data-x="4"] {
+    background-position-x: calc(var(--tile-width) * -4);
+}
+
+.wolves-active-tile[data-y="1"] {
+    background-position-y: calc(var(--tile-height) * -1);
+}
+
+.wolves-active-tile[data-y="2"] {
+    background-position-y: calc(var(--tile-height) * -2);
 }
 
 #wolves-land-container {

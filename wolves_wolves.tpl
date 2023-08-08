@@ -1,4 +1,9 @@
 {OVERALL_GAME_HEADER}
+<div id="wolves-active-tiles" class="hidden">
+    <!-- BEGIN activeTile -->
+    <div class="wolves-active-tile" data-index="{INDEX}"></div>
+    <!-- END activeTile -->
+</div>
 <div id="wolves-land-container">
     <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
     <!-- BEGIN region -->
