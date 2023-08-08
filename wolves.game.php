@@ -1293,12 +1293,12 @@ class Wolves extends Table {
             throw new BgaUserException(_('You have no extra turn tokens to play!'));
         }
         self::DbQuery("UPDATE player_status SET turn_tokens=$turnTokens - 1 WHERE player_id=$playerId");
-        $this->incGameStateValue(G_MOVES_REMAINING, 1);
+        $this->incGameStateValue(G_ACTIONS_REMAINING, 1);
 
-        self::notifyAllPlayers(NOT_EXTRA_TURN, clienttranslate('${active_player} has decided to take an additional turn'),
+        self::notifyAllPlayers(NOT_EXTRA_TURN, clienttranslate('${player_name} has decided to take an additional turn'),
         [
             "player_id" => $playerId,
-            "active_player" => self::getActivePlayerName()
+            "player_name" => self::getActivePlayerName()
         ]);
         self::incStat(1, STAT_PLAYER_BONUS_ACTIONS_TAKEN, $playerId);
         self::incStat(1, STAT_BONUS_ACTIONS_TAKEN);
@@ -1308,10 +1308,10 @@ class Wolves extends Table {
     function endTurn(){
         self::checkAction('endTurn');
         $playerId = self::getActivePlayerId();
-        self::notifyAllPlayers(NOT_END_TURN, clienttranslate('${active_player} has ended their turn'),
+        self::notifyAllPlayers(NOT_END_TURN, clienttranslate('${player_name} has ended their turn'),
         [
             "player_id" => $playerId,
-            "active_player" => self::getActivePlayerName()
+            "player_name" => self::getActivePlayerName()
         ]);
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
