@@ -1143,8 +1143,8 @@ class Wolves extends Table {
         $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
         $alpha = P_ALPHA;
-        $pack = P_PACK
-        $this->logDBInsert("moonlight_board", "(kind, player_id", "($den, $playerId");
+        $pack = P_PACK;
+        $this->logDBInsert("moonlight_board", "(kind, player_id)", "($den, $playerId)");
         $this->logDBUpdate("pieces", "kind=$lairValue", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
         $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
 
@@ -1598,15 +1598,16 @@ class Wolves extends Table {
     }
 
     function logSetGamestateValue($label, int $value): int{
+        self::debug("Logging Game state value ($label) -> $value");
         $prevVal = $this->getGameStateValue($label);
-        $newVal = $this->setGameStateValue($label, $value);
+        $this->setGameStateValue($label, $value);
         $this->updateNewestLog([
             "GAMESTATE_VALUE" => [
                 "label" => $label,
                 "restore" => $prevVal
             ]
         ]);
-        return $newVal;
+        return $value;
     }
 
     function logIncGamestateValue($label, int $delta): int{
@@ -1648,9 +1649,10 @@ class Wolves extends Table {
     }
 
     function newTurnLog(){
-            self::DbQuery("INSERT INTO turn_log (turn, data) VALUES ($currentTurn, '[]')");
-            $rowId = self::DbGetLastId();
-            return ["id" => $rowId, 'data' => '[]'];
+        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
+        self::DbQuery("INSERT INTO turn_log (turn, data) VALUES ($currentTurn, '[]')");
+        $rowId = self::DbGetLastId();
+        return ["id" => $rowId, 'data' => '[]'];
     }
 
     function undoAction(){
