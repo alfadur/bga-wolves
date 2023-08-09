@@ -29,9 +29,7 @@ class Wolves extends Table {
             G_MOVES_REMAINING => 12,
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
-            G_MOON_PHASE => 16,
-            G_FLIPPED_TILES => 17,
-            G_SPENT_TERRAIN_TOKENS => 18
+            G_MOON_PHASE => 16
         ]);
     }
 
@@ -96,8 +94,6 @@ class Wolves extends Table {
         self::setGameStateInitialValue(G_MOVED_WOLVES, 0);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
-        self::setGameStateInitialValue(G_FLIPPED_TILES, 0);
-        self::setGameStateInitialValue(G_SPENT_TERRAIN_TOKENS, 0);
 
         $playerStats = [
             STAT_PLAYER_PREY_HUNTED,
@@ -292,11 +288,6 @@ class Wolves extends Table {
 //////////// Utility functions
 ////////////    
 
-    function newTurnLog(){
-        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
-        self::DbQuery("INSERT INTO turn_log (turn) VALUES ($currentTurn)");
-    }
-
     function isImpassableTerrain($terrainType){
         return $terrainType === T_WATER || $terrainType === T_CHASM;
     }
@@ -345,7 +336,7 @@ class Wolves extends Table {
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $moved_wolves = $moved_wolves << 8;
         $moved_wolves |= ($wolfId & 0xff);
-        $this->setGameStateValue(G_MOVED_WOLVES, $moved_wolves);
+        $this->logSetGamestateValue(G_MOVED_WOLVES, $moved_wolves);
     }
 
     function getMovedWolves(): array {
@@ -386,8 +377,7 @@ class Wolves extends Table {
 
         if (count($sets) > 0) {
             $update = implode(", ", $sets);
-            $query = "UPDATE player_status SET $update WHERE player_id = $playerId";
-            self::DbQuery($query);
+            $this->logDBUpdate("player_status", $update, "player_id=$playerId", $update);
         }
 
         return $terrain;
@@ -478,15 +468,19 @@ class Wolves extends Table {
             $playerPresence = self::getObjectListFromDB($query);
             
             foreach($playerPresence as ["player_id" => $playerId, 'name' => $playerName]){
-                self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$playerId");
-                self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyType LIMIT 1");
+                $this->logDBUpdate("player_status", 
+                    "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData", 
+                    "player_id=$playerId", 
+                    "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData");
+
+                $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
                 self::notifyAllPlayers("hunted", clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
                 [
                     'player_id' => $playerId,
                     'player_name' => $playerName,
                     'prey_type' => PREY_NAMES[$preyData]
                 ]);
-                self::incStat(1, STAT_PLAYER_PREY_HUNTED, $playerId);
+                $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);
             }
         }
     }
@@ -662,6 +656,26 @@ class Wolves extends Table {
         return $numPrey;
     }
 
+    function giveDenAward($denType, $deployedDens, $playerId){
+        $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
+        $award = $this->getDenAwards($denType, $deployedDens);
+        $rewardString = "";
+        $reverseString = "";
+        switch($award){
+            case AW_TERRAIN:
+                $rewardString = ", terrain_tokens=terrain_tokens + 1";
+                $reverseString = ", terrain_tokens=terrain_tokens - 1";
+                break;
+            case AW_TURN:
+                $rewardString = ", turn_tokens=turn_tokens + 1";
+                $reverseString = ", turn_tokens=turn_tokens - 1";
+                break;
+            default:
+                break;
+        }
+        $this->logDBUpdate("player_status", "$denCol=$denCol + 1$rewardString", "player_id=$playerId", "$denCol=$denCol - 1$reverseString");
+    }
+
 //////////////////////////////////////////////////////////////////////////////
 //////////// Player actions
 //////////// 
@@ -757,15 +771,12 @@ class Wolves extends Table {
             $flipTilesState |= (1 << $tileIndex);
         }
 
-        $this->setGameStateValue(G_FLIPPED_TILES, $flipTilesState);
-        $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, $bonusTerrain);
-
         $actionName = $this->actionNames[$action];
         switch($actionName){
             case 'move':
-                $this->setGameStateValue(G_MOVED_WOLVES, 0);
+                $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
-                $this->setGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
+                $this->logsetGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
                 break;
             case 'howl':
                 $deployedWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
@@ -784,11 +795,10 @@ class Wolves extends Table {
         }
 
         if($bonusTerrain){
-            $query = "UPDATE player_status SET terrain_tokens = terrain_tokens - $bonusTerrain WHERE player_id = $playerId";
-            self::DbQuery($query);
+            $this->logDBUpdate("player_status", "terrain_tokens = terrain_tokens - $bonusTerrain", "player_id = $playerId", "terrain_tokens = terrain_tokens + $bonusTerrain");
         }
 
-        $this->setGameStateValue(G_SELECTED_TERRAIN, $terrain);
+        $this->logSetGameStateValue(G_SELECTED_TERRAIN, $terrain);
 
         $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
             'player_name' => self::getActivePlayerName(),
@@ -799,8 +809,8 @@ class Wolves extends Table {
         ]);
 
 
-        self::incStat($bonusTerrain, STAT_PLAYER_TERRAIN_TOKENS_SPENT);
-        self::incStat($bonusTerrain, STAT_TERRAIN_TOKENS_SPENT);
+        $this->logIncStat(STAT_PLAYER_TERRAIN_TOKENS_SPENT, $bonusTerrain, $playerId);
+        $this->logIncStat(STAT_TERRAIN_TOKENS_SPENT, $bonusTerrain);
         $this->gamestate->nextState( $actionName . "Select");
     }
 
@@ -862,10 +872,10 @@ class Wolves extends Table {
         $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
         $potential_wolves = self::getObjectListFromDB($query);
 
-        $query = "UPDATE pieces SET x=$targetX, y=$targetY WHERE id=$wolfId";
-        self::DbQuery($query);
+        ['x' => $wolfX, 'y' => $wolfY] = $wolf['x'];
+        $this->logDBUpdate("pieces", "x=$targetX, y=$targetY", "id=$wolfId", "x=$wolfX, y=$wolfY");
         $this->addMovedWolf($wolf['id']);
-        $newVal = $this->incGameStateValue(G_MOVES_REMAINING, -1);
+        $newVal = $this->logIncGameStateValue(G_MOVES_REMAINING, -1);
 
         $wolfName = $wolf['kind'] == P_PACK ? " Pack" : "n Alpha";
         self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a' . $wolfName . ' wolf, to a ${terrain} tile'),
@@ -880,10 +890,10 @@ class Wolves extends Table {
             ],
             'terrain' => $terrain_type,
         ]);
-        self::incStat(1, STAT_PLAYER_WOLVES_MOVED, $playerId);
+        $this->logIncStat(STAT_PLAYER_WOLVES_MOVED, 1, $playerId);
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
-            $this->setGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
+            $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
             $this->gamestate->nextState(TR_DISPLACE);
         }
         else{
@@ -940,9 +950,9 @@ class Wolves extends Table {
             }
 
         };
-        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, [$this, "validityCheck"]);
-
-        self::DbQuery("UPDATE pieces SET x=$x, y=$y WHERE id=$wolfId");
+        ['x' => $wolfX, 'y' => $wolfY] = $wolf;
+        [$x, $y] = $this->checkPath([$wolfX, $wolfY], $path, $finalCheck, [$this, "validityCheck"]);
+        $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
         $targetId = $wolf['owner'];
         self::notifyAllPlayers('update', clienttranslate('${player_name} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
@@ -994,8 +1004,8 @@ class Wolves extends Table {
 
         $updateId = self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
 
-        self::DbQuery("INSERT INTO moonlight_board (kind) VALUES ($lone)");
-        self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
+        $this->logDBInsert("moonlight_board", "(kind)", "($lone)");
+        $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} has howled at a Lone Wolf'), [
             'player_name' => self::getActivePlayerName(),
@@ -1008,7 +1018,7 @@ class Wolves extends Table {
                 'progress' => true
             ]
         ]);
-        self::incStat(1, STAT_PLAYER_LONE_WOLVES_CONVERTED, $playerId);
+        $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -1063,21 +1073,10 @@ class Wolves extends Table {
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
-        $award = $this->getDenAwards($denType, $deployedDens);
-        $rewardString = "";
-        switch($award){
-            case AW_TERRAIN:
-                $rewardString = ", terrain_tokens=terrain_tokens + 1";
-                break;
-            case AW_TURN:
-                $rewardString = ", turn_tokens=turn_tokens + 1";
-                break;
-            default:
-                break;
-        }
-        self::DbQuery("INSERT INTO pieces (owner, kind, x, y) VALUES ($playerId, $denValue, $x, $y)");
-        $newId = self::DbGetLastId();
-        self::DbQuery("UPDATE player_status SET $denCol=$denCol + 1$rewardString WHERE player_id=$playerId");
+        $this->giveDenAward($denType, $deployedDens, $playerId);
+
+        $newId = $this->logDBInsert("pieces", "(owner, kind, x, y)", "($playerId, $denValue, $x, $y)");
+        
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den, from their ${den_type} track'),
         [
@@ -1095,7 +1094,7 @@ class Wolves extends Table {
             ],
             'den_type' => DEN_COLS[$denType],
         ]);
-        self::incStat(1, STAT_PLAYER_DENS_PLACED, $playerId);
+        $this->logIncStat(STAT_PLAYER_DENS_PLACED, 1, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -1145,11 +1144,9 @@ class Wolves extends Table {
         
         $alpha = P_ALPHA;
         $pack = P_PACK
-        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind NOT IN ($alpha, $pack)");
-
-        self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
-
-        self::DbQuery("INSERT INTO moonlight_board (kind, player_id) VALUES ($den, $playerId)");
+        $this->logDBInsert("moonlight_board", "(kind, player_id", "($den, $playerId");
+        $this->logDBUpdate("pieces", "kind=$lairValue", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
+        $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} has placed a lair'), [
             'player_name' => self::getActivePlayerName(),
@@ -1164,13 +1161,13 @@ class Wolves extends Table {
         ]);
         if(count($pieces) == 1){
             $moveWolf = $pieces[0];
-            $this->setGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
-            $this->setGameStateValue(G_MOVES_REMAINING, 0);
+            $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
+            $this->logSetGameStateValue(G_MOVES_REMAINING, 0);
             $this->gamestate->nextState(TR_DISPLACE);
             return;
         }
         
-        self::incStat(1, STAT_PLAYER_DENS_UPGRADED, $playerId);
+        $this->logIncStat(STAT_PLAYER_DENS_UPGRADED, 1, $playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -1210,18 +1207,7 @@ class Wolves extends Table {
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
 
-            $award = $this->getDenAwards($denType, $numDens);
-            $rewardString = "";
-            switch($award){
-                case AW_TERRAIN:
-                    $rewardString = ", terrain_tokens=terrain_tokens + 1";
-                    break;
-                case AW_TURN:
-                    $rewardString = ", turn_tokens=turn_tokens + 1";
-                    break;
-            }
-
-            self::DbQuery("UPDATE player_status SET $denName=$denName + 1$rewardString WHERE player_id=$playerId");
+            $this->giveDenAward($denType, $numDens, $playerId);
             $newKind = P_DEN;
         } else {
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
@@ -1229,13 +1215,15 @@ class Wolves extends Table {
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
             $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-            self::DbQuery("UPDATE player_status SET deployed_wolves=deployed_wolves + 1 WHERE player_id=$playerId");
+            $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
             $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
             $newKind = $wolfType;
         }
 
-        self::DbQuery("UPDATE pieces SET owner=$playerId, kind=$newKind WHERE id=$targetId");
-        self::DbQuery("INSERT INTO moonlight_board (player_id, kind) VALUES ({$target['owner']}, {$target['kind']})");
+        $oldKind = $target['kind'];
+        $oldOwner = $target['owner'];
+        $this->logDBUpdate("pieces", "owner=$playerId, kind=$newKind", "id=$targetId", "owner=$oldOwner, kind=$oldKind");
+        $this->logDBInsert("moonlight_board", "(player_id, kind)", "({$target['owner']}, {$target['kind']})");
         self::notifyAllPlayers('update', clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
             [
                 "player_id" => $playerId,
@@ -1253,7 +1241,7 @@ class Wolves extends Table {
 
         // Set wolves on board stat for attacker & defender in case that was updated
         $stat = (int)$target['kind'] === P_DEN ? STAT_PLAYER_DENS_DOMINATED : STAT_PLAYER_WOLVES_DOMINATED;
-        self::incStat(1, $stat, $playerId);
+        $this->logIncStat($stat, 1, $playerId);
         
         $this->gamestate->nextState(TR_POST_ACTION);
 
@@ -1290,16 +1278,16 @@ class Wolves extends Table {
         if($turnTokens == 0){
             throw new BgaUserException(_('You have no extra turn tokens to play!'));
         }
-        self::DbQuery("UPDATE player_status SET turn_tokens=$turnTokens - 1 WHERE player_id=$playerId");
-        $this->incGameStateValue(G_ACTIONS_REMAINING, 1);
+        $this->logDBUpdate("player_status", "turn_tokens=turn_tokens - 1", "player_id=$playerId", "turn_tokens=turn_tokens + 1");
+        $this->logIncGameStateValue(G_ACTIONS_REMAINING, 1);
 
         self::notifyAllPlayers(NOT_EXTRA_TURN, clienttranslate('${player_name} has decided to take an additional turn'),
         [
             "player_id" => $playerId,
             "player_name" => self::getActivePlayerName()
         ]);
-        self::incStat(1, STAT_PLAYER_BONUS_ACTIONS_TAKEN, $playerId);
-        self::incStat(1, STAT_BONUS_ACTIONS_TAKEN);
+        $this->logIncStat(STAT_PLAYER_BONUS_ACTIONS_TAKEN, 1, $playerId);
+        $this->logIncStat(STAT_BONUS_ACTIONS_TAKEN, 1);
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
 
@@ -1395,7 +1383,7 @@ class Wolves extends Table {
 
     function stPostAction(): void {
         $playerId = self::getActivePlayerId();
-        $remainingActions = $this->incGameStateValue(G_ACTIONS_REMAINING, -1);
+        $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
         $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
         
@@ -1422,8 +1410,6 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVES_REMAINING, -1);
         $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
-        $this->setGameStateValue(G_FLIPPED_TILES, 0);
-        $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, 0);
         $this->newTurnLog();
     }
 
@@ -1552,16 +1538,110 @@ class Wolves extends Table {
 ///////////////////////////////////////////////////////////////////////////////////:
 ////////// Action Logging
 //////////
-    function logUpdate($table, $pk, $expression, $condition, $reverseExpression){
-        $selectedRows = self::getObjectListFromDB("SELECT $pk as pk FROM $table WHERE $condition");
-        if(count($selectedRows) === 0){
+    function logDBUpdate($table, $updates, $condition, $reversions){
+        $query = "UPDATE $table SET $updates WHERE $condition";
+        self::DbQuery($query);
+        $reverseQuery = "UPDATE $table SET $reversions WHERE $condition";
+        $this->updateNewestLog([
+            "DB" => $reverseQuery
+        ]);
+    }
+
+    function logDBInsert($table, $skeleton, $values): int{
+        self::DbQuery("INSERT INTO $table $skeleton VALUES $values");
+        $rowId = self::DbGetLastId();
+        $reverseExpression = "DELETE FROM $table WHERE id=$rowId";
+        $this->updateNewestLog([
+            "DB" => $reverseExpression
+        ]);
+        return $rowId;
+    }
+
+    function logDBDelete($table, $condition){
+        $prevObj = self::getObjectFromDB("SELECT * FROM $table WHERE $condition");
+        if(is_null($prevObj)){
             return;
         }
-        $pks = array_map(fn($row) => $row['pk'], $selectedRows);
-        $pkCondition = "$pk IN (" . implode(',', $pks) . ')';
-        self::DbQuery("UPDATE $table SET $expression WHERE $pkCondition");
+        self::DbQuery("DELETE FROM $table WHERE $condition");
+        $skeleton = '(`'.implode("`,`", array_keys($prevObj)).'`)';
+        $values = "('".implode("','", array_values($prevObj))."')";
+        $reverseExpression = "INSERT INTO $table $skeleton VALUES $values";
+        $this->updateNewestLog([
+            "DB" => $reverseExpression
+        ]);
+    }
 
-        $currentLog = self::getObjectFromDB("SELECT")
+    function logIncStat($statName, int $delta, $playerId=NULL){
+        $prevVal = self::getStat($statName, $playerId);
+        self::incStat($delta, $statName, $playerId);
+        $this->updateNewestLog([
+            "STAT" => [
+                "name" => $statName,
+                "restore" => $prevVal,
+                "player_id" => $playerId
+            ]
+        ]);
+        
+    }
+
+    function logSetStat($statName, int $newVal, $playerId=NULL){
+        $prevVal = self::getStat($statName, $playerId);
+        self::incStat($newVal, $statName, $playerId);
+        $this->updateNewestLog([
+            "STAT" => [
+                "name" => $statName,
+                "restore" => $prevVal,
+                "player_id" => $playerId
+            ]
+        ]);
+    }
+
+    function logSetGamestateValue($label, int $value): int{
+        $prevVal = $this->getGameStateValue($label);
+        $newVal = $this->setGameStateValue($label, $value);
+        $this->updateNewestLog([
+            "GAMESTATE_VALUE" => [
+                "label" => $label,
+                "restore" => $prevVal
+            ]
+        ]);
+        return $newVal;
+    }
+
+    function logIncGamestateValue($label, int $delta): int{
+        $prevVal = $this->getGameStateValue($label);
+        $newVal = $this->incGameStatevalue($label, $delta);
+        $this->updateNewestLog([
+            "GAMESTATE_VALUE" => [
+                "label" => $label,
+                "restore" => $prevVal
+            ]
+        ]);
+        return $newVal;
+    }
+
+    function updateNewestLog(array $data){
+        $newestLog = $this->getNewestLog();
+        $logJSON = json_decode($newestLog['data'], true);
+        $logJSON[] = $data;
+        $jsonString = json_encode($logJSON);
+        $rowId = $newestLog['id'];
+        self::DbQuery("UPDATE turn_log SET data='$jsonString' WHERE id=$rowId");
+    }
+
+    function getNewestLog(){
+        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
+        $newestLog = self::getObjectFromDB("SELECT id, data FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
+        if(is_null($newestLog)){
+            $newestLog = $this->newTurnLog();
+        }
+        return $newestLog;
+    }
+
+    function newTurnLog(){
+            self::DbQuery("INSERT INTO turn_log (turn, data) VALUES ($currentTurn, '[]')");
+            $rowId = self::DbGetLastId();
+            return ["id" => $rowId, 'data' => '[]'];
     }
 
 }
