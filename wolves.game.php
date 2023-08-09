@@ -1304,6 +1304,7 @@ class Wolves extends Table {
 
     function undo(){
         self::checkAction("undo");
+        $this->undoAction();
         $this->gamestate->jumpToState(ST_ACTION_SELECTION);
     }
 
