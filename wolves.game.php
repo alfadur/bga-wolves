@@ -76,22 +76,15 @@ class Wolves extends Table {
         //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
 
         //Initialize player tiles
-        $values = [];
-        foreach ($players as $player_id => $player){
-            $values[] = "('$player_id', '0', '0', '0', '0', '0')";
-        }
-        $args = implode(',', $values);
-        $query = "INSERT INTO player_tiles (player_id, `0`, `1`, `2`, `3`, `4`) VALUES $args";
-        self::DbQuery($query);
 
         $terrain = 0;
         $values = [];
         foreach ($players as $playerId => $player){
-            $values[] = "($playerId, $terrain)";
+            $values[] = "($playerId, $terrain, '0', '0', '0', '0', '0')";
             ++$terrain;
         }
         $args = implode(',', $values);
-        $query = "INSERT INTO player_status (player_id, home_terrain) VALUES $args";
+        $query = "INSERT INTO player_status (player_id, home_terrain, tile_0, tile_1, tile_2, tile_3, tile_4) VALUES $args";
         self::DbQuery($query);
 
         $this->generateLand(count($players));
@@ -299,6 +292,11 @@ class Wolves extends Table {
 //////////// Utility functions
 ////////////    
 
+    function newTurnLog(){
+        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
+        self::DbQuery("INSERT INTO turn_log (turn) VALUES ($currentTurn)");
+    }
+
     function isImpassableTerrain($terrainType){
         return $terrainType === T_WATER || $terrainType === T_CHASM;
     }
@@ -327,9 +325,7 @@ class Wolves extends Table {
     }
 
     function getPlayerTiles(int $player_id): array {
-        $tiles = self::getObjectFromDB("SELECT `0`, `1`, `2`, `3`, `4` FROM `player_tiles` WHERE player_id=$player_id");
-        $home_terrain = (int)self::getUniqueValueFromDB("SELECT `home_terrain` FROM `player_status` WHERE player_id=$player_id");
-        $tiles[] = $home_terrain;
+        $tiles = self::getObjectFromDB("SELECT `tile_0` as `0`, `tile_1` as `1`, `tile_2` as `2`, `tile_3` as `3`, `tile_4` as `4`, `home_terrain` as `5` FROM `player_status` WHERE player_id=$player_id");
         return $tiles;
     }
 
@@ -384,13 +380,13 @@ class Wolves extends Table {
             $terrain = $nextTerrain;
 
             if ($tileIndex < TILE_TERRAIN_TYPES) {
-                $sets[] = "`$tileIndex` = 1 - `$tileIndex`";
+                $sets[] = "`tile_$tileIndex` = 1 - `tile_$tileIndex`";
             }
         }
 
         if (count($sets) > 0) {
             $update = implode(", ", $sets);
-            $query = "UPDATE player_tiles SET $update WHERE player_id = $playerId";
+            $query = "UPDATE player_status SET $update WHERE player_id = $playerId";
             self::DbQuery($query);
         }
 
@@ -483,7 +479,7 @@ class Wolves extends Table {
             
             foreach($playerPresence as ["player_id" => $playerId, 'name' => $playerName]){
                 self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData WHERE player_id=$playerId");
-                self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyKind LIMIT 1");
+                self::DbQuery("DELETE FROM pieces WHERE x=$x AND y=$y AND kind=$preyType LIMIT 1");
                 self::notifyAllPlayers("hunted", clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
                 [
                     'player_id' => $playerId,
@@ -599,7 +595,7 @@ class Wolves extends Table {
         }
         
         foreach($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]){
-            self::DbQuery("UPDATE player SET player_score=player_score + ($score * $firstPlace) + (($score/2) * $secondPlace)");
+            self::DbQuery("UPDATE player SET player_score=player_score + ($score * $firstPlace) + (($score/2) * $secondPlace) WHERE player_id=$playerId");
             if($firstPlace > 0){
                 $args = implode(",", array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
@@ -1147,7 +1143,9 @@ class Wolves extends Table {
 
         $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
         
-        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind=$den");
+        $alpha = P_ALPHA;
+        $pack = P_PACK
+        self::DbQuery("UPDATE pieces SET kind=$lairValue WHERE x=$x AND y=$y AND kind NOT IN ($alpha, $pack)");
 
         self::DbQuery("UPDATE player_status SET deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1 WHERE player_id=$playerId");
 
@@ -1392,9 +1390,6 @@ class Wolves extends Table {
                 $this->activeNextPlayer();
             }
         }
-        if($draftCompleted){
-            self::DbQuery("INSERT INTO turn_log VALUES ()");
-        }
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
@@ -1407,12 +1402,10 @@ class Wolves extends Table {
     }
 
     function stNextTurn(): void {
-
         $currentPlayer = self::getActivePlayerId();
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $currentPlayer);
         self::incStat(1, STAT_TURNS_TAKEN);
         $currentPhase = $this->regionScoring();
-        self::DbQuery("INSERT INTO turn_log VALUES ()");
         //Determine if the game should end
         if($currentPhase > 2){
             $this->gamestate->nextState(TR_END_GAME);
@@ -1431,6 +1424,7 @@ class Wolves extends Table {
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
         $this->setGameStateValue(G_FLIPPED_TILES, 0);
         $this->setGameStateValue(G_SPENT_TERRAIN_TOKENS, 0);
+        $this->newTurnLog();
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1552,5 +1546,22 @@ class Wolves extends Table {
         $this->regionScoring();
 
     }
-}
 
+
+
+///////////////////////////////////////////////////////////////////////////////////:
+////////// Action Logging
+//////////
+    function logUpdate($table, $pk, $expression, $condition, $reverseExpression){
+        $selectedRows = self::getObjectListFromDB("SELECT $pk as pk FROM $table WHERE $condition");
+        if(count($selectedRows) === 0){
+            return;
+        }
+        $pks = array_map(fn($row) => $row['pk'], $selectedRows);
+        $pkCondition = "$pk IN (" . implode(',', $pks) . ')';
+        self::DbQuery("UPDATE $table SET $expression WHERE $pkCondition");
+
+        $currentLog = self::getObjectFromDB("SELECT")
+    }
+
+}
