@@ -1629,19 +1629,55 @@ class Wolves extends Table {
         self::DbQuery("UPDATE turn_log SET data='$jsonString' WHERE id=$rowId");
     }
 
-    function getNewestLog(){
+    function getNewestLog($createLog = true){
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         $newestLog = self::getObjectFromDB("SELECT id, data FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
         if(is_null($newestLog)){
+            if(!$createLog){
+                return NULL;
+            }
             $newestLog = $this->newTurnLog();
         }
         return $newestLog;
+    }
+
+    function deleteNewestLog(){
+        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
+        self::DbQuery("DELETE FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
     }
 
     function newTurnLog(){
             self::DbQuery("INSERT INTO turn_log (turn, data) VALUES ($currentTurn, '[]')");
             $rowId = self::DbGetLastId();
             return ["id" => $rowId, 'data' => '[]'];
+    }
+
+    function undoAction(){
+        $newestLog = $this->getNewestLog(false);
+        if(is_null($newestLog)){
+            throw new BgaUserException(_('There are no more actions to undo!'));
+        }
+
+        $JSONData = json_decode($newestLog['data'], true);
+        self::dump("Action Log", $JSONData);
+        foreach($JSONData as $actionLog){
+            foreach($actionLog as $actionType => $actionValue) {
+                switch($actionType){
+                    case "DB":
+                        self::DbQuery($actionValue);
+                        break;
+                    case "STAT":
+                        self::setStat((int)$actionValue['restore'], $actionValue['name'], $actionValue['player_id']);
+                        break;
+                    case "GAMESTATE_VALUE":
+                        $this->setGameStateValue($actionValue['label'], (int)$actionValue['restore']);
+                        break;
+                }
+            }
+        }
+
+        self::debug("Undo action completed");
+        $this->deleteNewestLog();
     }
 
 }
