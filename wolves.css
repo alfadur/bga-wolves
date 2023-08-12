@@ -88,7 +88,7 @@ html {
 }
 
 .wolves-region {
-    background-image: url("img/region.jpg");
+    background-image: url("img/regions.jpg");
     position: absolute;
     width: 475px;
     height: 411px;
@@ -97,11 +97,66 @@ html {
             93.75% 0, 100% 12.5%, 93.75% 25%, 100% 37.5%, 93.75% 50%, 100% 62.5%, 93.75% 75%,
             81.25% 75%, 75% 87.5%, 62.5% 87.5%, 56.25% 100%, 43.75% 100%, 37.25% 87.5%, 25% 87.5%, 18.75% 100%,
             6.25% 100%, 0 87.5%, 6.25% 75%, 0 62.5%, 6.25% 50%, 0 37.5%, 6.25% 25%);
+    transform-origin: center;
+}
+
+.wolves-region[data-tile="0"] {
+    background-position: -625px -662px;
+}
+
+.wolves-region[data-tile="1"] {
+    background-position: 0 -406px;
+}
+
+.wolves-region[data-tile="2"] {
+    background-position: -448px -554px;
+}
+
+.wolves-region[data-tile="3"] {
+    background-position: -498px -996px;
+    transform: rotate(180deg);
+}
+
+.wolves-region[data-tile="4"] {
+    background-position: -1062px -610px;
+}
+
+.wolves-region[data-tile="5"] {
+    background-position: -888px -306px;
+}
+
+.wolves-region[data-tile="6"] {
+    background-position: -180px -712px;
+}
+
+.wolves-region[data-tile="7"] {
+    background-position: -1240px -914px;
+    transform: rotate(180deg);
+}
+
+.wolves-region[data-tile="8"] {
+    background-position: -532px -1322px;
+}
+
+.wolves-region[data-tile="9"] {
+    background-position: -710px 0;
+    transform: rotate(180deg);
+}
+
+.wolves-region[data-tile="10"] {
+    background-position: -356px -1018px;
+    transform: rotate(180deg);
 }
 
 .wolves-region-rotated {
     transform: rotate(180deg);
-    transform-origin: center;
+}
+
+.wolves-region-rotated[data-tile="2"],
+.wolves-region-rotated[data-tile="6"],
+.wolves-region-rotated[data-tile="8"],
+.wolves-region-rotated[data-tile="9"] {
+    transform: none;
 }
 
 .wolves-hex {
@@ -124,31 +179,7 @@ html {
 }
 
 .wolves-hex-water > .wolves-hex-selector:hover {
-    background-color: revert !important;
-}
-
-.wolves-hex-grass > .wolves-hex-selector {
-    background-color: lightgreen;
-}
-
-.wolves-hex-rock > .wolves-hex-selector {
-    background-color: dimgray;
-}
-
-.wolves-hex-tundra > .wolves-hex-selector {
-    background-color: ghostwhite;
-}
-
-.wolves-hex-desert > .wolves-hex-selector {
-    background-color: sandybrown;
-}
-
-.wolves-hex-forest > .wolves-hex-selector {
-    background-color: darkgreen;
-}
-
-.wolves-hex-water > .wolves-hex-selector {
-    background-color: blue;
+    background-color: transparent !important;
 }
 
 .wolves-selectable > .wolves-hex-selector {
