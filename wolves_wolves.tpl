@@ -4,29 +4,35 @@
     <div class="wolves-terrain-tile wolves-active-tile" data-index="{INDEX}"></div>
     <!-- END activeTile -->
 </div>
-<div id="wolves-land-container" style="max-width: {LAND_WIDTH}px">
-    <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
-    <!-- BEGIN region -->
-        <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
-    <!-- END region -->
-    <!-- BEGIN hex -->
-        <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
-            <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
+
+<div id="wolves-game">
+    <div id="wolves-land-container" style="max-width: {LAND_WIDTH}px">
+        <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
+            <!-- BEGIN region -->
+            <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
+            <!-- END region -->
+
+            <!-- BEGIN hex -->
+            <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
+                <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
+            </div>
+            <!-- END hex -->
+
+            <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
+                <path id="wolves-svg-path" fill="none" stroke="red"
+                      stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""/>
+            </svg>
         </div>
-    <!-- END hex -->
-        <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
-            <path id="wolves-svg-path" fill="none" stroke="red"
-                  stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""/>
-        </svg>
     </div>
-</div>
-<div id="wolves-boards">
-    <div id="wolves-calendar">
-        <!-- BEGIN calendarSpace -->
+
+    <div id="wolves-boards">
+        <div id="wolves-calendar">
+            <!-- BEGIN calendarSpace -->
             <div id="wolves-calendar-space-{INDEX}" class="wolves-calendar-space" style="left: {CX}px; top: {CY}px"></div>
-        <!-- END calendarSpace -->
-    </div>
-    <!-- BEGIN playerBoard -->
+            <!-- END calendarSpace -->
+        </div>
+
+        <!-- BEGIN playerBoard -->
         <div id="wolves-player-container-{ID}" class="wolves-player-container">
             <h3 class="wolves-player-name" style="color: {COLOR}">{NAME}</h3>
             <div class="wolves-tile-container">
@@ -36,16 +42,18 @@
             </div>
             <div id="wolves-player-board-{ID}" class="wolves-player-board">
                 <!-- BEGIN playerBoardSpaceGroup -->
-                    <div class="wolves-space-group wolves-{ITEM}-group">
-                        <!-- BEGIN playerBoardSpace -->
-                        <div class="wolves-player-board-space wolves-{KIND}-space"></div>
-                        <!-- END playerBoardSpace -->
-                    </div>
+                <div class="wolves-space-group wolves-{ITEM}-group">
+                    <!-- BEGIN playerBoardSpace -->
+                    <div class="wolves-player-board-space wolves-{KIND}-space"></div>
+                    <!-- END playerBoardSpace -->
+                </div>
                 <!-- END playerBoardSpaceGroup -->
             </div>
         </div>
-    <!-- END playerBoard -->
+        <!-- END playerBoard -->
+    </div>
 </div>
+
 <script type="text/javascript">
 const jstpl_hex_content =
     `<div id="wolves-piece-\${id}" class="wolves-piece \${locationClass}" data-kind="\${kind}" data-owner="\${owner}">

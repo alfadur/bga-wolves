@@ -70,6 +70,13 @@ html {
     background-position-y: calc(var(--tile-height) * -2);
 }
 
+#wolves-game {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
 #wolves-land-container {
     width: 100%;
 }
