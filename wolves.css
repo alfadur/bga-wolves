@@ -18,7 +18,7 @@ html {
     --hex-height: 103px;
     --hex-half-height: 51px;
 
-    --tile-width: 194px;
+    --tile-width: 196px;
     --tile-height: 297px;
 }
 
@@ -46,27 +46,27 @@ html {
     box-shadow: inset 0 0 5px 4px red;
 }
 
-.wolves-active-tile[data-x="1"] {
+.wolves-terrain-tile[data-x="1"] {
     background-position-x: calc(var(--tile-width) * -1);
 }
 
-.wolves-active-tile[data-x="2"] {
+.wolves-terrain-tile[data-x="2"] {
     background-position-x: calc(var(--tile-width) * -2);
 }
 
-.wolves-active-tile[data-x="3"] {
+.wolves-terrain-tile[data-x="3"] {
     background-position-x: calc(var(--tile-width) * -3);
 }
 
-.wolves-active-tile[data-x="4"] {
+.wolves-terrain-tile[data-x="4"] {
     background-position-x: calc(var(--tile-width) * -4);
 }
 
-.wolves-active-tile[data-y="1"] {
+.wolves-terrain-tile[data-y="1"] {
     background-position-y: calc(var(--tile-height) * -1);
 }
 
-.wolves-active-tile[data-y="2"] {
+.wolves-terrain-tile[data-y="2"] {
     background-position-y: calc(var(--tile-height) * -2);
 }
 
@@ -282,6 +282,7 @@ html {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 4px;
 }
 
 #wolves-calendar {
@@ -322,27 +323,34 @@ html {
 
 .wolves-player-name {
     position: absolute;
+    top: 34%;
+    left: 4%;
 }
 
 .wolves-tile-container {
     width: 100%;
-    height: 35%;
+    height: 100px;
 }
 
 .wolves-player-tile {
     position: absolute;
-    width: 14.2%;
-    height: 37.3%;
-    border-radius: 22%;
-    background-color: red;
+    --tile-width: 72px;
+    --tile-height: 106px;
+    width: var(--tile-width);
+    height: var(--tile-height);
+    border-radius: 22px;
+    background-size: 359px 317px;
+    background-image: url("img/tiles.jpg");
+    background-clip: content-box;
+    background-repeat: no-repeat;
 }
 
-.wolves-player-tile:nth-child(1) { left: 3.9%; top: 7% }
+.wolves-player-tile:nth-child(1) { left: 3.9%; top: 6% }
 .wolves-player-tile:nth-child(2) { left: 19.5%; top: 3% }
 .wolves-player-tile:nth-child(3) { left: 35% }
 .wolves-player-tile:nth-child(4) { left: 50.5% }
 .wolves-player-tile:nth-child(5) { left: 66.5%; top: 3% }
-.wolves-player-tile:nth-child(6) { left: 82%; top: 7% }
+.wolves-player-tile:nth-child(6) { left: 82%; top: 6% }
 
 .wolves-player-board {
     position: relative;

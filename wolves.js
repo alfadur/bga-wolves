@@ -476,6 +476,13 @@ define([
             const attributes = new Attributes(status)
             this.attributes[playerId] = attributes;
 
+            const playerTiles = document.querySelectorAll(`#wolves-player-container-${playerId} .wolves-player-tile`);
+
+            attributes.tiles.forEach((tile, index) => {
+                playerTiles[index].dataset.x = tile.front
+                playerTiles[index].dataset.y = "flipped" in tile ? tile.flipped + 1 : 0;
+            });
+
             const node = document.getElementById(`player_board_${playerId}`);
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
 

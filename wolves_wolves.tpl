@@ -1,10 +1,10 @@
 {OVERALL_GAME_HEADER}
 <div id="wolves-active-tiles" class="hidden">
     <!-- BEGIN activeTile -->
-    <div class="wolves-active-tile" data-index="{INDEX}"></div>
+    <div class="wolves-terrain-tile wolves-active-tile" data-index="{INDEX}"></div>
     <!-- END activeTile -->
 </div>
-<div id="wolves-land-container">
+<div id="wolves-land-container" style="max-width: {LAND_WIDTH}px">
     <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
     <!-- BEGIN region -->
         <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
@@ -31,7 +31,7 @@
             <h3 class="wolves-player-name" style="color: {COLOR}">{NAME}</h3>
             <div class="wolves-tile-container">
                 <!-- BEGIN playerTile -->
-                <div class="wolves-player-tile" data-front="{FRONT}" data-back="{BACK}"></div>
+                <div class="wolves-terrain-tile wolves-player-tile"></div>
                 <!-- END playerTile -->
             </div>
             <div id="wolves-player-board-{ID}" class="wolves-player-board">

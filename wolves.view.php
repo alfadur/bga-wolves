@@ -80,15 +80,8 @@ class view_wolves_wolves extends game_view {
         foreach ($players as $player) {
             $this->page->reset_subblocks("playerTile");
 
-            $this->page->insert_block("playerTile", [
-                'FRONT' => $player['terrain'],
-                'BACK' => $player['terrain']
-            ]);
-            for ($i = 0; $i < TILE_TERRAIN_TYPES; ++$i) {
-                $this->page->insert_block("playerTile", [
-                    'FRONT' => $i,
-                    'BACK' => ($i + 1) % TILE_TERRAIN_TYPES
-                ]);
+            for ($i = 0; $i <= TILE_TERRAIN_TYPES; ++$i) {
+                $this->page->insert_block("playerTile");
             }
 
             $this->page->reset_subblocks('playerBoardSpaceGroup');
