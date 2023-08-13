@@ -136,7 +136,7 @@ $gameinfos = array(
     totranslate("Each action requires you to flip terrain tiles matching the terrain where you wish to take your action. These double-sided tiles mean the actions you take this round will set up which terrain types you can act on in the next round. As you take actions to expand your pack's control of each region, you also upgrade your pack's attributes, allowing you to take more aggressive actions as the game goes on."),
     totranslate("In three mid-game scoring phases, power is calculated in each region. At the end of the game, players tally points based on VP tokens earned in these scoring phases and the highest VP number revealed in each of the six tracks on your player board. The player with the most VP wins!")
 ],
-'db_undo_support' => true,
+'db_undo_support' => false,
 
 
 //////// BGA SANDBOX ONLY PARAMETERS (DO NOT MODIFY)

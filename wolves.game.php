@@ -1317,6 +1317,9 @@ class Wolves extends Table {
             "player_id" => $playerId,
             "player_name" => self::getActivePlayerName()
         ]);
+        self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
+        self::incStat(1, STAT_TURNS_TAKEN);
+        $this->activeNextPlayer();
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
@@ -1400,23 +1403,18 @@ class Wolves extends Table {
     }
 
     function stPostAction(): void {
-        $playerId = self::getActivePlayerId();
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
         $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
     }
 
     function stNextTurn(): void {
-        $currentPlayer = self::getActivePlayerId();
-        self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $currentPlayer);
-        self::incStat(1, STAT_TURNS_TAKEN);
         $currentPhase = $this->regionScoring();
         //Determine if the game should end
         if($currentPhase > 2){
             $this->gamestate->nextState(TR_END_GAME);
         }
         else{
-            $this->activeNextPlayer();
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
             $this->gamestate->nextState(TR_START_TURN);
         }
@@ -1427,6 +1425,8 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVES_REMAINING, -1);
         $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
+        $playerId = $this->getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->newTurnLog();
     }
 
