@@ -903,6 +903,8 @@ class Wolves extends Table {
                 $this->gamestate->nextState(TR_MOVE);
             }
             else{
+                $playerId = self::getActivePlayerId();
+                $this->giveExtraTime($playerId);
                 $this->gamestate->nextState(TR_END_MOVE);
             }
         }  
@@ -980,6 +982,8 @@ class Wolves extends Table {
             $this->gamestate->nextState(TR_MOVE);
         }
         else{
+            $playerId = self::getActivePlayerId();
+            $this->giveExtraTime($playerId);
             $this->gamestate->nextState(TR_POST_ACTION);
         }
     }
@@ -1034,6 +1038,8 @@ class Wolves extends Table {
         ]);
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
+        $playerId = self::getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
         /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
@@ -1109,6 +1115,8 @@ class Wolves extends Table {
             'den_type' => DEN_COLS[$denType],
         ]);
         $this->logIncStat(STAT_PLAYER_DENS_PLACED, 1, $playerId);
+        $playerId = self::getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -1182,6 +1190,8 @@ class Wolves extends Table {
         }
         
         $this->logIncStat(STAT_PLAYER_DENS_UPGRADED, 1, $playerId);
+        $playerId = self::getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
     }
@@ -1261,6 +1271,8 @@ class Wolves extends Table {
         $stat = (int)$target['kind'] === P_DEN ? STAT_PLAYER_DENS_DOMINATED : STAT_PLAYER_WOLVES_DOMINATED;
         $this->logIncStat($stat, 1, $playerId);
         
+        $playerId = self::getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
 
         /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range, $target){
@@ -1320,6 +1332,8 @@ class Wolves extends Table {
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
         self::incStat(1, STAT_TURNS_TAKEN);
         $this->activeNextPlayer();
+        $playerId = self::getActivePlayerId();
+        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
@@ -1426,7 +1440,6 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
         $playerId = $this->getActivePlayerId();
-        $this->giveExtraTime($playerId);
         $this->newTurnLog();
     }
 
