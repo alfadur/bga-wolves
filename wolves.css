@@ -14,10 +14,8 @@ html {
 }
 
 :root {
-    --hex-width: 119px;
-    --hex-height: 103px;
-    --hex-half-height: 51px;
-
+    --hex-width: 118px;
+    --hex-height: 102px;
     --tile-width: 196px;
     --tile-height: 297px;
 }
@@ -101,28 +99,28 @@ html {
 }
 
 .wolves-region[data-tile="0"] {
-    background-position: -625px -662px;
+    background-position: -620px -660px;
 }
 
 .wolves-region[data-tile="1"] {
-    background-position: 0 -406px;
+    background-position: 0 -404px;
 }
 
 .wolves-region[data-tile="2"] {
-    background-position: -446px -356px;
+    background-position: -444px -354px;
 }
 
 .wolves-region[data-tile="3"] {
-    background-position: -498px -996px;
+    background-position: -792px -964px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="4"] {
-    background-position: -1062px -610px;
+    background-position: -1058px -608px;
 }
 
 .wolves-region[data-tile="5"] {
-    background-position: -888px -306px;
+    background-position: -884px -302px;
 }
 
 .wolves-region[data-tile="6"] {
@@ -130,33 +128,33 @@ html {
 }
 
 .wolves-region[data-tile="7"] {
-    background-position: -1240px -914px;
+    background-position: -1236px -910px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="8"] {
-    background-position: -532px -1322px;
+    background-position: -528px -1318px;
 }
 
 .wolves-region[data-tile="9"] {
-    background-position: -710px 0;
+    background-position: -708px 2px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="10"] {
-    background-position: -356px -1018px;
+    background-position: -352px -1014px;
     transform: rotate(180deg);
 }
 
 .wolves-region-rotated {
-    transform: rotate(180deg);
+    transform: rotate(180deg) !important;
 }
 
-.wolves-region-rotated[data-tile="2"],
-.wolves-region-rotated[data-tile="6"],
-.wolves-region-rotated[data-tile="8"],
-.wolves-region-rotated[data-tile="9"] {
-    transform: none;
+.wolves-region-rotated[data-tile="3"],
+.wolves-region-rotated[data-tile="7"],
+.wolves-region-rotated[data-tile="9"],
+.wolves-region-rotated[data-tile="10"] {
+    transform: none !important;
 }
 
 .wolves-hex {

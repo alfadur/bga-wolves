@@ -24,13 +24,17 @@ class view_wolves_wolves extends game_view {
             $this->page->insert_block("activeTile", ['INDEX' => $i]);
         }
 
+        $hex_width = 118;
+        $hex_height = 102;
+
         $this->page->begin_block('wolves_wolves', 'region');
         foreach ($this->game->getRegions() as $region) {
+            $offset = $region['rotated'] ? 1 : 3;
             $this->page->insert_block('region', [
                 'ID' => $region['region_id'],
                 'N' => $region['tile_number'],
-                'CX' => $region['center_x'] * 89 - 268,
-                'CY' => $region['center_y'] * 103 - $region['center_x'] * 51 - 154,
+                'CX' => intdiv(($region['center_x'] - $offset) * 3 * $hex_width, 4),
+                'CY' => intdiv(($region['center_y'] * 2 - $region['center_x'] - 3) * $hex_height, 2),
                 'ROTATE' => $region['rotated'] ? 'wolves-region-rotated' : ''
             ]);
         }
@@ -40,8 +44,8 @@ class view_wolves_wolves extends game_view {
 
         $this->page->begin_block('wolves_wolves', 'hex');
         foreach ($this->game->getLand() as $hex) {
-            $cx = $hex['x'] * 89;
-            $cy = $hex['y'] * 103 - $hex['x'] * 51;
+            $cx = intdiv($hex['x'] * 3 * $hex_width, 4);
+            $cy = $hex['y'] * $hex_height - $hex['x'] * intdiv($hex_height, 2);
             if ($maxCx < $cx) {
                 $maxCx = $cx;
             }
@@ -57,8 +61,8 @@ class view_wolves_wolves extends game_view {
             ]);
         }
 
-        $this->tpl['LAND_WIDTH'] = $maxCx + 119;
-        $this->tpl['LAND_HEIGHT'] = $maxCy + 103;
+        $this->tpl['LAND_WIDTH'] = $maxCx + $hex_width;
+        $this->tpl['LAND_HEIGHT'] = $maxCy + $hex_height;
 
         $this->page->begin_block('wolves_wolves', 'calendarSpace');
         for ($i = 0; $i < 22; ++$i) {
