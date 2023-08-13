@@ -891,13 +891,19 @@ class Wolves extends Table {
             'terrain' => $terrain_type,
         ]);
         $this->logIncStat(STAT_PLAYER_WOLVES_MOVED, 1, $playerId);
+        
         if(count($potential_wolves) > 0){
             $pack_wolf = $potential_wolves[0];
             $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $pack_wolf['id']);
             $this->gamestate->nextState(TR_DISPLACE);
         }
         else{
-            $this->gamestate->nextState(($newVal > 0) ? TR_MOVE : TR_END_MOVE);
+            if($newVal > 0){
+                $this->gamestate->nextState(TR_MOVE);
+            }
+            else{
+                $this->gamestate->nextState(TR_END_MOVE);
+            }
         }  
     }
 
@@ -969,7 +975,12 @@ class Wolves extends Table {
             'target_player' => self::getPlayerNameById($targetId),
         ]);
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
-        $this->gamestate->nextState($remainingMoves > 0 ? TR_MOVE : TR_POST_ACTION);
+        if($remainingMoves > 0){
+            $this->gamestate->nextState(TR_MOVE);
+        }
+        else{
+            $this->gamestate->nextState(TR_POST_ACTION);
+        }
     }
 
     function howl(int $wolfId, int $x, int $y): void {
@@ -1305,7 +1316,6 @@ class Wolves extends Table {
     function undo(){
         self::checkAction("undo");
         $this->undoAction();
-        $this->gamestate->jumpToState(ST_ACTION_SELECTION);
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1386,8 +1396,8 @@ class Wolves extends Table {
         $playerId = self::getActivePlayerId();
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
+        $this->newTurnLog();
         $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
-        
     }
 
     function stNextTurn(): void {
@@ -1395,6 +1405,7 @@ class Wolves extends Table {
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $currentPlayer);
         self::incStat(1, STAT_TURNS_TAKEN);
         $currentPhase = $this->regionScoring();
+        $this->newTurnLog();
         //Determine if the game should end
         if($currentPhase > 2){
             $this->gamestate->nextState(TR_END_GAME);
@@ -1411,7 +1422,30 @@ class Wolves extends Table {
         $this->setGameStateValue(G_MOVES_REMAINING, -1);
         $this->setGameStateValue(G_MOVED_WOLVES, 0);
         $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
-        $this->newTurnLog();
+    }
+
+    function stMove(): void {
+        $this->newTurnLog(ST_MOVE_SELECTION);
+    }
+
+    function stDisplace(): void {
+        $this->newTurnLog(ST_DISPLACE);
+    }
+
+    function stHowl(): void {
+        $this->newTurnLog(ST_HOWL_SELECTION);
+    }
+
+    function stDen(): void {
+        $this->newTurnLog(ST_DEN_SELECTION);
+    }
+
+    function stLair(): void {
+        $this->newTurnLog(ST_LAIR_SELECTION);
+    }
+
+    function stDominate(): void {
+        $this->newTurnLog(ST_DOMINATE_SELECTION);
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1648,21 +1682,30 @@ class Wolves extends Table {
         self::DbQuery("DELETE FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
     }
 
-    function newTurnLog(){
+    function newTurnLog($state=ST_ACTION_SELECTION){
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
-        self::DbQuery("INSERT INTO turn_log (turn, data) VALUES ($currentTurn, '[]')");
+        self::DbQuery("INSERT INTO turn_log (turn, data, state) VALUES ($currentTurn, '[]', '$state')");
         $rowId = self::DbGetLastId();
         return ["id" => $rowId, 'data' => '[]'];
     }
 
     function undoAction(){
-        $newestLog = $this->getNewestLog(false);
-        if(is_null($newestLog)){
-            throw new BgaUserException(_('There are no more actions to undo!'));
+        $JSONData = [];
+        while(count($JSONData) === 0){
+            $newestLog = $this->getNewestLog(false);
+
+            if(is_null($newestLog)){
+                $this->newTurnLog();
+                throw new BgaUserException(_('There are no more actions to undo!'));
+            }
+    
+            $JSONData = json_decode($newestLog['data'], true);
+            $newState = $newestLog['state'];
+            self::dump("Action Log", $JSONData);
+            $this->deleteNewestLog();
         }
 
-        $JSONData = json_decode($newestLog['data'], true);
-        self::dump("Action Log", $JSONData);
+        
         foreach($JSONData as $actionLog){
             foreach($actionLog as $actionType => $actionValue) {
                 switch($actionType){
@@ -1675,12 +1718,16 @@ class Wolves extends Table {
                     case "GAMESTATE_VALUE":
                         $this->setGameStateValue($actionValue['label'], (int)$actionValue['restore']);
                         break;
+                    default: 
+                        break;
                 }
             }
         }
 
         self::debug("Undo action completed");
-        $this->deleteNewestLog();
+
+        $this->gamestate->jumpToState($newState);
+
     }
 
 }
