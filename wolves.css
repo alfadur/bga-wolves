@@ -14,10 +14,8 @@ html {
 }
 
 :root {
-    --hex-width: 119px;
-    --hex-height: 103px;
-    --hex-half-height: 51px;
-
+    --hex-width: 118px;
+    --hex-height: 102px;
     --tile-width: 196px;
     --tile-height: 297px;
 }
@@ -101,28 +99,28 @@ html {
 }
 
 .wolves-region[data-tile="0"] {
-    background-position: -625px -662px;
+    background-position: -620px -660px;
 }
 
 .wolves-region[data-tile="1"] {
-    background-position: 0 -406px;
+    background-position: 0 -404px;
 }
 
 .wolves-region[data-tile="2"] {
-    background-position: -448px -554px;
+    background-position: -444px -354px;
 }
 
 .wolves-region[data-tile="3"] {
-    background-position: -498px -996px;
+    background-position: -792px -964px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="4"] {
-    background-position: -1062px -610px;
+    background-position: -1058px -608px;
 }
 
 .wolves-region[data-tile="5"] {
-    background-position: -888px -306px;
+    background-position: -884px -302px;
 }
 
 .wolves-region[data-tile="6"] {
@@ -130,33 +128,33 @@ html {
 }
 
 .wolves-region[data-tile="7"] {
-    background-position: -1240px -914px;
+    background-position: -1236px -910px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="8"] {
-    background-position: -532px -1322px;
+    background-position: -528px -1318px;
 }
 
 .wolves-region[data-tile="9"] {
-    background-position: -710px 0;
+    background-position: -708px 2px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="10"] {
-    background-position: -356px -1018px;
+    background-position: -352px -1014px;
     transform: rotate(180deg);
 }
 
 .wolves-region-rotated {
-    transform: rotate(180deg);
+    transform: rotate(180deg) !important;
 }
 
-.wolves-region-rotated[data-tile="2"],
-.wolves-region-rotated[data-tile="6"],
-.wolves-region-rotated[data-tile="8"],
-.wolves-region-rotated[data-tile="9"] {
-    transform: none;
+.wolves-region-rotated[data-tile="3"],
+.wolves-region-rotated[data-tile="7"],
+.wolves-region-rotated[data-tile="9"],
+.wolves-region-rotated[data-tile="10"] {
+    transform: none !important;
 }
 
 .wolves-hex {
@@ -212,7 +210,7 @@ html {
 }
 
 .wolves-piece-sprite {
-    --piece-scale: 1.5;
+    --piece-scale: 0.8;
     position: absolute;
     width: var(--piece-width);
     height: var(--piece-height);
@@ -222,10 +220,10 @@ html {
     right: 0;
     bottom: 0;
     background-color: transparent;
-    background-image: url("img/wolves.png");
+    background-image: url("img/pieces.png");
     background-origin: content-box;
     background-clip: content-box;
-    background-position: 0 calc(var(--piece-sprite-y) * -1);
+    background-position-y: calc(var(--piece-sprite-y) * -1);
 
     pointer-events: none;
     transform: scale(var(--piece-scale)) translateY(-35%);
@@ -255,60 +253,57 @@ html {
 }
 
 .wolves-piece[data-kind="0"] > .wolves-piece-sprite {
-    --piece-width:  50px;
-    --piece-height: 48px;
-    --piece-sprite-y: 32px;
-}
-
-.wolves-piece[data-kind="1"] > .wolves-piece-sprite {
-    --piece-width:  44px;
-    --piece-height: 32px;
+    --piece-width:  101px;
+    --piece-height: 95px;
     --piece-sprite-y: 0px;
 }
 
+.wolves-piece[data-kind="1"] > .wolves-piece-sprite {
+    --piece-width:  94px;
+    --piece-height: 60px;
+    --piece-sprite-y: 96px;
+}
+
 .wolves-piece[data-kind="2"] > .wolves-piece-sprite {
-    --piece-width:  50px;
-    --piece-height: 44px;
-    --piece-sprite-y: 80px;
+    --piece-width:  72px;
+    --piece-height: 60px;
+    --piece-sprite-y: 156px;
 }
 
 .wolves-piece[data-kind="3"] > .wolves-piece-sprite {
-    --piece-width:  50px;
-    --piece-height: 54px;
-    --piece-sprite-y: 124px;
+    --piece-width:  95px;
+    --piece-height: 100px;
+    --piece-sprite-y: 220px;
 }
 
 .wolves-piece[data-kind="4"] > .wolves-piece-sprite {
-    --piece-width:  72px;
-    --piece-height: 72px;
-    --piece-sprite-y: 218px;
-    transform: none;
+    --piece-width:  100px;
+    --piece-height: 100px;
+    --piece-sprite-y: 320px;
+    transform: scale(var(--piece-scale))
 }
 
 .wolves-piece[data-kind="5"] > .wolves-piece-sprite {
-    --piece-width:  50px;
-    --piece-height: 40px;
-    --piece-sprite-y: 178px;
-}
-
-.wolves-piece-top > .wolves-piece-sprite, .wolves-piece-bottom > .wolves-piece-sprite {
-    padding-top: calc((var(--hex-half-height) - var(--piece-height) * 6 / 4) / 2);
+    --piece-width:  90px;
+    --piece-height: 74px;
+    --piece-sprite-y: 546px;
+    transform: scale(var(--piece-scale))
 }
 
 .wolves-piece[data-owner="1"] > .wolves-piece-sprite {
-    background-position: calc(var(--piece-width) * -1) calc(var(--piece-sprite-y) * -1);
+    background-position-x: calc(var(--piece-width) * -1);
 }
 
 .wolves-piece[data-owner="2"] > .wolves-piece-sprite {
-    background-position: calc(var(--piece-width) * -2) calc(var(--piece-sprite-y) * -1);
-}
-
-.wolves-piece[data-owner="3"] > .wolves-piece-sprite {
-    background-position: calc(var(--piece-width) * -3) calc(var(--piece-sprite-y) * -1);
+    background-position-x: calc(var(--piece-width) * -2);
 }
 
 .wolves-piece[data-owner="4"] > .wolves-piece-sprite {
-    background-position: calc(var(--piece-width) * -4) calc(var(--piece-sprite-y) * -1);
+    background-position-x: calc(var(--piece-width) * -3);
+}
+
+.wolves-piece[data-owner="0"] > .wolves-piece-sprite {
+    background-position-x: calc(var(--piece-width) * -4);
 }
 
 .wolves-player-status {
@@ -376,7 +371,7 @@ html {
     --tile-height: 106px;
     width: var(--tile-width);
     height: var(--tile-height);
-    border-radius: 22px;
+    border-radius: 19px;
     background-size: 359px 317px;
     background-image: url("img/tiles.jpg");
     background-clip: content-box;
