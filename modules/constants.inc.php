@@ -85,6 +85,7 @@ const TR_END_GAME = 'endGame';
 const TR_SKIP = 'skip';
 const TR_HUNT_CONFLICT = 'hunt_conflict';
 const TR_HUNT_CHOICE = 'hunt_choice';
+const TR_ZOMBIE_PASS = 'zombiePass'
 
 const BOARD_SETUP = [
     2 => [

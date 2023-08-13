@@ -1469,8 +1469,11 @@ class Wolves extends Table {
 
         if ($state['type'] === "activeplayer") {
             switch ($statename) {
+                case 'actionSelection':
+                    $this->gamestate->nextState(TR_ZOMBIE_PASS);
+                    break;
                 default:
-                    $this->gamestate->nextState( "zombiePass" );
+                    $this->undoAction();
                     break;
             }
 
@@ -1694,6 +1697,7 @@ class Wolves extends Table {
             $newestLog = $this->getNewestLog(false);
 
             if(is_null($newestLog)){
+                $this->gamestate->jumpToState(ST_ACTION_SELECTION);
                 throw new BgaUserException(_('There are no more actions to undo!'));
             }
     

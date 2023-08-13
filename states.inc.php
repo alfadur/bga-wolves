@@ -98,7 +98,8 @@ $machinestates = [
             TR_MOVE_SELECT => ST_MOVE_SELECTION,
             TR_DEN_SELECT => ST_DEN_SELECTION,
             TR_LAIR_SELECT => ST_LAIR_SELECTION,
-            TR_DOMINATE_SELECT => ST_DOMINATE_SELECTION
+            TR_DOMINATE_SELECT => ST_DOMINATE_SELECTION,
+            TR_ZOMBIE_PASS => ST_NEXT_TURN
         ]
     ],
 
