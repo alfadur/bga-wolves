@@ -593,6 +593,7 @@ class Wolves extends Table {
             if($firstPlace > 0){
                 $args = implode(",", array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
+                self::DbQuery("UPDATE player SET player_score_aux=player_score_aux + 100 WHERE player_id=$playerId");
             }
 
             self::incStat($firstPlace, STAT_PLAYER_FIRST_PLACE, $playerId);
@@ -1017,6 +1018,8 @@ class Wolves extends Table {
 
         $this->logDBInsert("moonlight_board", "(kind)", "($lone)");
         $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
+        // Update tie breaker
+        $this->logDBUpdate("player", "player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score_aux=player_score_aux-1");
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} has howled at a Lone Wolf'), [
             'player_name' => self::getActivePlayerName(),
@@ -1207,7 +1210,9 @@ class Wolves extends Table {
             throw new BgaUserException(_('Selected target is invalid!'));
         }
 
-        if((int)$target['kind'] === P_DEN){
+        $oldKind = $target['kind'];
+        $oldOwner = $target['owner'];
+        if((int)$oldKind === P_DEN){
             
             if(!array_key_exists($denType, DEN_COLS)){
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
@@ -1227,12 +1232,14 @@ class Wolves extends Table {
             }
             $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
+            // Update tie breaker
+            $this->logDBUpdate("player", "player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score_aux=player_score_aux-1");
+            $this->logDBUpdate("player", "player_score_aux=player_score_aux-1", "player_id=$oldOwner", "player_score_aux=player_score_aux+1");
             $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
             $newKind = $wolfType;
         }
 
-        $oldKind = $target['kind'];
-        $oldOwner = $target['owner'];
+
         $this->logDBUpdate("pieces", "owner=$playerId, kind=$newKind", "id=$targetId", "owner=$oldOwner, kind=$oldKind");
         $this->logDBInsert("moonlight_board", "(player_id, kind)", "({$target['owner']}, {$target['kind']})");
         self::notifyAllPlayers('update', clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
