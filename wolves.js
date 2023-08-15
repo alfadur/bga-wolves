@@ -56,13 +56,11 @@ class Attributes {
             terrainTokens: parseInt(data.terrain_tokens),
             turnTokens: parseInt(data.turn_tokens),
             preyData: parseInt(data.prey_data),
-            tiles: ["home_terrain", 0, 1, 2, 3, 4].map(p =>
-                typeof p === "string" ? {
-                        front: parseInt(data[p])
-                    } : {
-                        front: (p + parseInt(data[`tile_${p}`])) % 5,
-                        flipped: parseInt(data[`tile_${p}`])
-                    })
+            tile0: parseInt(data.tile_0),
+            tile1: parseInt(data.tile_1),
+            tile2: parseInt(data.tile_2),
+            tile3: parseInt(data.tile_3),
+            tile4: parseInt(data.tile_4),
         })
     }
 
@@ -70,6 +68,16 @@ class Attributes {
     get moveRange() { return this.attributeValue(3, this.deployedSpeedDens); }
     get packSpread() { return this.attributeValue(2, this.deployedPackDens); }
     get howlRange() { return this.attributeValue(2, this.deployedHowlDens); }
+
+    get tiles() {
+        return ["homeTerrain", 0, 1, 2, 3, 4].map(p =>
+            typeof p === "string" ? {
+                front: parseInt(this[p])
+            } : {
+                front: (p + parseInt(this[`tile${p}`])) % 5,
+                flipped: parseInt(this[`tile${p}`])
+            })
+    }
 
     update(data) {
         for (const name of Object.getOwnPropertyNames(this)) {
@@ -476,12 +484,7 @@ define([
             const attributes = new Attributes(status)
             this.attributes[playerId] = attributes;
 
-            const playerTiles = document.querySelectorAll(`#wolves-player-container-${playerId} .wolves-player-tile`);
-
-            attributes.tiles.forEach((tile, index) => {
-                playerTiles[index].dataset.x = tile.front
-                playerTiles[index].dataset.y = "flipped" in tile ? tile.flipped + 1 : 0;
-            });
+            this.updateTiles(playerId);
 
             const node = document.getElementById(`player_board_${playerId}`);
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
@@ -648,11 +651,7 @@ define([
                     prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
                     break;
                 case "clientSelectTiles":
-                    const tiles = document.querySelectorAll(".wolves-active-tile");
-                    this.activeAttributes().tiles.forEach((tile, index) => {
-                        tiles[index].dataset.x = tile.front
-                        tiles[index].dataset.y = "flipped" in tile ? tile.flipped + 1 : 0;
-                    });
+                    this.updateTiles(this.getActivePlayerId());
                     document.getElementById("wolves-active-tiles").classList.remove("hidden");
                     break;
             }
@@ -785,6 +784,22 @@ define([
             denType: attribute,
             path: ""
         }, () => {});
+    },
+
+    updateTiles(playerId) {
+        const tileData = this.attributes[playerId].tiles;
+        function setTiles(tiles) {
+            tileData.forEach((tile, index) => {
+                tiles[index].dataset.x = tile.front
+                tiles[index].dataset.y = "flipped" in tile ? tile.flipped + 1 : 0;
+            });
+        }
+
+        if (playerId === this.getActivePlayerId()) {
+            setTiles(document.querySelectorAll(".wolves-active-tile"));
+        }
+
+        setTiles(document.querySelectorAll(`#wolves-player-container-${playerId} .wolves-player-tile`));
     },
 
     ///////////////////////////////////////////////////
@@ -1024,6 +1039,8 @@ define([
                 const node = document.getElementById(`player_board_${playerId}`);
                 dojo.place(this.format_block("jstpl_player_status", attributes), node);
             }
+
+            this.updateTiles(playerId);
         }
     },
 

@@ -316,7 +316,7 @@ class Wolves extends Table {
     }
 
     function getPlayerTiles(int $player_id): array {
-        $tiles = self::getObjectFromDB("SELECT `tile_0` as `0`, `tile_1` as `1`, `tile_2` as `2`, `tile_3` as `3`, `tile_4` as `4`, `home_terrain` as `5` FROM `player_status` WHERE player_id=$player_id");
+        $tiles = self::getObjectFromDB("SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain FROM `player_status` WHERE player_id=$player_id");
         return $tiles;
     }
 
@@ -353,26 +353,27 @@ class Wolves extends Table {
 
     }
 
-    function flipTiles(int $playerId, array $tileIndices, bool $forceFlip=false): int {
+    function flipTiles(int $playerId, array $tileIndices, int &$terrain): array {
         $tiles = $this->getPlayerTiles($playerId);
         self::dump("player_$playerId\_tiles", $tiles);
         $terrain = -1;
         $sets = [];
 
         foreach ($tileIndices as $tileIndex) {
-            $nextTerrain = $tileIndex < TILE_TERRAIN_TYPES ?
-                ($tileIndex + $tiles[strval($tileIndex)]) % TILE_TERRAIN_TYPES :
-                (int)self::getUniqueValueFromDB("SELECT home_terrain FROM player_status WHERE player_id = $playerId");
+            if ($tileIndex < TILE_TERRAIN_TYPES) {
+                $isFlipped = &$tiles["tile_$tileIndex"];
+                $nextTerrain = ($tileIndex + $isFlipped) % TILE_TERRAIN_TYPES;
+                $sets[] = "tile_$tileIndex = 1 - tile_$tileIndex";
+                $isFlipped = 1 - (int)$isFlipped;
+            } else {
+                $nextTerrain =  $tiles['home_terrain'];
+            }
 
             self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
-            if ($forceFlip || ($terrain >= 0 && $nextTerrain !== $terrain)) {
+            if ($terrain >= 0 && $nextTerrain !== $terrain) {
                 throw new BgaUserException(_('All tiles must have identical terrain'));
             }
             $terrain = $nextTerrain;
-
-            if ($tileIndex < TILE_TERRAIN_TYPES) {
-                $sets[] = "`tile_$tileIndex` = 1 - `tile_$tileIndex`";
-            }
         }
 
         if (count($sets) > 0) {
@@ -380,7 +381,7 @@ class Wolves extends Table {
             $this->logDBUpdate("player_status", $update, "player_id=$playerId", $update);
         }
 
-        return $terrain;
+        return $tiles;
     }
 
     function getDenAwards(int $denType, int $deployedDens): ?int {
@@ -765,7 +766,12 @@ class Wolves extends Table {
             throw new BgaUserException(_('Cannot force terrain when flipping tiles'));
         }
 
-        $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
+        $terrain = $forceTerrain ?? -1;
+        $newTiles = null;
+        if ($terrain < 0) {
+            $newTiles = $this->flipTiles($playerId, $tiles, $terrain);
+            $newTiles['playerId'] = $playerId;
+        }
 
         $flipTilesState = 0;
         foreach($tiles as $tileIndex){
@@ -801,17 +807,20 @@ class Wolves extends Table {
 
         $this->logSetGameStateValue(G_SELECTED_TERRAIN, $terrain);
 
-        $this->notifyAllPlayers('action', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), [
-            'player_name' => self::getActivePlayerName(),
-            'player_id' => $playerId,
-            'action_name' => $this->actionNames[$action],
-            'terrain_name' => $this->terrainNames[$terrain],
-            'new_tiles' => $this->getPlayerTiles($playerId)
-        ]);
-
-
         $this->logIncStat(STAT_PLAYER_TERRAIN_TOKENS_SPENT, $bonusTerrain, $playerId);
         $this->logIncStat(STAT_TERRAIN_TOKENS_SPENT, $bonusTerrain);
+
+        $notificationArgs = [
+            'player_name' => self::getActivePlayerName(),
+            'action_name' => $this->actionNames[$action],
+            'terrain_name' => $this->terrainNames[$terrain]
+        ];
+        if ($newTiles !== null) {
+            $notificationArgs['newAttributes'] = $newTiles;
+        }
+
+        $this->notifyAllPlayers('update', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), $notificationArgs);
+
         $this->gamestate->nextState( $actionName . "Select");
     }
 
