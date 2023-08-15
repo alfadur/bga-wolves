@@ -315,11 +315,6 @@ class Wolves extends Table {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
 
-    function getPlayerTiles(int $player_id): array {
-        $tiles = self::getObjectFromDB("SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain FROM `player_status` WHERE player_id=$player_id");
-        return $tiles;
-    }
-
     function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
@@ -354,7 +349,10 @@ class Wolves extends Table {
     }
 
     function flipTiles(int $playerId, array $tileIndices, int &$terrain): array {
-        $tiles = $this->getPlayerTiles($playerId);
+        $tiles = self::getObjectFromDB(<<<EOF
+            SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain
+            FROM player_status WHERE player_id=$playerId
+            EOF);
         self::dump("player_$playerId\_tiles", $tiles);
         $terrain = -1;
         $sets = [];
@@ -366,7 +364,7 @@ class Wolves extends Table {
                 $sets[] = "tile_$tileIndex = 1 - tile_$tileIndex";
                 $isFlipped = 1 - (int)$isFlipped;
             } else {
-                $nextTerrain =  $tiles['home_terrain'];
+                $nextTerrain = (int)$tiles['home_terrain'];
             }
 
             self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
