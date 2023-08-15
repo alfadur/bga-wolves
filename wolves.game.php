@@ -1340,9 +1340,6 @@ class Wolves extends Table {
         ]);
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
         self::incStat(1, STAT_TURNS_TAKEN);
-        $this->activeNextPlayer();
-        $playerId = self::getActivePlayerId();
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
@@ -1438,6 +1435,9 @@ class Wolves extends Table {
             $this->gamestate->nextState(TR_END_GAME);
         }
         else{
+            $this->activeNextPlayer();
+            $this->giveExtraTime(self::getActivePlayerId());
+
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
             $this->gamestate->nextState(TR_START_TURN);
         }
