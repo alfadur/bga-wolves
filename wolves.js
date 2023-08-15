@@ -81,7 +81,7 @@ class Attributes {
 
     update(data) {
         for (const name of Object.getOwnPropertyNames(this)) {
-            const snakeName = name.replace(/[A-Z]/g, (match) => `_${match.toLowerCase()}`);
+            const snakeName = name.replace(/[A-Z0-9]/g, (match) => `_${match.toLowerCase()}`);
             if (snakeName in data) {
                 this[name] = parseInt(data[snakeName]);
             }
