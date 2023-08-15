@@ -1622,6 +1622,7 @@ class Wolves extends Table {
         self::DbQuery("DELETE FROM $table WHERE $condition");
         $skeleton = '(`'.implode("`,`", array_keys($prevObj)).'`)';
         $values = "('".implode("','", array_values($prevObj))."')";
+        $values = str_replace("''", "NULL", $values);
         $reverseExpression = "INSERT INTO $table $skeleton VALUES $values";
         $this->updateNewestLog([
             "DB" => $reverseExpression
@@ -1682,7 +1683,7 @@ class Wolves extends Table {
         $newestLog = $this->getNewestLog();
         $logJSON = json_decode($newestLog['data'], true);
         $logJSON[] = $data;
-        $jsonString = json_encode($logJSON);
+        $jsonString = json_encode($logJSON, JSON_HEX_QUOT + JSON_HEX_APOS + JSON_HEX_TAG + JSON_HEX_AMP);
         $rowId = $newestLog['id'];
         self::DbQuery("UPDATE turn_log SET data='$jsonString' WHERE id=$rowId");
     }
