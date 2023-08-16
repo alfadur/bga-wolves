@@ -650,6 +650,8 @@ define([
                 case "actionSelection":
                     this.selectedAction = {};
                     clearTag("wolves-selected");
+                    this.updateTiles(this.getActivePlayerId());
+                    document.getElementById("wolves-active-tiles").classList.remove("hidden");
                     break;
                 case "howlSelection":
                     prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
@@ -715,14 +717,13 @@ define([
                     break;
                 case "clientSelectTiles":
                     const flippedTiles = this.selectedAction.tiles.size;
-                    const cost = this.selectedAction.cost - flippedTiles;
-
-                    let hasTokens = this.activeAttributes().terrainTokens >= cost;
-                    const text = hasTokens ?
-                        _(`Flip ${flippedTiles} tiles (${cost} tokens)`) :
+                    const remainingCost = this.selectedAction.cost - flippedTiles;
+                    let tokens = this.activeAttributes().terrainTokens;
+                    const text = tokens && tokens >= remainingCost ?
+                        _(`Flip ${flippedTiles} tiles (${remainingCost} tokens)`) :
                         _(`Flip ${flippedTiles} tiles`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
-                    if (!hasTokens) {
+                    if (tokens < remainingCost) {
                         dojo.addClass("wolves-action-flip", "disabled");
                     }
                 //fallthrough
@@ -952,12 +953,12 @@ define([
         if (!this.selectedAction.tiles.delete(index) && this.selectedAction.tiles.size < this.selectedAction.cost) {
             this.selectedAction.tiles.add(index);
             tile.classList.add("wolves-selected");
-            this.setClientState("clientSelectTiles", {
-                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
-            });
         } else {
             tile.classList.remove("wolves-selected");
         }
+        this.setClientState("clientSelectTiles", {
+            descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
+        });
     },
 
     onFlipTiles() {
