@@ -802,7 +802,7 @@ define([
             lock: true,
             wolfId,
             targetId: target.id,
-            denType: attribute,
+            denType: attribute || 0,
             path: ""
         }, () => {});
     },
