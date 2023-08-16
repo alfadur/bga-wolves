@@ -172,20 +172,35 @@ html {
     pointer-events: all;
 }
 
-.wolves-hex-selector:hover {
-    background-color: black !important;
-}
-
 .wolves-hex-water > .wolves-hex-selector:hover {
     background-color: transparent !important;
 }
 
+#wolves-land.wolves-selectable > .wolves-hex:not(.wolves-selectable) > .wolves-hex-selector {
+    background-color: #4b4b4b;
+    opacity: 0.7;
+    mix-blend-mode: multiply;
+}
+
 .wolves-selectable > .wolves-hex-selector {
-    border: 2px solid blueviolet;
+    pointer-events: all;
 }
 
 .wolves-selectable > .wolves-hex-selector:hover {
-    background-color: blueviolet !important;
+    backdrop-filter: contrast(150%) blur(0.5px) saturate(130%);
+}
+
+.wolves-selectable > .wolves-hex-selector:hover:after {
+    display: block;
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #FF0000a0;
+    clip-path: polygon(
+        0 50%, 25% 0%, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%,
+        10% 50%, 30% 91.34%, 70.0% 91.34%, 90% 50%, 70% 8.66%, 30% 8.66%, 10% 50%);
+    pointer-events: none;
 }
 
 .wolves-piece-selector {
@@ -197,7 +212,6 @@ html {
 }
 
 .wolves-selectable > .wolves-piece-selector {
-    border: 2px solid blueviolet;
     pointer-events: all;
 }
 
@@ -239,12 +253,9 @@ html {
     transform: scale(var(--piece-scale)) translateY(10%);
 }
 
+.wolves-piece.wolves-selected > .wolves-piece-sprite,
 .wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite {
-    animation-name: pulse;
-    animation-direction: alternate;
-    animation-timing-function: ease-out;
-    animation-iteration-count: infinite;
-    animation-duration: 0.5s;
+    filter: contrast(150%) saturate(130%);
 }
 
 @keyframes pulse {

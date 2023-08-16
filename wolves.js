@@ -315,6 +315,7 @@ function collectPaths(from, range, terrain, canStopPredicate) {
 }
 
 function makeHexSelectable(hex, terrain) {
+    document.getElementById("wolves-land").classList.add("wolves-selectable");
     let node = getHexNode(hex);
     if (node && (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
@@ -326,6 +327,7 @@ function makeHexSelectable(hex, terrain) {
 function prepareHowlSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
+
     for (const wolf of loneWolves) {
         if (alphaWolves.some(alpha => hexDistance(wolf, alpha) <= range)) {
             makeHexSelectable(wolf, terrain);
@@ -405,6 +407,7 @@ function selectWolf(id, canStopPredicate, range, terrain) {
             y: parseInt(sourceHex.dataset.y),
         }, range, terrain, canStopPredicate);
         clearTag("wolves-selectable");
+        getPieceNode(id).classList.add("wolves-selected");
         for (const path of paths) {
             if (path.canStop) {
                 makeHexSelectable(path.hex);
@@ -884,7 +887,7 @@ define([
                 lock: true,
                 wolfId: this.selectedPiece,
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
-            }, () => {});
+            }, () => clearTag("wolves-selected"));
         } else if (this.checkAction("howl", true)) {
             const howlRange = this.activeAttributes().howlRange;
             const wolfId = this.pieces.getByOwner(playerId, p =>
@@ -982,6 +985,8 @@ define([
     onCancel(event) {
         dojo.stopEvent(event);
         console.log("cancelled");
+        clearTag("wolves-selectable");
+        clearTag("wolves-selected");
         this.restoreServerGameState();
     },
 
