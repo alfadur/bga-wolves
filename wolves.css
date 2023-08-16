@@ -21,28 +21,12 @@ html {
     --piece-scale: 0.8;
 }
 
-#wolves-active-tiles {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-#wolves-active-tiles.hidden {
-    display: none;
-}
-
-.wolves-active-tile {
+.wolves-terrain-tile {
     width: var(--tile-width);
     height: var(--tile-height);
-    border-radius: 52px;
-    flex-shrink: 0;
     background-image: url("img/tiles.jpg");
     background-clip: content-box;
     background-repeat: no-repeat;
-}
-
-.wolves-active-tile.wolves-selected {
-    box-shadow: inset 0 0 5px 4px red;
 }
 
 .wolves-terrain-tile[data-x="1"] {
@@ -67,6 +51,29 @@ html {
 
 .wolves-terrain-tile[data-y="2"] {
     background-position-y: calc(var(--tile-height) * -2);
+}
+
+#wolves-active-tiles {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+#wolves-active-tiles.hidden {
+    display: none;
+}
+
+.wolves-active-tile {
+    border-radius: 52px;
+    flex-shrink: 0;
+    background-image: url("img/tiles.jpg");
+    background-clip: content-box;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 8px black;
+}
+
+.wolves-active-tile.wolves-selected {
+    box-shadow: inset 0 0 4px 12px #f00c, 0 4px 8px black;
 }
 
 #wolves-game {
@@ -402,12 +409,14 @@ html {
 
 .wolves-player-container {
     position: relative;
+    height: 386px;
 }
 
 .wolves-player-name {
     position: absolute;
-    top: 34%;
-    left: 4%;
+    top: 39%;
+    width: 100%;
+    text-align: center;
 }
 
 .wolves-tile-container {
@@ -419,13 +428,9 @@ html {
     position: absolute;
     --tile-width: 72px;
     --tile-height: 106px;
-    width: var(--tile-width);
-    height: var(--tile-height);
     border-radius: 19px;
     background-size: 359px 317px;
-    background-image: url("img/tiles.jpg");
-    background-clip: content-box;
-    background-repeat: no-repeat;
+    box-shadow: 0 2px 4px black;
 }
 
 .wolves-player-tile:nth-child(1) { left: 3.9%; top: 6% }
