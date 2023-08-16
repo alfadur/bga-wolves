@@ -482,6 +482,24 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
+        for (const region of gameData.regions) {
+            const hex = getHexNode(region);
+            const mask = parseInt(region.phase);
+            for (let phase = 2; phase >= 0; --phase) {
+                if (mask & (0x1 << phase)) {
+                    dojo.place(this.format_block("jstpl_moon", {phase}), hex)
+                }
+            }
+        }
+
+        for (let phase = 0; phase < 3; ++phase) {
+            const moons = document.querySelectorAll(`.wolves-moon[data-phase="${phase}"]`);
+            if (moons.length > 0) {
+                moons.forEach(moon => moon.classList.add("wolves-upcoming"));
+                break;
+            }
+        }
+
         for (const status of gameData.status) {
             const playerId = status.player_id;
             const attributes = new Attributes(status)
@@ -516,7 +534,7 @@ define([
                 locationClass: ""
             };
             const node = document.getElementById(`wolves-calendar-space-${index}`);
-            dojo.place(this.format_block("jstpl_hex_content", args), node);
+            dojo.place(this.format_block("jstpl_piece", args), node);
         }, this);
 
         document.querySelectorAll(".wolves-active-tile").forEach(tile => {
@@ -570,7 +588,7 @@ define([
                 kind: piece.kind,
                 locationClass
             };
-            const newNode = dojo.place(this.format_block("jstpl_hex_content", args), node);
+            const newNode = dojo.place(this.format_block("jstpl_piece", args), node);
             dojo.connect(newNode, "onclick", e => {
                 if (this.onPieceClick(piece.id)) {
                     dojo.stopEvent(e);
@@ -592,7 +610,7 @@ define([
                     locationClass: ""
                 };
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
-                const newNode = dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
+                const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
 
                 if (this.useMoveAnimation) {
                     const start = node.getBoundingClientRect();

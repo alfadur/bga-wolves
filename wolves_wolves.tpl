@@ -55,11 +55,13 @@
 </div>
 
 <script type="text/javascript">
-const jstpl_hex_content =
+const jstpl_piece =
     `<div id="wolves-piece-\${id}" class="wolves-piece \${locationClass}" data-kind="\${kind}" data-owner="\${owner}">
         <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-sprite"></div>
     </div>`
+const jstpl_moon =
+    `<div class="wolves-moon" data-phase="\${phase}"></div>`
 const jstpl_player_status =
     `<div class="wolves-player-status">
         <div>Move \${moveRange}</div>

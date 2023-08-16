@@ -18,6 +18,7 @@ html {
     --hex-height: 102px;
     --tile-width: 196px;
     --tile-height: 297px;
+    --piece-scale: 0.8;
 }
 
 #wolves-active-tiles {
@@ -172,8 +173,8 @@ html {
     pointer-events: all;
 }
 
-.wolves-hex-water > .wolves-hex-selector:hover {
-    background-color: transparent !important;
+.wolves-hex-water > .wolves-hex-selector {
+    pointer-events: none;
 }
 
 #wolves-land.wolves-selectable > .wolves-hex:not(.wolves-selectable) > .wolves-hex-selector {
@@ -203,6 +204,45 @@ html {
     pointer-events: none;
 }
 
+.wolves-moon {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    background-position-y: -424px;
+    background-image: url("img/pieces.png");
+    transform: scale(var(--piece-scale));
+}
+
+.wolves-moon[data-phase="1"] {
+    background-position-x: -120px;
+}
+
+.wolves-moon[data-phase="2"] {
+    background-position-x: -240px;
+}
+
+.wolves-moon:nth-child(3) {
+    transform: scale(var(--piece-scale)) translateY(-12px);
+}
+
+.wolves-moon.wolves-upcoming:after {
+    display: block;
+    content: "";
+    position: absolute;
+    width: 62px;
+    height: 62px;
+    right: 5%;
+    bottom: 20%;
+    background-image: url("img/pieces.png");
+    background-position: -350px -154px;
+    transform: scale(var(--piece-scale));
+}
+
 .wolves-piece-selector {
     position: absolute;
     width: 100%;
@@ -224,7 +264,6 @@ html {
 }
 
 .wolves-piece-sprite {
-    --piece-scale: 0.8;
     position: absolute;
     width: var(--piece-width);
     height: var(--piece-height);
