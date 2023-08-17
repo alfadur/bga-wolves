@@ -315,6 +315,7 @@ function collectPaths(from, range, terrain, canStopPredicate) {
 }
 
 function makeHexSelectable(hex, terrain) {
+    document.getElementById("wolves-land").classList.add("wolves-selectable");
     let node = getHexNode(hex);
     if (node && (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
@@ -326,6 +327,7 @@ function makeHexSelectable(hex, terrain) {
 function prepareHowlSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
+
     for (const wolf of loneWolves) {
         if (alphaWolves.some(alpha => hexDistance(wolf, alpha) <= range)) {
             makeHexSelectable(wolf, terrain);
@@ -405,6 +407,7 @@ function selectWolf(id, canStopPredicate, range, terrain) {
             y: parseInt(sourceHex.dataset.y),
         }, range, terrain, canStopPredicate);
         clearTag("wolves-selectable");
+        getPieceNode(id).classList.add("wolves-selected");
         for (const path of paths) {
             if (path.canStop) {
                 makeHexSelectable(path.hex);
@@ -479,6 +482,29 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
+        for (const region of gameData.regions) {
+            const hex = getHexNode(region);
+            const mask = parseInt(region.phase);
+            for (let phase = 2; phase >= 0; --phase) {
+                if (mask & (0x1 << phase)) {
+                    dojo.place(this.format_block("jstpl_moon", {phase}), hex)
+                }
+            }
+        }
+
+        const scoringNode = document.getElementById(`wolves-calendar-space-${gameData.nextScoring - 1}`);
+        if (scoringNode) {
+            dojo.place(this.format_block("jstpl_marker", {id: "scoring"}), scoringNode);
+        }
+
+        for (let phase = 0; phase < 3; ++phase) {
+            const moons = document.querySelectorAll(`.wolves-moon[data-phase="${phase}"]`);
+            if (moons.length > 0) {
+                moons.forEach(moon => moon.classList.add("wolves-upcoming"));
+                break;
+            }
+        }
+
         for (const status of gameData.status) {
             const playerId = status.player_id;
             const attributes = new Attributes(status)
@@ -513,7 +539,7 @@ define([
                 locationClass: ""
             };
             const node = document.getElementById(`wolves-calendar-space-${index}`);
-            dojo.place(this.format_block("jstpl_hex_content", args), node);
+            dojo.place(this.format_block("jstpl_piece", args), node);
         }, this);
 
         document.querySelectorAll(".wolves-active-tile").forEach(tile => {
@@ -567,7 +593,7 @@ define([
                 kind: piece.kind,
                 locationClass
             };
-            const newNode = dojo.place(this.format_block("jstpl_hex_content", args), node);
+            const newNode = dojo.place(this.format_block("jstpl_piece", args), node);
             dojo.connect(newNode, "onclick", e => {
                 if (this.onPieceClick(piece.id)) {
                     dojo.stopEvent(e);
@@ -589,7 +615,7 @@ define([
                     locationClass: ""
                 };
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
-                const newNode = dojo.place(this.format_block("jstpl_hex_content", args), calendarNode);
+                const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
 
                 if (this.useMoveAnimation) {
                     const start = node.getBoundingClientRect();
@@ -629,6 +655,8 @@ define([
                 case "actionSelection":
                     this.selectedAction = {};
                     clearTag("wolves-selected");
+                    this.updateTiles(this.getActivePlayerId());
+                    document.getElementById("wolves-active-tiles").classList.remove("hidden");
                     break;
                 case "howlSelection":
                     prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
@@ -694,14 +722,13 @@ define([
                     break;
                 case "clientSelectTiles":
                     const flippedTiles = this.selectedAction.tiles.size;
-                    const cost = this.selectedAction.cost - flippedTiles;
-
-                    let hasTokens = this.activeAttributes().terrainTokens >= cost;
-                    const text = hasTokens ?
-                        _(`Flip ${flippedTiles} tiles (${cost} tokens)`) :
+                    const remainingCost = this.selectedAction.cost - flippedTiles;
+                    let tokens = this.activeAttributes().terrainTokens;
+                    const text = tokens && tokens >= remainingCost ?
+                        _(`Flip ${flippedTiles} tiles (${remainingCost} tokens)`) :
                         _(`Flip ${flippedTiles} tiles`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
-                    if (!hasTokens) {
+                    if (tokens < remainingCost) {
                         dojo.addClass("wolves-action-flip", "disabled");
                     }
                 //fallthrough
@@ -781,7 +808,7 @@ define([
             lock: true,
             wolfId,
             targetId: target.id,
-            denType: attribute,
+            denType: attribute || 0,
             path: ""
         }, () => {});
     },
@@ -884,7 +911,7 @@ define([
                 lock: true,
                 wolfId: this.selectedPiece,
                 path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
-            }, () => {});
+            }, () => clearTag("wolves-selected"));
         } else if (this.checkAction("howl", true)) {
             const howlRange = this.activeAttributes().howlRange;
             const wolfId = this.pieces.getByOwner(playerId, p =>
@@ -931,12 +958,12 @@ define([
         if (!this.selectedAction.tiles.delete(index) && this.selectedAction.tiles.size < this.selectedAction.cost) {
             this.selectedAction.tiles.add(index);
             tile.classList.add("wolves-selected");
-            this.setClientState("clientSelectTiles", {
-                descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
-            });
         } else {
             tile.classList.remove("wolves-selected");
         }
+        this.setClientState("clientSelectTiles", {
+            descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
+        });
     },
 
     onFlipTiles() {
@@ -982,6 +1009,8 @@ define([
     onCancel(event) {
         dojo.stopEvent(event);
         console.log("cancelled");
+        clearTag("wolves-selectable");
+        clearTag("wolves-selected");
         this.restoreServerGameState();
     },
 

@@ -260,10 +260,11 @@ class Wolves extends Table {
             'SELECT player_id id, player_score score, player_color color FROM player');
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
         $result['regions'] = self::getObjectListFromDb(
-            'SELECT tile_number, center_x, center_y, rotated FROM regions');
+            'SELECT center_x AS x, center_y AS y, moon_phase AS phase FROM regions');
         $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
-
+        $result['nextScoring'] =
+                PHASES[$this->getGameStateValue(G_MOON_PHASE)][$this->getPlayersNumber()];
         return $result;
     }
 
@@ -315,11 +316,6 @@ class Wolves extends Table {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
 
-    function getPlayerTiles(int $player_id): array {
-        $tiles = self::getObjectFromDB("SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain FROM `player_status` WHERE player_id=$player_id");
-        return $tiles;
-    }
-
     function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array {
         $checks = [];
         foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
@@ -354,7 +350,10 @@ class Wolves extends Table {
     }
 
     function flipTiles(int $playerId, array $tileIndices, int &$terrain): array {
-        $tiles = $this->getPlayerTiles($playerId);
+        $tiles = self::getObjectFromDB(<<<EOF
+            SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain
+            FROM player_status WHERE player_id=$playerId
+            EOF);
         self::dump("player_$playerId\_tiles", $tiles);
         $terrain = -1;
         $sets = [];
@@ -366,7 +365,7 @@ class Wolves extends Table {
                 $sets[] = "tile_$tileIndex = 1 - tile_$tileIndex";
                 $isFlipped = 1 - (int)$isFlipped;
             } else {
-                $nextTerrain =  $tiles['home_terrain'];
+                $nextTerrain = (int)$tiles['home_terrain'];
             }
 
             self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
@@ -1340,9 +1339,6 @@ class Wolves extends Table {
         ]);
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
         self::incStat(1, STAT_TURNS_TAKEN);
-        $this->activeNextPlayer();
-        $playerId = self::getActivePlayerId();
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
@@ -1438,6 +1434,9 @@ class Wolves extends Table {
             $this->gamestate->nextState(TR_END_GAME);
         }
         else{
+            $this->activeNextPlayer();
+            $this->giveExtraTime(self::getActivePlayerId());
+
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
             $this->gamestate->nextState(TR_START_TURN);
         }

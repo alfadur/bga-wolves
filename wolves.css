@@ -18,30 +18,15 @@ html {
     --hex-height: 102px;
     --tile-width: 196px;
     --tile-height: 297px;
+    --piece-scale: 0.8;
 }
 
-#wolves-active-tiles {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-}
-
-#wolves-active-tiles.hidden {
-    display: none;
-}
-
-.wolves-active-tile {
+.wolves-terrain-tile {
     width: var(--tile-width);
     height: var(--tile-height);
-    border-radius: 52px;
-    flex-shrink: 0;
     background-image: url("img/tiles.jpg");
     background-clip: content-box;
     background-repeat: no-repeat;
-}
-
-.wolves-active-tile.wolves-selected {
-    box-shadow: inset 0 0 5px 4px red;
 }
 
 .wolves-terrain-tile[data-x="1"] {
@@ -66,6 +51,29 @@ html {
 
 .wolves-terrain-tile[data-y="2"] {
     background-position-y: calc(var(--tile-height) * -2);
+}
+
+#wolves-active-tiles {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+#wolves-active-tiles.hidden {
+    display: none;
+}
+
+.wolves-active-tile {
+    border-radius: 52px;
+    flex-shrink: 0;
+    background-image: url("img/tiles.jpg");
+    background-clip: content-box;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 8px black;
+}
+
+.wolves-active-tile.wolves-selected {
+    box-shadow: inset 0 0 4px 12px #f00c, 0 4px 8px black;
 }
 
 #wolves-game {
@@ -172,20 +180,77 @@ html {
     pointer-events: all;
 }
 
-.wolves-hex-selector:hover {
-    background-color: black !important;
+.wolves-hex-water > .wolves-hex-selector {
+    pointer-events: none;
 }
 
-.wolves-hex-water > .wolves-hex-selector:hover {
-    background-color: transparent !important;
+#wolves-land.wolves-selectable > .wolves-hex:not(.wolves-selectable) > .wolves-hex-selector {
+    background-color: #4b4b4b;
+    opacity: 0.7;
+    mix-blend-mode: multiply;
 }
 
 .wolves-selectable > .wolves-hex-selector {
-    border: 2px solid blueviolet;
+    pointer-events: all;
 }
 
 .wolves-selectable > .wolves-hex-selector:hover {
-    background-color: blueviolet !important;
+    backdrop-filter: contrast(150%) blur(0.5px) saturate(130%);
+}
+
+.wolves-selectable > .wolves-hex-selector:hover:after {
+    display: block;
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: #FF0000a0;
+    clip-path: polygon(
+        0 50%, 25% 0%, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%,
+        10% 50%, 30% 91.34%, 70.0% 91.34%, 90% 50%, 70% 8.66%, 30% 8.66%, 10% 50%);
+    pointer-events: none;
+}
+
+.wolves-moon {
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    background-position-y: -424px;
+    background-image: url("img/pieces.png");
+    transform: scale(var(--piece-scale));
+}
+
+.wolves-moon[data-phase="1"] {
+    background-position-x: -120px;
+}
+
+.wolves-moon[data-phase="2"] {
+    background-position-x: -240px;
+}
+
+.wolves-moon:nth-child(3) {
+    transform: scale(var(--piece-scale)) translateY(-12px);
+}
+
+#wolves-marker-scoring, .wolves-moon.wolves-upcoming:after {
+    display: block;
+    content: "";
+    position: absolute;
+    width: 62px;
+    height: 62px;
+    background-image: url("img/pieces.png");
+    background-position: -350px -154px;
+    transform: scale(var(--piece-scale));
+}
+
+.wolves-moon.wolves-upcoming:after {
+    right: 5%;
+    bottom: 20%;
 }
 
 .wolves-piece-selector {
@@ -197,7 +262,6 @@ html {
 }
 
 .wolves-selectable > .wolves-piece-selector {
-    border: 2px solid blueviolet;
     pointer-events: all;
 }
 
@@ -210,7 +274,6 @@ html {
 }
 
 .wolves-piece-sprite {
-    --piece-scale: 0.8;
     position: absolute;
     width: var(--piece-width);
     height: var(--piece-height);
@@ -239,12 +302,9 @@ html {
     transform: scale(var(--piece-scale)) translateY(10%);
 }
 
+.wolves-piece.wolves-selected > .wolves-piece-sprite,
 .wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite {
-    animation-name: pulse;
-    animation-direction: alternate;
-    animation-timing-function: ease-out;
-    animation-iteration-count: infinite;
-    animation-duration: 0.5s;
+    filter: contrast(150%) saturate(130%);
 }
 
 @keyframes pulse {
@@ -352,12 +412,14 @@ html {
 
 .wolves-player-container {
     position: relative;
+    height: 386px;
 }
 
 .wolves-player-name {
     position: absolute;
-    top: 34%;
-    left: 4%;
+    top: 39%;
+    width: 100%;
+    text-align: center;
 }
 
 .wolves-tile-container {
@@ -369,13 +431,9 @@ html {
     position: absolute;
     --tile-width: 72px;
     --tile-height: 106px;
-    width: var(--tile-width);
-    height: var(--tile-height);
     border-radius: 19px;
     background-size: 359px 317px;
-    background-image: url("img/tiles.jpg");
-    background-clip: content-box;
-    background-repeat: no-repeat;
+    box-shadow: 0 2px 4px black;
 }
 
 .wolves-player-tile:nth-child(1) { left: 3.9%; top: 6% }
