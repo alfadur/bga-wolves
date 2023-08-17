@@ -55,13 +55,15 @@
 </div>
 
 <script type="text/javascript">
+const jstpl_marker =
+    `<div id="wolves-marker-\${id}"></div>`;
 const jstpl_piece =
     `<div id="wolves-piece-\${id}" class="wolves-piece \${locationClass}" data-kind="\${kind}" data-owner="\${owner}">
         <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-sprite"></div>
-    </div>`
+    </div>`;
 const jstpl_moon =
-    `<div class="wolves-moon" data-phase="\${phase}"></div>`
+    `<div class="wolves-moon" data-phase="\${phase}"></div>`;
 const jstpl_player_status =
     `<div class="wolves-player-status">
         <div>Move \${moveRange}</div>
@@ -69,7 +71,7 @@ const jstpl_player_status =
         <div>Howl \${howlRange}</div>
         <div>Terrain \${terrainTokens}</div>
         <div>Turns \${turnTokens}</div>
-     </div>`
+     </div>`;
 </script>  
 
 {OVERALL_GAME_FOOTER}

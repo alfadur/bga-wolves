@@ -263,7 +263,8 @@ class Wolves extends Table {
             'SELECT center_x AS x, center_y AS y, moon_phase AS phase FROM regions');
         $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
-
+        $result['nextScoring'] =
+                PHASES[$this->getGameStateValue(G_MOON_PHASE)][$this->getPlayersNumber()];
         return $result;
     }
 

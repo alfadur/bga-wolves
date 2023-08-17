@@ -492,6 +492,11 @@ define([
             }
         }
 
+        const scoringNode = document.getElementById(`wolves-calendar-space-${gameData.nextScoring - 1}`);
+        if (scoringNode) {
+            dojo.place(this.format_block("jstpl_marker", {id: "scoring"}), scoringNode);
+        }
+
         for (let phase = 0; phase < 3; ++phase) {
             const moons = document.querySelectorAll(`.wolves-moon[data-phase="${phase}"]`);
             if (moons.length > 0) {

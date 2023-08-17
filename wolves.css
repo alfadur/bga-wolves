@@ -237,17 +237,20 @@ html {
     transform: scale(var(--piece-scale)) translateY(-12px);
 }
 
-.wolves-moon.wolves-upcoming:after {
+#wolves-marker-scoring, .wolves-moon.wolves-upcoming:after {
     display: block;
     content: "";
     position: absolute;
     width: 62px;
     height: 62px;
-    right: 5%;
-    bottom: 20%;
     background-image: url("img/pieces.png");
     background-position: -350px -154px;
     transform: scale(var(--piece-scale));
+}
+
+.wolves-moon.wolves-upcoming:after {
+    right: 5%;
+    bottom: 20%;
 }
 
 .wolves-piece-selector {
