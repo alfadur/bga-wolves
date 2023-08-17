@@ -781,6 +781,10 @@ define([
                     this.ensureButton("button_end", _("End turn"), "onEndTurn", null, null, "red");
                     break;
             }
+
+            if (!stateName.startsWith("client")) {
+                this.ensureButton("button_undo", _("Undo"), "onUndo", null, null, "red");
+            }
         }
     },
 
@@ -1047,6 +1051,11 @@ define([
         this.ajaxcall("/wolves/wolves/endTurn.html", {lock: true}, () => {});
     },
 
+    onUndo(event) {
+        this.onCancel(event);
+        this.ajaxcall("/wolves/wolves/undo.html", {lock: true}, () => {});
+    },
+
     ///////////////////////////////////////////////////
     //// Reaction to cometD notifications
 
@@ -1056,6 +1065,7 @@ define([
         this.notifqueue.setSynchronous("draft", 100);
 
         dojo.subscribe("update", this, "onUpdateNotification");
+        dojo.subscribe("undo", this, "onUndoNotification");
     },
 
     onDraftNotification(data) {
@@ -1079,7 +1089,6 @@ define([
             this.movePiece(move.id, move.path);
         }
 
-
         if (pieceData) {
             this.removePiece(pieceData.id, pieceData.progress);
             this.addPiece(pieceData);
@@ -1099,6 +1108,18 @@ define([
             }
 
             this.updateTiles(playerId);
+        }
+    },
+
+    onUndoNotification(data) {
+        console.log("Undo notification:");
+        console.log(data);
+
+        const move = data.args.moveUpdate;
+
+        if (move) {
+            const path = move.path.map(d => (d + 3) % 6).reverse();
+            this.movePiece(move.id, path);
         }
     },
 
