@@ -882,7 +882,7 @@ class Wolves extends Table {
         $query = "SELECT * FROM pieces WHERE x=$targetX AND y=$targetY AND kind=1 AND owner != $playerId";
         $potential_wolves = self::getObjectListFromDB($query);
 
-        ['x' => $wolfX, 'y' => $wolfY] = $wolf['x'];
+        ['x' => $wolfX, 'y' => $wolfY] = $wolf;
         $this->logDBUpdate("pieces", "x=$targetX, y=$targetY", "id=$wolfId", "x=$wolfX, y=$wolfY");
         $this->addMovedWolf($wolf['id']);
         $newVal = $this->logIncGameStateValue(G_MOVES_REMAINING, -1);
