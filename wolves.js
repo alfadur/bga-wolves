@@ -194,7 +194,7 @@ class Pieces {
     }
 
     getById(id) {
-        return this.idMap.get(id);
+        return this.idMap.get(parseInt(id));
     }
 
     *getByOwner(owner, predicate) {
@@ -638,6 +638,29 @@ define([
         }
     },
 
+    movePiece(id, path) {
+        const piece = this.pieces.getById(id);
+        if (piece) {
+            const source = getHexNode(piece);
+
+            const destination = path.reduce((hex, step) => hexAdd(hex, hexDirections[step]), piece);
+            destination.id = id;
+
+            this.pieces.update(destination);
+            const node = getHexNode(destination);
+
+            node.appendChild(getPieceNode(id));
+
+            const partition = node.children.length > 2;
+            node.children[1].classList.toggle("wolves-piece-top", partition);
+            node.children[node.children.length - 1].classList.toggle("wolves-piece-bottom", partition);
+
+            if (source.children.length > 1) {
+                source.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
+            }
+        }
+    },
+
     ///////////////////////////////////////////////////
     //// Game & client states
 
@@ -1050,6 +1073,12 @@ define([
         console.log(data);
         const pieceData = data.args.newPiece;
         const attributeData = data.args.newAttributes;
+        const move = data.args.moveUpdate;
+
+        if (move) {
+            this.movePiece(move.id, move.path);
+        }
+
 
         if (pieceData) {
             this.removePiece(pieceData.id, pieceData.progress);
