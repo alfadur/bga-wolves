@@ -1118,7 +1118,9 @@ define([
         const move = data.args.moveUpdate;
 
         if (move) {
-            const path = move.path.map(d => (d + 3) % 6).reverse();
+            console.log("path to", move.path);
+            const path = move.path.map(d => (parseInt(d) + 3) % 6).reverse();
+            console.log("path from", path);
             this.movePiece(move.id, path);
         }
     },

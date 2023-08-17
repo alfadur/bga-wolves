@@ -1712,9 +1712,9 @@ class Wolves extends Table {
         self::DbQuery("UPDATE turn_log SET data='$jsonString' WHERE id=$rowId");
     }
 
-    function getNewestLog($createLog = true){
+    function getNewestLog(bool $createLog = true): ?array {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
-        $newestLog = self::getObjectFromDB("SELECT id, data FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
+        $newestLog = self::getObjectFromDB("SELECT id, data, state FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
         if(is_null($newestLog)){
             if(!$createLog){
                 return NULL;
@@ -1729,7 +1729,7 @@ class Wolves extends Table {
         self::DbQuery("DELETE FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
     }
 
-    function newTurnLog($state=ST_ACTION_SELECTION){
+    function newTurnLog($state=ST_ACTION_SELECTION): array {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         self::DbQuery("INSERT INTO turn_log (turn, data, state) VALUES ($currentTurn, '[]', '$state')");
         $rowId = self::DbGetLastId();
