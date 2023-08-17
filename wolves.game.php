@@ -894,10 +894,11 @@ class Wolves extends Table {
             'x' => $targetX,
             'y' => $targetY,
             'preserve' => ['x', 'y'],
-            'moveUpdate' => [
-                'id' => $wolfId,
-                'path' => $path
-            ]
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path],
+        ]);
+
+        $this->logNotification(clienttranslate('${player_name} undoes a wolf movement'), [
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
         ]);
 
         $pack = P_PACK;
@@ -1638,31 +1639,42 @@ class Wolves extends Table {
         $values = str_replace("''", "NULL", $values);
         $reverseExpression = "INSERT INTO $table $skeleton VALUES $values";
         $this->updateNewestLog([
-            "DB" => $reverseExpression
+            'DB' => $reverseExpression
         ]);
     }
 
-    function logIncStat($statName, int $delta, $playerId=NULL){
+    function logNotification(string $message, array $args) {
+        if (!array_key_exists("player_name", $args)) {
+            $args['player_name'] = self::getActivePlayerName();
+        }
+        $this->updateNewestLog([
+           'NOTIFY' => [
+               'message' => $message,
+               'args' => $args
+           ]
+        ]);
+    }
+
+    function logIncStat(string $statName, int $delta, $playerId=NULL){
         $prevVal = self::getStat($statName, $playerId);
         self::incStat($delta, $statName, $playerId);
         $this->updateNewestLog([
-            "STAT" => [
-                "name" => $statName,
-                "restore" => $prevVal,
-                "player_id" => $playerId
+            'STAT' => [
+                'name' => $statName,
+                'restore' => $prevVal,
+                'player_id' => $playerId
             ]
         ]);
-        
     }
 
     function logSetStat($statName, int $newVal, $playerId=NULL){
         $prevVal = self::getStat($statName, $playerId);
         self::incStat($newVal, $statName, $playerId);
         $this->updateNewestLog([
-            "STAT" => [
-                "name" => $statName,
-                "restore" => $prevVal,
-                "player_id" => $playerId
+            'STAT' => [
+                'name' => $statName,
+                'restore' => $prevVal,
+                'player_id' => $playerId
             ]
         ]);
     }
@@ -1682,14 +1694,13 @@ class Wolves extends Table {
 
     function logIncGamestateValue($label, int $delta): int{
         $prevVal = $this->getGameStateValue($label);
-        $newVal = $this->incGameStatevalue($label, $delta);
         $this->updateNewestLog([
-            "GAMESTATE_VALUE" => [
-                "label" => $label,
-                "restore" => $prevVal
+            'GAMESTATE_VALUE' => [
+                'label' => $label,
+                'restore' => $prevVal
             ]
         ]);
-        return $newVal;
+        return $this->incGameStatevalue($label, $delta);
     }
 
     function updateNewestLog(array $data){
@@ -1744,13 +1755,16 @@ class Wolves extends Table {
         foreach($JSONData as $actionLog){
             foreach($actionLog as $actionType => $actionValue) {
                 switch($actionType){
-                    case "DB":
+                    case 'DB':
                         self::DbQuery($actionValue);
                         break;
-                    case "STAT":
+                    case 'NOTIFY':
+                        self::notifyAllPlayers('undo', $actionValue['message'], $actionValue['args']);
+                        break;
+                    case 'STAT':
                         self::setStat((int)$actionValue['restore'], $actionValue['name'], $actionValue['player_id']);
                         break;
-                    case "GAMESTATE_VALUE":
+                    case 'GAMESTATE_VALUE':
                         $this->setGameStateValue($actionValue['label'], (int)$actionValue['restore']);
                         break;
                     default: 
