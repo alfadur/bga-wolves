@@ -662,6 +662,8 @@ class Wolves extends Table {
         $award = $this->getDenAwards($denType, $deployedDens);
         $rewardString = "";
         $reverseString = "";
+        $numPlayers = $this->getPlayersNumber();
+        $numPoints = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$deployedDens];
         switch($award){
             case AW_TERRAIN:
                 $rewardString = ", terrain_tokens=terrain_tokens + 1";
@@ -675,6 +677,7 @@ class Wolves extends Table {
                 break;
         }
         $this->logDBUpdate("player_status", "$denCol=$denCol + 1$rewardString", "player_id=$playerId", "$denCol=$denCol - 1$reverseString");
+        $this->logDBUpdate('player', "player_score=player_score+$numPoints", "player_id=$playerId", "player_score=player_score-$numPoints");
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1031,7 +1034,8 @@ class Wolves extends Table {
         $this->logDBInsert("moonlight_board", "(kind)", "($lone)");
         $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
         // Update tie breaker
-        $this->logDBUpdate("player", "player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score_aux=player_score_aux-1");
+        $wolfScore = DEPLOYED_WOLF_SCORE[$wolfIndex];
+        $this->logDBUpdate("player", "player_score=player_score+$wolfScore, player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score=player_score-$wolfScore, player_score_aux=player_score_aux-1");
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} has howled at a Lone Wolf'), [
             'player_name' => self::getActivePlayerName(),
@@ -1104,7 +1108,7 @@ class Wolves extends Table {
         $this->giveDenAward($denType, $deployedDens, $playerId);
 
         $newId = $this->logDBInsert("pieces", "(owner, kind, x, y)", "($playerId, $denValue, $x, $y)");
-        
+
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den, from their ${den_type} track'),
         [
@@ -1248,12 +1252,12 @@ class Wolves extends Table {
             if($numWolves >= count(WOLF_DEPLOYMENT)){
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
-            $wolfIndex = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
             // Update tie breaker
-            $this->logDBUpdate("player", "player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score_aux=player_score_aux-1");
+            $wolfScore = DEPLOYED_WOLF_SCORE[$numWolves];
+            $this->logDBUpdate("player", "player_score=player_score+$wolfScore, player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score=player_score-$wolfScore, player_score_aux=player_score_aux-1");
             $this->logDBUpdate("player", "player_score_aux=player_score_aux-1", "player_id=$oldOwner", "player_score_aux=player_score_aux+1");
-            $wolfType = WOLF_DEPLOYMENT[$wolfIndex];
+            $wolfType = WOLF_DEPLOYMENT[$numWolves];
             $newKind = $wolfType;
         }
 
