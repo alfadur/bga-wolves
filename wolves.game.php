@@ -980,26 +980,23 @@ class Wolves extends Table {
         [$x, $y] = $this->checkPath([$wolfX, $wolfY], $path, $finalCheck, [$this, "validityCheck"]);
         $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
-        $targetId = $wolf['owner'];
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has displaced a${wolf_string} wolf belonging to ${target_player}.'),
+        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'),
         [
             'player_name' => self::getActivePlayerName(),
-            'newPiece' => [
-                'id' => $wolfId,
-                'owner' => $wolf['owner'],
-                'x' => $x,
-                'y' => $y,
-                'kind' => $wolf['kind']
-            ],
-            'wolf_string' => $wolf['kind'] == P_PACK ? ' Pack' : 'n Alpha',
-            'target_player' => self::getPlayerNameById($targetId),
+            'owner' => self::getPlayerNameById($wolf['owner']),
+            'preserve' => ['owner'],
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
         ]);
+
+        $this->logNotification(clienttranslate('${player_name} undoes a wolf displacement'), [
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+        ]);
+
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
         if($remainingMoves > 0){
             $this->gamestate->nextState(TR_MOVE);
         }
         else{
-            $playerId = self::getActivePlayerId();
             $this->giveExtraTime($playerId);
             $this->gamestate->nextState(TR_POST_ACTION);
         }
