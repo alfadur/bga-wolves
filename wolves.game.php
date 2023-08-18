@@ -746,7 +746,7 @@ class Wolves extends Table {
         $this->gamestate->nextState('draftPlace');
     }
 
-    function selectAction(int $action, array $tiles, int $bonusTerrain, ?int $forceTerrain = null): void {
+    function selectAction(int $action, array $tiles, int $bonusTerrain, ?int $forceTerrain): void {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
             throw new BgaUserException(_('Invalid action selected'));
@@ -812,18 +812,22 @@ class Wolves extends Table {
         $this->logIncStat(STAT_PLAYER_TERRAIN_TOKENS_SPENT, $bonusTerrain, $playerId);
         $this->logIncStat(STAT_TERRAIN_TOKENS_SPENT, $bonusTerrain);
 
-        $notificationArgs = [
+        $args = [
             'player_name' => self::getActivePlayerName(),
-            'action_name' => $this->actionNames[$action],
-            'terrain_name' => $this->terrainNames[$terrain]
+            'tilesUpdate' => [
+                'playerId' => $playerId,
+                'flippedTiles' => $tiles,
+                'bonusTokens' => $bonusTerrain
+            ]
         ];
-        if ($newTiles !== null) {
-            $notificationArgs['newAttributes'] = $newTiles;
-        }
 
-        $this->notifyAllPlayers('update', clienttranslate('${player_name} chooses to ${action_name} at ${terrain_name}.'), $notificationArgs);
+        $this->logNotification('${player_name} flips tiles back', $args);
 
-        $this->gamestate->nextState( $actionName . "Select");
+        $args['actionName'] = $this->actionNames[$action];
+        $args['preserve'] = ['actionName'];
+        $this->notifyAllPlayers('update', clienttranslate('${player_name} flips tiles to perform ${actionName}'), $args);
+
+        $this->gamestate->nextState("${actionName}Select");
     }
 
     function move(int $wolfId, array $path): void {

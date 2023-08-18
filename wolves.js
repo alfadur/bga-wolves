@@ -87,6 +87,16 @@ class Attributes {
             }
         }
     }
+
+    flipTiles(tiles, tokens) {
+        for (const index of tiles) {
+            const field = `tile${index}`;
+            if (field in this) {
+                this[field] = 1 - this[field];
+            }
+        }
+        this.terrainTokens += tokens;
+    }
 }
 
 class Queue {
@@ -1084,9 +1094,16 @@ define([
         const pieceData = data.args.newPiece;
         const attributeData = data.args.newAttributes;
         const move = data.args.moveUpdate;
+        const tiles = data.args.tilesUpdate;
 
         if (move) {
             this.movePiece(move.id, move.path);
+        }
+
+        if (tiles) {
+            const attributes = this.attributes[tiles.playerId];
+            attributes.flipTiles(tiles.flippedTiles, tiles.bonusTokens);
+            this.updateTiles(tiles.playerId);
         }
 
         if (pieceData) {
@@ -1116,12 +1133,19 @@ define([
         console.log(data);
 
         const move = data.args.moveUpdate;
+        const tiles = data.args.tilesUpdate;
 
         if (move) {
             console.log("path to", move.path);
             const path = move.path.map(d => (parseInt(d) + 3) % 6).reverse();
             console.log("path from", path);
             this.movePiece(move.id, path);
+        }
+
+        if (tiles) {
+            const attributes = this.attributes[tiles.playerId];
+            attributes.flipTiles(tiles.flippedTiles, -tiles.bonusTokens);
+            this.updateTiles(tiles.playerId);
         }
     },
 
