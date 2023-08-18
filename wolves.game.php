@@ -1708,12 +1708,8 @@ class Wolves extends Table {
     }
 
     function updateNewestLog(array $data){
-        $newestLog = $this->getNewestLog();
-        $logJSON = json_decode($newestLog['data'], true);
-        $logJSON[] = $data;
-        $jsonString = json_encode($logJSON, JSON_HEX_QUOT + JSON_HEX_APOS + JSON_HEX_TAG + JSON_HEX_AMP);
-        $rowId = $newestLog['id'];
-        self::DbQuery("UPDATE turn_log SET data='$jsonString' WHERE id=$rowId");
+        $jsonString = json_encode($data, JSON_HEX_QUOT + JSON_HEX_APOS + JSON_HEX_TAG + JSON_HEX_AMP);
+        self::DbQuery("UPDATE turn_log SET data=JSON_ARRAY_APPEND(data, '$', '$jsonString') ORDER BY id DESC LIMIT 1)");
     }
 
     function getNewestLog(bool $createLog = true): ?array {
