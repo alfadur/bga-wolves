@@ -1428,13 +1428,18 @@ class Wolves extends Table {
                 $this->activeNextPlayer();
             }
         }
+        if($draftCompleted){
+            $this->newTurnLog();
+        }
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
     function stPostAction(): void {
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
-        $this->gamestate->nextState($remainingActions == 0 ? TR_CONFIRM_END : TR_SELECT_ACTION);
+        $noActionsRemaining = $remainingActions === 0;
+        $this->newTurnLog($noActionsRemaining ? ST_CONFIRM_END : ST_ACTION_SELECTION);
+        $this->gamestate->nextState($noActionsRemaining ? TR_CONFIRM_END : TR_SELECT_ACTION);
     }
 
     function stNextTurn(): void {
@@ -1448,12 +1453,12 @@ class Wolves extends Table {
             $this->giveExtraTime(self::getActivePlayerId());
 
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
+            $this->newTurnLog();
             $this->gamestate->nextState(TR_START_TURN);
         }
     }
 
     function stPreActionSelection(): void {
-        $this->newTurnLog();
         $this->logSetGameStateValue(G_SELECTED_TERRAIN, -1);
         $this->logSetGameStateValue(G_MOVES_REMAINING, -1);
         $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
