@@ -1453,12 +1453,11 @@ class Wolves extends Table {
     }
 
     function stPreActionSelection(): void {
-        $this->setGameStateValue(G_SELECTED_TERRAIN, -1);
-        $this->setGameStateValue(G_MOVES_REMAINING, -1);
-        $this->setGameStateValue(G_MOVED_WOLVES, 0);
-        $this->setGameStateValue(G_DISPLACEMENT_WOLF, -1);
-        $playerId = $this->getActivePlayerId();
         $this->newTurnLog();
+        $this->logSetGameStateValue(G_SELECTED_TERRAIN, -1);
+        $this->logSetGameStateValue(G_MOVES_REMAINING, -1);
+        $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
+        $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, -1);
     }
 
     function stMove(): void {
