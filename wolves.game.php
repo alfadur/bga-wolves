@@ -400,34 +400,19 @@ class Wolves extends Table {
         $den = P_DEN;
         $alpha = P_ALPHA;
         $pack = P_PACK;
-        //TODO: Ensure this query works
-        $query = <<<EOF
-                    SELECT p.owner as owner, 
-                    ((COUNT(CASE WHEN p.kind=$lair THEN 1 END) * 3) + COUNT(CASE WHEN p.kind=$den OR p.kind=$pack OR p.kind=$alpha THEN 1 END)) as score,
-                    COUNT(CASE WHEN p.kind=$alpha THEN 1 END) as alphas
-                    FROM land l
-                    NATURAL LEFT JOIN pieces p
-                    WHERE l.region_id=$regionId AND p.owner IS NOT NULL
-                    GROUP BY p.owner
-                    ORDER BY score, alphas
-                    EOF;
-        $playerPieces = self::getObjectListFromDB($query);
-        $aiQuery = <<<EOF
-                        "ai" as owner,
-                        SELECT ((COUNT(CASE WHEN p.kind=$lair THEN 1 END) * 3) + COUNT(CASE WHEN p.kind=$den OR p.kind=$pack OR p.kind=$alpha THEN 1 END)) as score,
-                        COUNT(CASE WHEN p.kind=$alpha THEN 1 END) as alphas
-                        FROM land l
-                        NATURAL LEFT JOIN pieces p
-                        WHERE l.region_id=$regionId AND ai IS TRUE
-                        GROUP BY owner
-                      EOF;
-        $aiPieces = self::getObjectFromDB($aiQuery);
-        if(!is_null($aiPieces)){
-            self::dump("AI Pieces", $aiPieces);
-            $playerPieces[] = $aiPieces;
+        $pieces = self::getObjectListFromDB(<<<EOF
+            SELECT owner, 
+                SUM(CASE kind WHEN $lair THEN 3 ELSE 1 END) AS score,
+                COUNT(CASE kind WHEN $alpha THEN 1 END) AS alphas
+            FROM pieces NATURAL JOIN land  
+            WHERE region_id = $regionId AND kind IN ($alpha, $pack, $den, $lair)
+            GROUP BY owner
+            ORDER BY score, alphas
+            EOF);
+        foreach ($pieces as &$piece) {
+            $piece['owner'] ??= "ai";
         }
-        
-        return $playerPieces;
+        return $pieces;
     }
 
     function doHunt(): void {
@@ -532,13 +517,6 @@ class Wolves extends Table {
             if(count($presence) == 0){
                 continue;
             }
-            $cmp = function($a, $b) {
-                if($a['score'] === $b['score']){
-                    return ($a['alphas'] > $b['alphas']) ? -1 : 1;
-                }
-                return ($a['score'] > $b['score']) ? -1 : 1;
-            };
-            usort($presence, $cmp);
 
             //Determine who won
 
