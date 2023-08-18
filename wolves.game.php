@@ -349,7 +349,7 @@ class Wolves extends Table {
 
     }
 
-    function flipTiles(string $playerId, array $tileIndices, int &$terrain): array {
+    function flipTiles(string $playerId, array $tileIndices): int {
         $tiles = self::getObjectFromDB(<<<EOF
             SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain
             FROM player_status WHERE player_id=$playerId
@@ -380,7 +380,7 @@ class Wolves extends Table {
             $this->logDBUpdate("player_status", $update, "player_id=$playerId", $update);
         }
 
-        return $tiles;
+        return $terrain;
     }
 
     function getDenAwards(int $denType, int $deployedDens): ?int {
@@ -746,12 +746,7 @@ class Wolves extends Table {
             throw new BgaUserException(_('Cannot force terrain when flipping tiles'));
         }
 
-        $terrain = $forceTerrain ?? -1;
-        $newTiles = null;
-        if ($terrain < 0) {
-            $newTiles = $this->flipTiles($playerId, $tiles, $terrain);
-            $newTiles['playerId'] = $playerId;
-        }
+        $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
 
         $flipTilesState = 0;
         foreach($tiles as $tileIndex){
