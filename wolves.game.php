@@ -1428,9 +1428,6 @@ class Wolves extends Table {
                 $this->activeNextPlayer();
             }
         }
-        if($draftCompleted){
-            $this->newTurnLog();
-        }
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
@@ -1438,7 +1435,6 @@ class Wolves extends Table {
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
         $noActionsRemaining = $remainingActions === 0;
-        $this->newTurnLog($noActionsRemaining ? ST_CONFIRM_END : ST_ACTION_SELECTION);
         $this->gamestate->nextState($noActionsRemaining ? TR_CONFIRM_END : TR_SELECT_ACTION);
     }
 
@@ -1453,7 +1449,6 @@ class Wolves extends Table {
             $this->giveExtraTime(self::getActivePlayerId());
 
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
-            $this->newTurnLog();
             $this->gamestate->nextState(TR_START_TURN);
         }
     }
@@ -1463,6 +1458,7 @@ class Wolves extends Table {
         $this->logSetGameStateValue(G_MOVES_REMAINING, -1);
         $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
         $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, -1);
+        $this->newTurnLog();
     }
 
     function stMove(): void {
@@ -1487,6 +1483,10 @@ class Wolves extends Table {
 
     function stDominate(): void {
         $this->newTurnLog(ST_DOMINATE_SELECTION);
+    }
+
+    function stConfirmEnd(): void {
+        $this->newTurnLog(ST_CONFIRM_END);
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1756,7 +1756,7 @@ class Wolves extends Table {
             $this->deleteNewestLog();
         }
         
-        foreach($JSONData as $actionLog){
+        foreach(array_reverse($JSONData) as $actionLog){
             foreach($actionLog as $actionType => $actionValue) {
                 switch($actionType){
                     case 'DB':
