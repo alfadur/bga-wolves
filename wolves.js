@@ -289,6 +289,19 @@ function hexDirection(from, to) {
     return hexDirections.findIndex(d => d.x === to.x - from.x && d.y === to.y - from.y);
 }
 
+function updateHexSharing(...hexNodes) {
+    const classes = ["wolves-piece-top", "wolves-piece-bottom"];
+    for (const node of hexNodes) {
+        const pieces = Array.from(node.querySelectorAll(".wolves-piece"));
+        if (pieces.length > 1) {
+            pieces.sort((a, b) => parseInt(a.dataset.kind) - parseInt(b.dataset.kind) );
+            classes.forEach((name, index) => pieces[index].classList.add(name));
+        } else {
+            pieces.forEach(p => p.classList.remove(...classes));
+        }
+    }
+}
+
 function collectPaths(from, range, terrain, canStopPredicate) {
     const queue = new Queue;
     const visited = new Set;
@@ -592,16 +605,10 @@ define([
                 "N/A";
         const node = getHexNode(piece);
         if (node) {
-            let locationClass = "";
-            if (node.children.length > 1) {
-                node.children[1].classList.add("wolves-piece-top");
-                locationClass = "wolves-piece-bottom";
-            }
             const args = {
                 id: piece.id,
                 owner: homeTerrain,
                 kind: piece.kind,
-                locationClass
             };
             const newNode = dojo.place(this.format_block("jstpl_piece", args), node);
             dojo.connect(newNode, "onclick", e => {
@@ -609,6 +616,7 @@ define([
                     dojo.stopEvent(e);
                 }
             });
+            updateHexSharing(node);
         }
     },
 
@@ -641,10 +649,7 @@ define([
                 }
             }
             dojo.destroy(node);
-
-            if (hexNode.children.length > 1) {
-                hexNode.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
-            }
+            updateHexSharing(hexNode);
         }
     },
 
@@ -652,22 +657,14 @@ define([
         const piece = this.pieces.getById(id);
         if (piece) {
             const source = getHexNode(piece);
-
             const destination = path.reduce((hex, step) => hexAdd(hex, hexDirections[step]), piece);
             destination.id = id;
 
             this.pieces.update(destination);
             const node = getHexNode(destination);
-
             node.appendChild(getPieceNode(id));
 
-            const partition = node.children.length > 2;
-            node.children[1].classList.toggle("wolves-piece-top", partition);
-            node.children[node.children.length - 1].classList.toggle("wolves-piece-bottom", partition);
-
-            if (source.children.length > 1) {
-                source.children[1].classList.remove("wolves-piece-top", "wolves-piece-bottom");
-            }
+            updateHexSharing(source, node);
         }
     },
 
