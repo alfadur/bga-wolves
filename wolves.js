@@ -1090,17 +1090,30 @@ define([
         console.log(data);
         const pieceData = data.args.newPiece;
         const attributeData = data.args.newAttributes;
-        const move = data.args.moveUpdate;
-        const tiles = data.args.tilesUpdate;
 
+        const move = data.args.moveUpdate;
         if (move) {
             this.movePiece(move.id, move.path);
         }
 
+        const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
             attributes.flipTiles(tiles.flippedTiles, tiles.bonusTokens);
             this.updateTiles(tiles.playerId);
+        }
+
+        const howl = data.args.howlUpdate;
+        if (howl) {
+            const loneWolf = this.pieces.getById(howl.targetId);
+            this.removePiece(loneWolf.id, true);
+            this.addPiece({
+                id: loneWolf.id,
+                owner: howl.newOwner,
+                x: loneWolf.x,
+                y: loneWolf.y,
+                kind: howl.newKind
+            });
         }
 
         if (pieceData) {
@@ -1130,8 +1143,6 @@ define([
         console.log(data);
 
         const move = data.args.moveUpdate;
-        const tiles = data.args.tilesUpdate;
-
         if (move) {
             console.log("path to", move.path);
             const path = move.path.map(d => (parseInt(d) + 3) % 6).reverse();
@@ -1139,10 +1150,24 @@ define([
             this.movePiece(move.id, path);
         }
 
+        const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
             attributes.flipTiles(tiles.flippedTiles, -tiles.bonusTokens);
             this.updateTiles(tiles.playerId);
+        }
+
+        const howl = data.args.howlUpdate;
+        if (howl) {
+            const placedWolf = this.pieces.getById(howl.targetId);
+            this.removePiece(placedWolf.id, false);
+            this.addPiece({
+                id: placedWolf.id,
+                owner: null,
+                x: placedWolf.x,
+                y: placedWolf.y,
+                kind: PieceKind.Lone
+            });
         }
     },
 

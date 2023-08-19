@@ -794,7 +794,7 @@ class Wolves extends Table {
             ]
         ];
 
-        $this->logNotification('${player_name} flips tiles back', $args);
+        $this->logNotification(clienttranslate('${player_name} flips tiles back'), $args);
 
         $args['actionName'] = $this->actionNames[$action];
         $args['preserve'] = ['actionName'];
@@ -979,14 +979,14 @@ class Wolves extends Table {
         self::checkAction('howl');
         $playerId = self::getActivePlayerId();
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
-        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
+        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id = $wolfId");
 
         ['dens' => $deployedDens, 'wolves' => $wolfIndex] = self::getObjectFromDB(<<<EOF
             SELECT deployed_howl_dens AS dens, deployed_wolves AS wolves  
             FROM player_status WHERE player_id=$playerId
             EOF);
 
-        if($wolf == NULL || $wolf['kind'] != P_ALPHA || $wolf['owner'] != $playerId){
+        if ($wolf === null || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
             throw new BgaUserException(_('Invalid wolf!'));
         }
 
@@ -994,53 +994,44 @@ class Wolves extends Table {
         $maxRange = HOWL_RANGE[$deployedDens];
         $newKind = WOLF_DEPLOYMENT[$wolfIndex];
 
-        self::DbQuery(<<<EOF
-            UPDATE pieces NATURAL JOIN land
-            SET kind=$newKind, owner=$playerId
+        $targetId = self::getUniqueValueFromDb(<<<EOF
+            SELECT id FROM pieces NATURAL JOIN land
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-              AND {$this->sql_hex_in_range($x, $y, $wolf['x'], $wolf['y'], $maxRange)}
+                AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
             EOF);
 
-        if (self::DbAffectedRow() <= 0) {
+        if ($targetId === null) {
             throw new BgaUserException(_('Selected tile is invalid'));
         }
 
-        $updateId = self::getUniqueValueFromDb("SELECT id FROM pieces WHERE x = $x AND y = $y");
-
+        $this->logDBUpdate("pieces", "kind=$newKind, owner=$playerId", "id = $targetId", "kind=$lone, owner=NULL");
         $this->logDBInsert("moonlight_board", "(kind)", "($lone)");
         $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
         // Update tie breaker
         $wolfScore = DEPLOYED_WOLF_SCORE[$wolfIndex];
         $this->logDBUpdate("player", "player_score=player_score+$wolfScore, player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score=player_score-$wolfScore, player_score_aux=player_score_aux-1");
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has howled at a Lone Wolf'), [
-            'player_name' => self::getActivePlayerName(),
-            'newPiece' => [
-                'id' => $updateId,
-                'owner' => $playerId,
-                'x' => $x,
-                'y' => $y,
-                'kind' => $newKind,
-                'progress' => true
-            ]
-        ]);
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
-        $playerId = self::getActivePlayerId();
+        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), [
+            'howlUpdate' => [
+                'targetId' => $targetId,
+                'newOwner' => $playerId,
+                'newKind' => $newKind
+            ]
+        ]);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), [
+            'player_name' => self::getActivePlayerName(),
+            'howlUpdate' => [
+                'targetId' => $targetId,
+                'newOwner' => $playerId,
+                'newKind' => $newKind
+            ]
+        ]);
+
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
-
-        /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range){
-            $lone_val = P_LONE;
-            $wolfX = $wolf['x'];
-            $wolfY = $wolf['y'];
-            $query = "SELECT l.* FROM land l NATURAL LEFT JOIN pieces p WHERE l.x=$x AND l.y=$y AND p.kind<=>$lone_val AND (ABS(l.x - $wolfX) + ABS(l.y - $wolfY) + ABS(l.x - l.y - $wolfX + $wolfY)) / 2 <= $max_range";
-            $validLand = self::getObjectFromDB($query);
-            if($validLand === NULL){
-                throw new BgaUserException(_('Selected tile is invalid'));
-            }
-        };
-        [$x, $y] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck);*/
     }
 
     function placeDen(int $wolfId, ?int $path, int $denType): void {
