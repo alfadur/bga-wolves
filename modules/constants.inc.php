@@ -392,15 +392,15 @@ const MOON_SCORES = [
 ];
 
 const DEPLOYED_WOLF_SCORE = [
-    1, 2, 3, 4, 6, 8, 10, 12
+    1, 1, 1, 1, 2, 2, 2, 2
 ];
 
 const DEN_SCORE = [
-    0, 0, 3, 7
+    0, 0, 3, 4
 ];
 
 const DEN_SCORE_2P = [
-    0, 0, 2, 5
+    0, 0, 2, 3
 ];
 
 
