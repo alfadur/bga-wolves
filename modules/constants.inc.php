@@ -400,6 +400,8 @@ const DEN_SCORE_2P = [
     0, 0, 2, 3
 ];
 
+const LAIR_SCORE = 5;
+
 
 // Table Stats
 

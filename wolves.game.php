@@ -1146,9 +1146,11 @@ class Wolves extends Table {
 
         $alpha = P_ALPHA;
         $pack = P_PACK;
+        $lairScore = LAIR_SCORE;
         $this->logDBInsert("moonlight_board", "(kind, player_id)", "($den, $playerId)");
         $this->logDBUpdate("pieces", "kind=$lairValue", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
         $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
+        $this->logDBUpdate("player", "player_score=player_score+$lairScore", "player_id=$playerId", "player_score=player_score-$lairScore");
 
         $args = [
             'player_name' => self::getActivePlayerName(),
