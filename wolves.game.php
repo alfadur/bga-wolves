@@ -1129,7 +1129,7 @@ class Wolves extends Table {
         $den = P_DEN;
         $water = T_WATER;
         $query = <<<EOF
-            SELECT id 
+            SELECT id, region_id
             FROM pieces NATURAL LEFT JOIN land
             WHERE x = $x AND y = $y
                 AND terrain = $terrain
@@ -1142,8 +1142,21 @@ class Wolves extends Table {
                         AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND terrain=$water) > 0
             EOF;
-        $updateId = self::getUniqueValueFromDB($query);
-
+        ["id" => $updateId, "region_id" => $regionId] = self::getObjectFromDB($query);
+        if(is_null($updateId)){
+            throw new BgaUserException(_('No valid den at given hex!'));
+        }
+        $lair
+        $query = <<<EOF
+                    SELECT COUNT(*)
+                    FROM pieces NATURAL LEFT JOIN land
+                    WHERE region_id=$regionId AND type=$lairValue
+                    EOF;
+        $lairsInRegion = (int)self::getUniqueValueFromDB($query);
+        if($lairsInRegion > 0){
+            throw new BgaUserException(_('You already have a lair in this region!'));
+        }
+        
         $alpha = P_ALPHA;
         $pack = P_PACK;
         $lairScore = LAIR_SCORE;
