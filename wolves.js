@@ -1142,6 +1142,13 @@ define([
         console.log("Undo notification:");
         console.log(data);
 
+        function undoCalendar() {
+            --this.gameProgress;
+            const spacesCount = document.querySelectorAll(".wolves-calendar-space .wolves-piece").length;
+            const space = document.getElementById(`wolves-calendar-space-${spacesCount - 1}`);
+            space.removeChild(space.lastChild);
+        }
+
         const move = data.args.moveUpdate;
         if (move) {
             console.log("path to", move.path);
@@ -1168,6 +1175,7 @@ define([
                 y: placedWolf.y,
                 kind: PieceKind.Lone
             });
+            undoCalendar.call(this);
         }
 
         const buildData = data.args.buildUpdate;
@@ -1176,6 +1184,7 @@ define([
             if (buildData.kind === PieceKind.Lair) {
                 buildData.kind = PieceKind.Den;
                 this.addPiece(buildData);
+                undoCalendar.call(this);
             }
         }
 
