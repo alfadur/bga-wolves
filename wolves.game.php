@@ -635,27 +635,32 @@ class Wolves extends Table {
         return $numPrey;
     }
 
-    function giveDenAward($denType, $deployedDens, $playerId){
+    function giveDenAward(int $denType, int $deployedDens, string $playerId): array {
         $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
         $award = $this->getDenAwards($denType, $deployedDens);
         $rewardString = "";
         $reverseString = "";
         $numPlayers = $this->getPlayersNumber();
         $numPoints = ($numPlayers === 2 ? DEN_SCORE_2P : DEN_SCORE)[$deployedDens];
+        $changes = [
+            'playerId' => $playerId,
+            $denCol => 1
+        ];
         switch($award){
             case AW_TERRAIN:
+                $changes['terrainTokens'] = 1;
                 $rewardString = ", terrain_tokens=terrain_tokens + 1";
                 $reverseString = ", terrain_tokens=terrain_tokens - 1";
                 break;
             case AW_TURN:
+                $changes['actionTokens'] = 1;
                 $rewardString = ", turn_tokens=turn_tokens + 1";
                 $reverseString = ", turn_tokens=turn_tokens - 1";
-                break;
-            default:
                 break;
         }
         $this->logDBUpdate("player_status", "$denCol=$denCol + 1$rewardString", "player_id=$playerId", "$denCol=$denCol - 1$reverseString");
         $this->logDBUpdate('player', "player_score=player_score+$numPoints", "player_id=$playerId", "player_score=player_score-$numPoints");
+        return $changes;
     }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -796,8 +801,10 @@ class Wolves extends Table {
 
         $this->logNotification(clienttranslate('${player_name} flips tiles back'), $args);
 
-        $args['actionName'] = $this->actionNames[$action];
-        $args['preserve'] = ['actionName'];
+        $args = array_merge($args, [
+            'actionName' => $this->actionNames[$action],
+            'preserve' => ['actionName']
+        ]);
         $this->notifyAllPlayers('update', clienttranslate('${player_name} flips tiles to perform ${actionName}'), $args);
 
         $this->gamestate->nextState("${actionName}Select");
@@ -865,8 +872,12 @@ class Wolves extends Table {
         $remainingMoves = $this->logIncGameStateValue(G_MOVES_REMAINING, -1);
         $this->logIncStat(STAT_PLAYER_WOLVES_MOVED, 1, $playerId);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'),
-        [
+        $args = [
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+        ];
+        $this->logNotification(clienttranslate('${player_name} undoes a wolf movement'), $args);
+
+        $args = array_merge($args, [
             'player_name' => self::getActivePlayerName(),
             'x' => $targetX,
             'y' => $targetY,
@@ -874,9 +885,7 @@ class Wolves extends Table {
             'moveUpdate' => ['id' => $wolfId, 'path' => $path],
         ]);
 
-        $this->logNotification(clienttranslate('${player_name} undoes a wolf movement'), [
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
-        ]);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'),$args);
 
         $pack = P_PACK;
         $packWolf = self::getUniqueValueFromDB(<<<EOF
@@ -953,17 +962,20 @@ class Wolves extends Table {
         [$x, $y] = $this->checkPath([$wolfX, $wolfY], $path, $finalCheck, [$this, "validityCheck"]);
         $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'),
-        [
+        $args = [
+            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+        ];
+
+        $this->logNotification(clienttranslate('${player_name} undoes a wolf displacement'), $args);
+
+        $args = array_merge($args, [
             'player_name' => self::getActivePlayerName(),
             'owner' => self::getPlayerNameById($wolf['owner']),
             'preserve' => ['owner'],
             'moveUpdate' => ['id' => $wolfId, 'path' => $path]
         ]);
 
-        $this->logNotification(clienttranslate('${player_name} undoes a wolf displacement'), [
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
-        ]);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'), $args);
 
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
         if($remainingMoves > 0){
@@ -1013,22 +1025,17 @@ class Wolves extends Table {
 
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
-        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), [
-            'howlUpdate' => [
-                'targetId' => $targetId,
-                'newOwner' => $playerId,
-                'newKind' => $newKind
-            ]
-        ]);
-
-        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), [
+        $args = [
             'player_name' => self::getActivePlayerName(),
             'howlUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
                 'newKind' => $newKind
             ]
-        ]);
+        ];
+        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), $args);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), $args);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1043,7 +1050,7 @@ class Wolves extends Table {
         if($numDens >= DEN_COUNT){
             throw new BgaUserException(_('No more dens of this type!'));
         }
-        $terrain_type = $this->getGameStateValue(G_SELECTED_TERRAIN);
+        $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
         if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
             throw new BgaUserException(_('Invalid wolf selected!'));
@@ -1062,9 +1069,9 @@ class Wolves extends Table {
             SELECT COUNT(*)  
             FROM land l NATURAL LEFT JOIN pieces p
             WHERE l.x = $x AND l.y = $y 
-                AND l.terrain = $terrain_type
+                AND l.terrain = $terrain
                 AND (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
-                AND (p.owner IS NULL OR p.kind < $denValue)                    
+                AND (p.owner IS NULL OR p.kind < $denValue)
             EOF;
         if ((int)self::getUniqueValueFromDB($query) === 0){
             throw new BgaUserException(_('Invalid hex selected!'));
@@ -1072,32 +1079,28 @@ class Wolves extends Table {
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
-        $this->giveDenAward($denType, $deployedDens, $playerId);
-
         $newId = $this->logDBInsert("pieces", "(owner, kind, x, y)", "($playerId, $denValue, $x, $y)");
 
+        $this->logIncStat(STAT_PLAYER_DENS_PLACED, 1, $playerId);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den, from their ${den_type} track'),
-        [
+        $args = [
             'player_name' => self::getActivePlayerName(),
-            'newPiece' => [
+            'buildUpdate' => [
                 'id' => $newId,
                 'owner' => $playerId,
                 'x' => $x,
                 'y' => $y,
                 'kind' => P_DEN
             ],
-            'newAttributes' => [
-                'playerId' => $playerId,
-                $denCol => $deployedDens + 1
-            ],
-            'den_type' => DEN_COLS[$denType],
-        ]);
-        $this->logIncStat(STAT_PLAYER_DENS_PLACED, 1, $playerId);
-        $playerId = self::getActivePlayerId();
+            'attributesUpdate' => $this->giveDenAward($denType, $deployedDens, $playerId)
+        ];
+
+        $this->logNotification(clienttranslate('${player_name} takes the den back'), $args);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den'), $args);
+
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
-
     }
 
     function placeLair(int $wolfId, ?int $path): void {

@@ -54,7 +54,7 @@ class Attributes {
             deployedLairs: parseInt(data.deployed_lairs),
             deployedWolves: parseInt(data.deployed_wolves),
             terrainTokens: parseInt(data.terrain_tokens),
-            turnTokens: parseInt(data.turn_tokens),
+            actionTokens: parseInt(data.turn_tokens),
             preyData: parseInt(data.prey_data),
             tile0: parseInt(data.tile_0),
             tile1: parseInt(data.tile_1),
@@ -80,10 +80,10 @@ class Attributes {
     }
 
     update(data) {
-        for (const name of Object.getOwnPropertyNames(this)) {
-            const snakeName = name.replace(/[A-Z0-9]/g, (match) => `_${match.toLowerCase()}`);
-            if (snakeName in data) {
-                this[name] = parseInt(data[snakeName]);
+        for (const name of Object.getOwnPropertyNames(data)) {
+            const camelName = name.replace(/_[a-z0-9]/g, (match) => match.substring(1).toUpperCase());
+            if (camelName in this) {
+                this[camelName] += parseInt(data[name]);
             }
         }
     }
@@ -782,7 +782,7 @@ define([
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "confirmEnd":
-                    if (this.activeAttributes().turnTokens > 0) {
+                    if (this.activeAttributes().actionTokens > 0) {
                         this.ensureButton("button_action", _("Use bonus action token"), "onBonusAction");
                     }
                     this.ensureButton("button_end", _("End turn"), "onEndTurn", null, null, "red");
@@ -861,6 +861,16 @@ define([
         }
 
         setTiles(document.querySelectorAll(`#wolves-player-container-${playerId} .wolves-player-tile`));
+    },
+
+    updateStatus(playerId) {
+        const statusNode = document.querySelector(
+            `#player_board_${playerId} .wolves-player-status`);
+        if (statusNode) {
+            dojo.destroy(statusNode);
+            const node = document.getElementById(`player_board_${playerId}`);
+            dojo.place(this.format_block("jstpl_player_status", this.attributes[playerId]), node);
+        }
     },
 
     ///////////////////////////////////////////////////
@@ -1088,8 +1098,6 @@ define([
     onUpdateNotification(data) {
         console.log("Update notification:");
         console.log(data);
-        const pieceData = data.args.newPiece;
-        const attributeData = data.args.newAttributes;
 
         const move = data.args.moveUpdate;
         if (move) {
@@ -1116,25 +1124,17 @@ define([
             });
         }
 
-        if (pieceData) {
-            this.removePiece(pieceData.id, pieceData.progress);
-            this.addPiece(pieceData);
+        const buildData = data.args.buildUpdate;
+        if (buildData) {
+            this.removePiece(buildData.id, true);
+            this.addPiece(buildData);
         }
 
-        if (attributeData) {
-            const playerId = attributeData.playerId;
-            const attributes = this.attributes[playerId];
-            attributes.update(attributeData);
-
-            const statusNode = document.querySelector(
-                `#player_board_${playerId} .wolves-player-status`);
-            if (statusNode) {
-                dojo.destroy(statusNode);
-                const node = document.getElementById(`player_board_${playerId}`);
-                dojo.place(this.format_block("jstpl_player_status", attributes), node);
-            }
-
-            this.updateTiles(playerId);
+        const attributesData = data.args.attributesUpdate;
+        if (attributesData) {
+            const playerId = attributesData.playerId;
+            this.attributes[playerId].update(attributesData);
+            this.updateStatus(playerId);
         }
     },
 
@@ -1168,6 +1168,27 @@ define([
                 y: placedWolf.y,
                 kind: PieceKind.Lone
             });
+        }
+
+        const buildData = data.args.buildUpdate;
+        if (buildData) {
+            this.removePiece(buildData.id, false);
+            if (buildData.kind === PieceKind.Lair) {
+                buildData.kind = PieceKind.Den;
+                this.addPiece(buildData);
+            }
+        }
+
+        const attributesData = data.args.attributesUpdate;
+        if (attributesData) {
+            Object.getOwnPropertyNames(attributesData).forEach(name => {
+                if (typeof attributesData[name] === "number") {
+                    attributesData[name] *= -1;
+                }
+            });
+            const playerId = attributesData.playerId;
+            this.attributes[playerId].update(attributesData);
+            this.updateStatus(playerId);
         }
     },
 
