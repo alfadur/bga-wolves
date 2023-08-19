@@ -1144,38 +1144,48 @@ class Wolves extends Table {
             EOF;
         $updateId = self::getUniqueValueFromDB($query);
 
-        $pieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x and y=$y AND kind < $den AND owner <> $playerId");
-        
         $alpha = P_ALPHA;
         $pack = P_PACK;
         $this->logDBInsert("moonlight_board", "(kind, player_id)", "($den, $playerId)");
         $this->logDBUpdate("pieces", "kind=$lairValue", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
         $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has placed a lair'), [
+        $args = [
             'player_name' => self::getActivePlayerName(),
-            'newPiece' => [
+            'buildUpdate' => [
                 'id' => $updateId,
                 'owner' => $playerId,
                 'x' => $x,
                 'y' => $y,
-                'kind' => P_LAIR,
-                'progress' => true
+                'kind' => P_LAIR
+            ],
+            'attributesUpdate' => [
+                'playerId' => $playerId,
+                'terrainTokens' => 1,
+                'deployedLairs' => 1
             ]
-        ]);
-        if(count($pieces) == 1){
-            $moveWolf = $pieces[0];
-            $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $moveWolf['id']);
+        ];
+
+        $this->logNotification(clienttranslate('${player_name} takes the lair back'), $args);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} places a lair'), $args);
+
+        $displaceWolf = self::getUniqueValueFromDB(<<<EOF
+            SELECT id FROM pieces 
+            WHERE x = $x AND y = $y 
+              AND kind IN ($alpha, $pack) AND owner <> $playerId
+            EOF);
+
+        if($displaceWolf !== null){
+            $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $displaceWolf);
             $this->logSetGameStateValue(G_MOVES_REMAINING, 0);
             $this->gamestate->nextState(TR_DISPLACE);
             return;
         }
         
         $this->logIncStat(STAT_PLAYER_DENS_UPGRADED, 1, $playerId);
-        $playerId = self::getActivePlayerId();
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
-
     }
 
     function dominate(int $wolfId, int $targetId, int $denType): void {
@@ -1293,24 +1303,27 @@ class Wolves extends Table {
         $this->logDBUpdate("player_status", "turn_tokens=turn_tokens - 1", "player_id=$playerId", "turn_tokens=turn_tokens + 1");
         $this->logIncGameStateValue(G_ACTIONS_REMAINING, 1);
 
-        self::notifyAllPlayers(NOT_EXTRA_TURN, clienttranslate('${player_name} has decided to take an additional turn'),
-        [
-            "player_id" => $playerId,
-            "player_name" => self::getActivePlayerName()
-        ]);
         $this->logIncStat(STAT_PLAYER_BONUS_ACTIONS_TAKEN, 1, $playerId);
         $this->logIncStat(STAT_BONUS_ACTIONS_TAKEN, 1);
+
+        $args = [
+            "player_name" => self::getActivePlayerName(),
+            'attributesUpdate' => [
+                "playerId" => $playerId,
+                'actionTokens' => -1
+            ]
+        ];
+
+        $this->logNotification('${player_name} cancels the bonus action', $args);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} decides to take a bonus action'), $args);
+
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
 
     function endTurn(){
         self::checkAction('endTurn');
         $playerId = self::getActivePlayerId();
-        self::notifyAllPlayers(NOT_END_TURN, clienttranslate('${player_name} has ended their turn'),
-        [
-            "player_id" => $playerId,
-            "player_name" => self::getActivePlayerName()
-        ]);
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
         self::incStat(1, STAT_TURNS_TAKEN);
         $this->gamestate->nextState(TR_CONFIRM_END);

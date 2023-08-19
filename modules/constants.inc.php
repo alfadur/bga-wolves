@@ -1,8 +1,5 @@
 <?php
 
-const NOT_EXTRA_TURN = 'extra_turn';
-const NOT_END_TURN = 'end_turn';
-
 const ST_GAME_START = 1;
 const ST_DRAFT_RESOLUTION = 2;
 const ST_DRAFT_WOLVES = 3;

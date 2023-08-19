@@ -70,7 +70,7 @@ const jstpl_player_status =
         <div>Spread \${packSpread}</div>
         <div>Howl \${howlRange}</div>
         <div>Terrain \${terrainTokens}</div>
-        <div>Turns \${actionTokens}</div>
+        <div>Actions \${actionTokens}</div>
      </div>`;
 </script>  
 
