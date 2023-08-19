@@ -795,9 +795,15 @@ class Wolves extends Table {
             'tilesUpdate' => [
                 'playerId' => $playerId,
                 'flippedTiles' => $tiles,
-                'bonusTokens' => $bonusTerrain
             ]
         ];
+
+        if ($bonusTerrain > 0) {
+            $args['attributesUpdate'] = [
+                'playerId' => $playerId,
+                'terrainTokens' => -$bonusTerrain
+            ];
+        }
 
         $this->logNotification(clienttranslate('${player_name} flips tiles back'), $args);
 
@@ -1146,12 +1152,12 @@ class Wolves extends Table {
         if(is_null($updateId)){
             throw new BgaUserException(_('No valid den at given hex!'));
         }
-        $lair
+
         $query = <<<EOF
-                    SELECT COUNT(*)
-                    FROM pieces NATURAL LEFT JOIN land
-                    WHERE region_id=$regionId AND type=$lairValue
-                    EOF;
+            SELECT COUNT(*)
+            FROM pieces NATURAL JOIN land
+            WHERE region_id = $regionId AND kind = $lairValue AND owner = $playerId
+            EOF;
         $lairsInRegion = (int)self::getUniqueValueFromDB($query);
         if($lairsInRegion > 0){
             throw new BgaUserException(_('You already have a lair in this region!'));

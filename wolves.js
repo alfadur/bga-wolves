@@ -88,14 +88,13 @@ class Attributes {
         }
     }
 
-    flipTiles(tiles, tokens) {
+    flipTiles(tiles) {
         for (const index of tiles) {
             const field = `tile${index}`;
             if (field in this) {
                 this[field] = 1 - this[field];
             }
         }
-        this.terrainTokens += tokens;
     }
 }
 
@@ -1014,8 +1013,8 @@ define([
         if (this.selectedAction.tiles.size > 0) {
             this.ajaxcall("/wolves/wolves/selectAction.html", {
                 lock: true,
-                action_id: actionNames.indexOf(this.selectedAction.name),
-                terrain_tokens: this.selectedAction.cost - this.selectedAction.tiles.size,
+                actionId: actionNames.indexOf(this.selectedAction.name),
+                terrainTokens: this.selectedAction.cost - this.selectedAction.tiles.size,
                 tiles: Array.from(this.selectedAction.tiles).join(',')
             }, this, () => this.selectedAction = {});
         } else {
@@ -1032,9 +1031,9 @@ define([
     onSubmitTerrain(event) {
         this.ajaxcall("/wolves/wolves/selectAction.html", {
             lock: true,
-            action_id: actionNames.indexOf(this.selectedAction.name),
-            terrain_tokens: this.selectedAction.cost,
-            force_terrain: terrainNames.indexOf(event.target.innerText),
+            actionId: actionNames.indexOf(this.selectedAction.name),
+            terrainTokens: this.selectedAction.cost,
+            forceTerrain: terrainNames.indexOf(event.target.innerText),
             tiles: ""
         }, this, () => this.selectedAction = {});
     },
@@ -1107,7 +1106,7 @@ define([
         const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
-            attributes.flipTiles(tiles.flippedTiles, tiles.bonusTokens);
+            attributes.flipTiles(tiles.flippedTiles);
             this.updateTiles(tiles.playerId);
         }
 
@@ -1160,7 +1159,7 @@ define([
         const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
-            attributes.flipTiles(tiles.flippedTiles, -tiles.bonusTokens);
+            attributes.flipTiles(tiles.flippedTiles);
             this.updateTiles(tiles.playerId);
         }
 
