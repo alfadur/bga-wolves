@@ -646,18 +646,17 @@ class Wolves extends Table {
             'playerId' => $playerId,
             $denCol => 1
         ];
-        switch($award){
-            case AW_TERRAIN:
-                $changes['terrainTokens'] = 1;
-                $rewardString = ", terrain_tokens=terrain_tokens + 1";
-                $reverseString = ", terrain_tokens=terrain_tokens - 1";
-                break;
-            case AW_TURN:
-                $changes['actionTokens'] = 1;
-                $rewardString = ", turn_tokens=turn_tokens + 1";
-                $reverseString = ", turn_tokens=turn_tokens - 1";
-                break;
+
+        if ($award === AW_TERRAIN) {
+            $changes['terrainTokens'] = 1;
+            $rewardString = ", terrain_tokens=terrain_tokens + 1";
+            $reverseString = ", terrain_tokens=terrain_tokens - 1";
+        } else if ($award === AW_ACTION) {
+            $changes['actionTokens'] = 1;
+            $rewardString = ", turn_tokens=turn_tokens + 1";
+            $reverseString = ", turn_tokens=turn_tokens - 1";
         }
+
         $this->logDBUpdate("player_status", "$denCol=$denCol + 1$rewardString", "player_id=$playerId", "$denCol=$denCol - 1$reverseString");
         $this->logDBUpdate('player', "player_score=player_score+$numPoints", "player_id=$playerId", "player_score=player_score-$numPoints");
         return $changes;
