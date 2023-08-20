@@ -324,7 +324,7 @@ html {
 }
 
 .wolves-piece[data-owner="0"]:not([data-kind="5"]) > .wolves-piece-sprite {
-    background-color: limegreen;
+    background-color: #32cd32;
 }
 
 .wolves-piece[data-owner="1"]:not([data-kind="5"]) > .wolves-piece-sprite {
@@ -332,7 +332,7 @@ html {
 }
 
 .wolves-piece[data-owner="2"]:not([data-kind="5"]) > .wolves-piece-sprite {
-    background-color: yellow;
+    background-color: #ffff00;
 }
 
 .wolves-piece[data-owner="3"]:not([data-kind="5"]) > .wolves-piece-sprite {
