@@ -1031,17 +1031,23 @@ class Wolves extends Table {
 
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
-        $args = [
+        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), [
             'player_name' => self::getActivePlayerName(),
-            'howlUpdate' => [
+            'convertUpdate' => [
+                'targetId' => $targetId,
+                'newOwner' => null,
+                'newKind' => P_LONE
+            ]
+        ]);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), [
+            'player_name' => self::getActivePlayerName(),
+            'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
                 'newKind' => $newKind
             ]
-        ];
-        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), $args);
-
-        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), $args);
+        ]);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1236,7 +1242,6 @@ class Wolves extends Table {
         $oldKind = $target['kind'];
         $oldOwner = $target['owner'];
         if((int)$oldKind === P_DEN){
-            
             if(!array_key_exists($denType, DEN_COLS)){
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
             }
@@ -1262,55 +1267,34 @@ class Wolves extends Table {
             $newKind = $wolfType;
         }
 
-
         $this->logDBUpdate("pieces", "owner=$playerId, kind=$newKind", "id=$targetId", "owner=$oldOwner, kind=$oldKind");
         $this->logDBInsert("moonlight_board", "(player_id, kind)", "({$target['owner']}, {$target['kind']})");
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has dominated a piece belonging to ${target_player}'),
-            [
-                "player_id" => $playerId,
-                "player_name" => self::getActivePlayerName(),
-                'newPiece' => [
-                    'id' => $target['id'],
-                    'owner' => $playerId,
-                    'x' => $target['x'],
-                    'y' => $target['y'],
-                    'kind' => $newKind,
-                    'progress' => true
-                ],
-                "target_player" => self::getPlayerNameById($target['owner'])
-            ]);
 
         // Set wolves on board stat for attacker & defender in case that was updated
         $stat = (int)$target['kind'] === P_DEN ? STAT_PLAYER_DENS_DOMINATED : STAT_PLAYER_WOLVES_DOMINATED;
         $this->logIncStat($stat, 1, $playerId);
-        
-        $playerId = self::getActivePlayerId();
+
+        $this->logNotification('${player_name} undoes domination', [
+            'convertUpdate' => [
+                'targetId' => $targetId,
+                'newOwner' => $target['owner'],
+                'newKind' => (int)$target['kind']
+            ]
+        ]);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a piece belonging to ${targetPlayer}'), [
+            "player_name" => self::getActivePlayerName(),
+            'convertUpdate' => [
+                'targetId' => $targetId,
+                'newOwner' => $playerId,
+                'newKind' => $newKind
+            ],
+            'targetPlayer' => self::getPlayerNameById($target['owner']),
+            'preserve' => ['targetPlayer']
+        ]);
+
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
-
-        /*$finalCheck = function($x, $y) use ($playerId, $wolf, $max_range, $target){
-
-            if(!($target['x'] === $x && $target['y'] === $y)){
-                throw new BgaUserException(_('Target wolf is not at the end of the given path!'));
-            }
-            $wolves_max = P_PACK;
-            $wolfX = $wolf['x'];
-            $wolfY = $wolf['y'];
-            $query = <<<EOF
-                        SELECT l.* 
-                        FROM land l 
-                        NATURAL LEFT JOIN pieces p 
-                        WHERE l.x=$x AND l.y=$y
-                        AND NOT (p.owner IS NULL OR p.owner <=> $playerId)
-                        AND ((SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2 OR (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y GROUP BY owner) <> 1)
-                        AND {$this->sql_hex_in_range('l.x', 'l.y', $wolfX, $wolfY, $max_range)}
-            EOF;
-            $validLand = self::getObjectFromDB($query);
-            if($validLand === NULL){
-                throw new BgaUserException(_('Selected tile is invalid'));
-            }
-        };
-        $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, [$this, "validityCheck"]);*/
     }
 
     function extraTurn(){

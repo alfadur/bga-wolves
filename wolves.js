@@ -822,7 +822,7 @@ define([
 
         const args = {lock: true, wolfId: wolf.id}
         const path = hexDirection(wolf, {x, y});
-        if (path !== undefined) {
+        if (path >= 0) {
             args.path = path.toString();
         }
         Object.assign(args, extraArgs);
@@ -1110,16 +1110,16 @@ define([
             this.updateTiles(tiles.playerId);
         }
 
-        const howl = data.args.howlUpdate;
-        if (howl) {
-            const loneWolf = this.pieces.getById(howl.targetId);
-            this.removePiece(loneWolf.id, true);
+        const convert = data.args.convertUpdate;
+        if (convert) {
+            const piece = this.pieces.getById(convert.targetId);
+            this.removePiece(piece.id, true);
             this.addPiece({
-                id: loneWolf.id,
-                owner: howl.newOwner,
-                x: loneWolf.x,
-                y: loneWolf.y,
-                kind: howl.newKind
+                id: piece.id,
+                owner: convert.newOwner,
+                x: piece.x,
+                y: piece.y,
+                kind: convert.newKind
             });
         }
 
@@ -1163,16 +1163,16 @@ define([
             this.updateTiles(tiles.playerId);
         }
 
-        const howl = data.args.howlUpdate;
-        if (howl) {
-            const placedWolf = this.pieces.getById(howl.targetId);
-            this.removePiece(placedWolf.id, false);
+        const convert = data.args.convertUpdate;
+        if (convert) {
+            const piece = this.pieces.getById(convert.targetId);
+            this.removePiece(piece.id, false);
             this.addPiece({
-                id: placedWolf.id,
-                owner: null,
-                x: placedWolf.x,
-                y: placedWolf.y,
-                kind: PieceKind.Lone
+                id: piece.id,
+                owner: convert.newOwner,
+                x: piece.x,
+                y: piece.y,
+                kind: convert.newKind
             });
             undoCalendar.call(this);
         }
