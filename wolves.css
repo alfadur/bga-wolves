@@ -248,6 +248,11 @@ html {
     transform: scale(var(--piece-scale));
 }
 
+#wolves-marker-scoring {
+    right: 0;
+    bottom: 0;
+}
+
 .wolves-moon.wolves-upcoming:after {
     right: 5%;
     bottom: 20%;
@@ -416,15 +421,20 @@ html {
 #wolves-calendar {
     position: relative;
     background-image: url("img/calendar2_3p.jpg");
-    width: 472px;
-    height: 296px;
-    border-radius: 4px;
+    width: 718px;
+    height: 450px;
+    border-radius: 30px;
+    box-shadow: 0 4px 8px black;
+}
+
+#wolves-calendar.wolves-reverse {
+    background-image: url("img/calendar4_5p.jpg");
 }
 
 .wolves-calendar-space {
     position: absolute;
-    width: 54px;
-    height: 54px;
+    width: 84px;
+    height: 84px;
 }
 
 .wolves-calendar-space .wolves-piece-sprite {

@@ -504,6 +504,11 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
+        const playerCount = Object.keys(gameData.players).length;
+        if (playerCount > 3) {
+            document.getElementById("wolves-calendar").classList.add("wolves-reverse")
+        }
+
         for (const region of gameData.regions) {
             const hex = getHexNode(region);
             const mask = parseInt(region.phase);
