@@ -248,6 +248,11 @@ html {
     transform: scale(var(--piece-scale));
 }
 
+#wolves-marker-scoring {
+    right: 0;
+    bottom: 0;
+}
+
 .wolves-moon.wolves-upcoming:after {
     right: 5%;
     bottom: 20%;
@@ -312,6 +317,41 @@ html {
     to { opacity: 20% }
 }
 
+.wolves-piece[data-kind="0"] > .wolves-piece-sprite,
+.wolves-piece[data-kind="1"] > .wolves-piece-sprite,
+.wolves-piece[data-kind="2"] > .wolves-piece-sprite,
+.wolves-piece[data-kind="3"] > .wolves-piece-sprite {
+    background-blend-mode: multiply;
+    mask-image: url("img/pieces.png");
+    mask-position: 0 calc(var(--piece-sprite-y) * -1);;
+    -webkit-mask-image: url("img/pieces.png");
+    -webkit-mask-position: 0 calc(var(--piece-sprite-y) * -1);;
+}
+
+.wolves-piece[data-owner="0"]:not([data-kind="5"]) > .wolves-piece-sprite {
+    background-color: #32cd32;
+}
+
+.wolves-piece[data-owner="1"]:not([data-kind="5"]) > .wolves-piece-sprite {
+    background-color: #976dee;
+}
+
+.wolves-piece[data-owner="2"]:not([data-kind="5"]) > .wolves-piece-sprite {
+    background-color: #ffff00;
+}
+
+.wolves-piece[data-owner="3"]:not([data-kind="5"]) > .wolves-piece-sprite {
+    background-color: #70cfee;
+}
+
+.wolves-piece[data-owner="4"]:not([data-kind="5"]) > .wolves-piece-sprite {
+    background-color: #b76327;
+}
+
+.wolves-piece[data-owner="N/A"]:not([data-kind="4"]) > .wolves-piece-sprite {
+    background-color: #e4e4e4;
+}
+
 .wolves-piece[data-kind="0"] > .wolves-piece-sprite {
     --piece-width:  101px;
     --piece-height: 95px;
@@ -350,19 +390,19 @@ html {
     transform: scale(var(--piece-scale))
 }
 
-.wolves-piece[data-owner="1"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="5"][data-owner="1"] > .wolves-piece-sprite {
     background-position-x: calc(var(--piece-width) * -1);
 }
 
-.wolves-piece[data-owner="2"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="5"][data-owner="2"] > .wolves-piece-sprite {
     background-position-x: calc(var(--piece-width) * -2);
 }
 
-.wolves-piece[data-owner="4"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="5"][data-owner="4"] > .wolves-piece-sprite {
     background-position-x: calc(var(--piece-width) * -3);
 }
 
-.wolves-piece[data-owner="0"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="5"][data-owner="0"] > .wolves-piece-sprite {
     background-position-x: calc(var(--piece-width) * -4);
 }
 
@@ -381,15 +421,20 @@ html {
 #wolves-calendar {
     position: relative;
     background-image: url("img/calendar2_3p.jpg");
-    width: 472px;
-    height: 296px;
-    border-radius: 4px;
+    width: 718px;
+    height: 450px;
+    border-radius: 30px;
+    box-shadow: 0 4px 8px black;
+}
+
+#wolves-calendar.wolves-reverse {
+    background-image: url("img/calendar4_5p.jpg");
 }
 
 .wolves-calendar-space {
     position: absolute;
-    width: 54px;
-    height: 54px;
+    width: 84px;
+    height: 84px;
 }
 
 .wolves-calendar-space .wolves-piece-sprite {

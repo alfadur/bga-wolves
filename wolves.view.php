@@ -65,9 +65,9 @@ class view_wolves_wolves extends game_view {
         $this->tpl['LAND_HEIGHT'] = $maxCy + $hex_height;
 
         $this->page->begin_block('wolves_wolves', 'calendarSpace');
-        for ($i = 0; $i < 22; ++$i) {
-            $x = 54 * (($i + 2) % 8) + 16;
-            $y = 54 * (intdiv($i + 2, 8)) + 58;
+        for ($i = 0; $i < 30; ++$i) {
+            $x = 84 * (($i + 2) % 8) + 24;
+            $y = 84 * (intdiv($i + 2, 8)) + 92;
             $this->page->insert_block('calendarSpace', [
                 'INDEX' => $i,
                 'CX' => $x,

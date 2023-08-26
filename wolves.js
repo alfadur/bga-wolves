@@ -88,14 +88,13 @@ class Attributes {
         }
     }
 
-    flipTiles(tiles, tokens) {
+    flipTiles(tiles) {
         for (const index of tiles) {
             const field = `tile${index}`;
             if (field in this) {
                 this[field] = 1 - this[field];
             }
         }
-        this.terrainTokens += tokens;
     }
 }
 
@@ -505,6 +504,11 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
+        const playerCount = Object.keys(gameData.players).length;
+        if (playerCount > 3) {
+            document.getElementById("wolves-calendar").classList.add("wolves-reverse")
+        }
+
         for (const region of gameData.regions) {
             const hex = getHexNode(region);
             const mask = parseInt(region.phase);
@@ -823,7 +827,7 @@ define([
 
         const args = {lock: true, wolfId: wolf.id}
         const path = hexDirection(wolf, {x, y});
-        if (path !== undefined) {
+        if (path >= 0) {
             args.path = path.toString();
         }
         Object.assign(args, extraArgs);
@@ -1014,8 +1018,8 @@ define([
         if (this.selectedAction.tiles.size > 0) {
             this.ajaxcall("/wolves/wolves/selectAction.html", {
                 lock: true,
-                action_id: actionNames.indexOf(this.selectedAction.name),
-                terrain_tokens: this.selectedAction.cost - this.selectedAction.tiles.size,
+                actionId: actionNames.indexOf(this.selectedAction.name),
+                terrainTokens: this.selectedAction.cost - this.selectedAction.tiles.size,
                 tiles: Array.from(this.selectedAction.tiles).join(',')
             }, this, () => this.selectedAction = {});
         } else {
@@ -1032,9 +1036,9 @@ define([
     onSubmitTerrain(event) {
         this.ajaxcall("/wolves/wolves/selectAction.html", {
             lock: true,
-            action_id: actionNames.indexOf(this.selectedAction.name),
-            terrain_tokens: this.selectedAction.cost,
-            force_terrain: terrainNames.indexOf(event.target.innerText),
+            actionId: actionNames.indexOf(this.selectedAction.name),
+            terrainTokens: this.selectedAction.cost,
+            forceTerrain: terrainNames.indexOf(event.target.innerText),
             tiles: ""
         }, this, () => this.selectedAction = {});
     },
@@ -1107,20 +1111,20 @@ define([
         const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
-            attributes.flipTiles(tiles.flippedTiles, tiles.bonusTokens);
+            attributes.flipTiles(tiles.flippedTiles);
             this.updateTiles(tiles.playerId);
         }
 
-        const howl = data.args.howlUpdate;
-        if (howl) {
-            const loneWolf = this.pieces.getById(howl.targetId);
-            this.removePiece(loneWolf.id, true);
+        const convert = data.args.convertUpdate;
+        if (convert) {
+            const piece = this.pieces.getById(convert.targetId);
+            this.removePiece(piece.id, true);
             this.addPiece({
-                id: loneWolf.id,
-                owner: howl.newOwner,
-                x: loneWolf.x,
-                y: loneWolf.y,
-                kind: howl.newKind
+                id: piece.id,
+                owner: convert.newOwner,
+                x: piece.x,
+                y: piece.y,
+                kind: convert.newKind
             });
         }
 
@@ -1142,6 +1146,13 @@ define([
         console.log("Undo notification:");
         console.log(data);
 
+        function undoCalendar() {
+            --this.gameProgress;
+            const spacesCount = document.querySelectorAll(".wolves-calendar-space .wolves-piece").length;
+            const space = document.getElementById(`wolves-calendar-space-${spacesCount - 1}`);
+            space.removeChild(space.lastChild);
+        }
+
         const move = data.args.moveUpdate;
         if (move) {
             console.log("path to", move.path);
@@ -1153,21 +1164,22 @@ define([
         const tiles = data.args.tilesUpdate;
         if (tiles) {
             const attributes = this.attributes[tiles.playerId];
-            attributes.flipTiles(tiles.flippedTiles, -tiles.bonusTokens);
+            attributes.flipTiles(tiles.flippedTiles);
             this.updateTiles(tiles.playerId);
         }
 
-        const howl = data.args.howlUpdate;
-        if (howl) {
-            const placedWolf = this.pieces.getById(howl.targetId);
-            this.removePiece(placedWolf.id, false);
+        const convert = data.args.convertUpdate;
+        if (convert) {
+            const piece = this.pieces.getById(convert.targetId);
+            this.removePiece(piece.id, false);
             this.addPiece({
-                id: placedWolf.id,
-                owner: null,
-                x: placedWolf.x,
-                y: placedWolf.y,
-                kind: PieceKind.Lone
+                id: piece.id,
+                owner: convert.newOwner,
+                x: piece.x,
+                y: piece.y,
+                kind: convert.newKind
             });
+            undoCalendar.call(this);
         }
 
         const buildData = data.args.buildUpdate;
@@ -1176,6 +1188,7 @@ define([
             if (buildData.kind === PieceKind.Lair) {
                 buildData.kind = PieceKind.Den;
                 this.addPiece(buildData);
+                undoCalendar.call(this);
             }
         }
 
