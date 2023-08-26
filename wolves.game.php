@@ -562,6 +562,8 @@ class Wolves extends Table {
             
         }
 
+        self::DbQuery("UPDATE regions SET moon_phase=moon_phase ^ $phaseBitMask WHERE moon_phase & $phaseBitMask > 0");
+
         if(isset($playerStates["ai"])){
             unset($playerStates["ai"]);
         }
@@ -1371,6 +1373,7 @@ class Wolves extends Table {
         $returnArr = [];
         $playerId = self::getActivePlayerId();
         $returnArr["remainingActions"] = $this->getGameStateValue(G_ACTIONS_REMAINING);
+        $returnArr["canUndo"] = $this->canUndo();
         return $returnArr;
     }
 
@@ -1773,6 +1776,12 @@ class Wolves extends Table {
 
         $this->gamestate->jumpToState($newState);
 
+    }
+
+    function canUndo(){
+        $currentTurn = self::getStat(STAT_TURNS_TAKEN);
+        $thisRoundLogs = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM turn_log WHERE turn=$currentTurn");
+        return $thisRoundLogs > 1;
     }
 
 }
