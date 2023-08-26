@@ -1,20 +1,23 @@
 <?php
- /**
-  *------
-  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
-  * Wolves implementation : © <Your name here> <Your email address here>
-  * 
-  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
-  * See http://en.boardgamearena.com/#!doc/Studio for more information.
-  * -----
-  */
 
-require_once(APP_GAMEMODULE_PATH.'module/table/table.game.php');
+/**
+ *------
+ * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
+ * Wolves implementation : © <Your name here> <Your email address here>
+ * 
+ * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
+ * See http://en.boardgamearena.com/#!doc/Studio for more information.
+ * -----
+ */
+
+require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 require_once('modules/constants.inc.php');
 
-class Wolves extends Table {
+class Wolves extends Table
+{
 
-    function __construct() {
+    function __construct()
+    {
         // Your global variables labels:
         //  Here, you can assign labels to global variables you are using for this game.
         //  You can use any number of global variables with IDs between 10 and 99.
@@ -22,7 +25,7 @@ class Wolves extends Table {
         //  the corresponding ID in gameoptions.inc.php.
         // Note: afterwards, you can get/set the global variables with getGameStateValue/setGameStateInitialValue/setGameStateValue
         parent::__construct();
-        
+
         self::initGameStateLabels([
             G_SELECTED_TERRAIN => 10,
             G_ACTIONS_REMAINING => 11,
@@ -33,10 +36,11 @@ class Wolves extends Table {
         ]);
     }
 
-    protected function getGameName(): string {
+    protected function getGameName(): string
+    {
         // Used for translations and stuff. Please do not modify.
         return 'wolves';
-    }	
+    }
 
     /*
         setupNewGame:
@@ -45,7 +49,8 @@ class Wolves extends Table {
         In this method, you must setup the game according to the game rules, so that
         the game is ready to be played.
     */
-    protected function setupNewGame($players, $options = []): void {
+    protected function setupNewGame($players, $options = []): void
+    {
         $gameinfos = self::getGameinfos();
         $default_colors = $gameinfos['player_colors'];
 
@@ -62,12 +67,12 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         self::reloadPlayersBasicInfos();
-        
+
         /************ Start the game initialization *****/
 
         // Init global values with their initial values
         //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
-        
+
         // Init game statistics
         // (note: statistics used in this file must be defined in your stats.inc.php file)
         //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
@@ -77,7 +82,7 @@ class Wolves extends Table {
 
         $terrain = 0;
         $values = [];
-        foreach ($players as $playerId => $player){
+        foreach ($players as $playerId => $player) {
             $values[] = "($playerId, $terrain, '0', '0', '0', '0', '0')";
             ++$terrain;
         }
@@ -109,7 +114,7 @@ class Wolves extends Table {
             STAT_PLAYER_SECOND_PLACE,
             STAT_PLAYER_TERRAIN_TOKENS_SPENT
         ];
-        foreach($playerStats as $stat){
+        foreach ($playerStats as $stat) {
             self::initStat("player", $stat, 0);
         }
 
@@ -118,7 +123,7 @@ class Wolves extends Table {
             STAT_BONUS_ACTIONS_TAKEN,
             STAT_TERRAIN_TOKENS_SPENT
         ];
-        foreach($tableStats as $stat){
+        foreach ($tableStats as $stat) {
             self::initStat("table", $stat, 0);
         }
 
@@ -128,7 +133,8 @@ class Wolves extends Table {
         /************ End of the game initialization *****/
     }
 
-    protected function generateLand(int $player_count): void {
+    protected function generateLand(int $player_count): void
+    {
         $region_values = [];
         $land_values = [];
         $region_hexes = array_map(null, HEX_COORDS, REGION_HEXES);
@@ -153,7 +159,7 @@ class Wolves extends Table {
                 $x = $center[0] + $coord[0] * $scale;
                 $y = $center[1] + $coord[1] * $scale;
                 $type = $palette[$palette_index];
-                
+
                 $land_values[] = "($x, $y, $type, $region_id)";
             }
             ++$region_id;
@@ -164,17 +170,18 @@ class Wolves extends Table {
         $args = implode(', ', $land_values);
         self::DbQuery("INSERT INTO land VALUES $args");
 
-        if($player_count === 2){
+        if ($player_count === 2) {
             $this->generateAIPieces();
             $currentPlayer = $this->getNextPlayerTable()[0];
             self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id <> $currentPlayer");
         }
     }
 
-    function generateAIPieces(){
+    function generateAIPieces()
+    {
         $regions = self::getObjectListFromDB("SELECT region_id, moon_phase, center_x, center_y FROM regions");
         $values = [];
-        foreach($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase, "center_x" => $x, "center_y" => $y]){
+        foreach ($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase, "center_x" => $x, "center_y" => $y]) {
             $regionId = (int)$regionId;
             $moonPhase = (int)$moonPhase;
             $water = T_WATER;
@@ -184,7 +191,7 @@ class Wolves extends Table {
             $topRight = [$x + HD_TOP_RIGHT[0], $y + HD_TOP_RIGHT[1]];
             $bottomRight = [$x + HD_BOTTOM_RIGHT[0], $y + HD_BOTTOM_RIGHT[1]];
             $piecesToAdd = [];
-            switch($moonPhase){
+            switch ($moonPhase) {
                 case M_CRESCENT:
                     $piecesToAdd[] = ["kind" => P_PACK, "loc" => $topRight, "num" => 2];
                     break;
@@ -193,7 +200,7 @@ class Wolves extends Table {
                     break;
                 case M_FULL:
                     $piecesToAdd[] = ["kind" => P_ALPHA, "loc" => $topRight, "num" => 1];
-                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1]; 
+                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
                     break;
                 case M_QUARTER_FULL:
                     $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
@@ -201,8 +208,8 @@ class Wolves extends Table {
                 default:
                     break;
             }
-            foreach($piecesToAdd as ["kind" => $kind, "loc" => [$pieceX, $pieceY], "num" => $num]){
-                for($i = 0; $i<$num; $i++){
+            foreach ($piecesToAdd as ["kind" => $kind, "loc" => [$pieceX, $pieceY], "num" => $num]) {
+                for ($i = 0; $i < $num; $i++) {
                     $values[] = "($kind, $pieceX, $pieceY, TRUE)";
                 }
             }
@@ -211,7 +218,8 @@ class Wolves extends Table {
         self::DbQuery("INSERT INTO pieces (kind, x, y, ai) VALUES $args");
     }
 
-    protected function generatePieces(array $players): void {
+    protected function generatePieces(array $players): void
+    {
         $values = [];
         $kind = P_LONE;
         $prey_kind = P_PREY;
@@ -220,7 +228,7 @@ class Wolves extends Table {
 
         foreach (BOARD_SETUP[count($players)] as $tile) {
             if (!array_key_exists('chasm', $tile)) {
-                
+
                 $center = $tile['center'];
                 $scale = array_key_exists('rotate', $tile) ? -1 : 1;
                 foreach (REGION_LONE_WOLVES as [$x, $y]) {
@@ -233,7 +241,7 @@ class Wolves extends Table {
                 [$preyX, $preyY] = REGION_PREY;
                 $x = $center[0] + $preyX * $scale;
                 $y = $center[1] + $preyY * $scale;
-                for($i = 0; $i<$numPrey; $i++){
+                for ($i = 0; $i < $numPrey; $i++) {
                     $values[] = "($x, $y, $prey_kind, $preyType)";
                 }
             }
@@ -252,19 +260,22 @@ class Wolves extends Table {
         _ when the game starts
         _ when a player refreshes the game page (F5)
     */
-    protected function getAllDatas(): array {
+    protected function getAllDatas(): array
+    {
         $result = [];
 
         // Get information about players
         $result['players'] = self::getCollectionFromDb(
-            'SELECT player_id id, player_score score, player_color color FROM player');
+            'SELECT player_id id, player_score score, player_color color FROM player'
+        );
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
         $result['regions'] = self::getObjectListFromDb(
-            'SELECT center_x AS x, center_y AS y, moon_phase AS phase FROM regions');
+            'SELECT center_x AS x, center_y AS y, moon_phase AS phase FROM regions'
+        );
         $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
         $result['nextScoring'] =
-                PHASES[$this->getGameStateValue(G_MOON_PHASE)][$this->getPlayersNumber()];
+            PHASES[$this->getGameStateValue(G_MOON_PHASE)][$this->getPlayersNumber()];
         return $result;
     }
 
@@ -278,47 +289,55 @@ class Wolves extends Table {
         This method is called each time we are in a game state with the "updateGameProgression" property set to true 
         (see states.inc.php)
     */
-    function getGameProgression(): int {
+    function getGameProgression(): int
+    {
 
         $numEntries = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         return intval(($numEntries * 100) / FULL_DATES[self::getPlayersNumber()]);
     }
 
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Utility functions
-////////////    
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Utility functions
+    ////////////    
 
-    function isImpassableTerrain($terrainType){
+    function isImpassableTerrain($terrainType)
+    {
         return $terrainType === T_WATER || $terrainType === T_CHASM;
     }
 
-    function getRegions(): array {
+    function getRegions(): array
+    {
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
 
-    static function sql_hex_range($x1, $y1, $x2, $y2) {
+    static function sql_hex_range($x1, $y1, $x2, $y2)
+    {
         return "(ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1)) / 2";
     }
 
-    static function sql_hex_in_range($x1, $y1, $x2, $y2, $range) {
+    static function sql_hex_in_range($x1, $y1, $x2, $y2, $range)
+    {
         return "ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1) <= 2 * $range";
     }
 
-    function getPlayers(): array {
+    function getPlayers(): array
+    {
         return self::getObjectListFromDb(<<<EOF
             SELECT player_id AS id, player_name AS name, player_color AS color, home_terrain AS terrain 
             FROM player NATURAL JOIN player_status 
             EOF);
     }
 
-    function getLand(): array {
+    function getLand(): array
+    {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
 
-    function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array {
+    function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array
+    {
         $checks = [];
-        foreach (array_map(fn($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+        foreach (array_map(fn ($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
             $start[0] += $dx;
             $start[1] += $dy;
             $pathCheck($start[0], $start[1]);
@@ -328,28 +347,30 @@ class Wolves extends Table {
         return [$start[0], $start[1]];
     }
 
-    function addMovedWolf(int $wolfId){
+    function addMovedWolf(int $wolfId)
+    {
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $moved_wolves = $moved_wolves << 8;
         $moved_wolves |= ($wolfId & 0xff);
         $this->logSetGamestateValue(G_MOVED_WOLVES, $moved_wolves);
     }
 
-    function getMovedWolves(): array {
+    function getMovedWolves(): array
+    {
         $moved_wolves = $this->getGameStateValue(G_MOVED_WOLVES);
         $wolf_ids = [];
-        for($i = 0; ($i/8)<4; $i += 8){
+        for ($i = 0; ($i / 8) < 4; $i += 8) {
             $wolf_id = ($moved_wolves & (0xff << $i)) >> $i;
-            if($wolf_id > 0){
+            if ($wolf_id > 0) {
                 $wolf_ids[] = $wolf_id;
             }
         }
 
         return $wolf_ids;
-
     }
 
-    function flipTiles(string $playerId, array $tileIndices): int {
+    function flipTiles(string $playerId, array $tileIndices): int
+    {
         $tiles = self::getObjectFromDB(<<<EOF
             SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain
             FROM player_status WHERE player_id=$playerId
@@ -383,8 +404,9 @@ class Wolves extends Table {
         return $terrain;
     }
 
-    function getDenAwards(int $denType, int $deployedDens): ?int {
-        switch(DEN_COLS[$denType]){
+    function getDenAwards(int $denType, int $deployedDens): ?int
+    {
+        switch (DEN_COLS[$denType]) {
             case 'howl':
                 return HOWL_RANGE_AWARDS[self::getPlayersNumber()][$deployedDens];
             case 'pack':
@@ -395,7 +417,8 @@ class Wolves extends Table {
         return null;
     }
 
-    function getRegionPresence(int $regionId): array {
+    function getRegionPresence(int $regionId): array
+    {
         $lair = P_LAIR;
         $den = P_DEN;
         $alpha = P_ALPHA;
@@ -415,11 +438,12 @@ class Wolves extends Table {
         return $pieces;
     }
 
-    function doHunt(): void {
+    function doHunt(): void
+    {
         $preyType = P_PREY;
         $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
 
-        foreach($preyTokens as ["x" => $x, "y" => $y, "prey_metadata" => $preyData]){
+        foreach ($preyTokens as ["x" => $x, "y" => $y, "prey_metadata" => $preyData]) {
             $args = [];
             foreach (HEX_DIRECTIONS as [$dx, $dy]) {
                 $newX = $x + $dx;
@@ -451,33 +475,39 @@ class Wolves extends Table {
                         EOF;
 
             $playerPresence = self::getObjectListFromDB($query);
-            
-            foreach($playerPresence as ["player_id" => $playerId, 'name' => $playerName]){
-                $this->logDBUpdate("player_status", 
-                    "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData", 
-                    "player_id=$playerId", 
-                    "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData");
+
+            foreach ($playerPresence as ["player_id" => $playerId, 'name' => $playerName]) {
+                $this->logDBUpdate(
+                    "player_status",
+                    "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData",
+                    "player_id=$playerId",
+                    "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
+                );
 
                 $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
-                self::notifyAllPlayers("hunted", clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
-                [
-                    'player_id' => $playerId,
-                    'player_name' => $playerName,
-                    'prey_type' => PREY_NAMES[$preyData]
-                ]);
+                self::notifyAllPlayers(
+                    "hunted",
+                    clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
+                    [
+                        'player_id' => $playerId,
+                        'player_name' => $playerName,
+                        'prey_type' => PREY_NAMES[$preyData]
+                    ]
+                );
                 $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);
             }
         }
     }
 
-    function regionScoring(): int {
+    function regionScoring(): int
+    {
         //Scoring
         $numPlayers = self::getPlayersNumber();
         $currentDate = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
         $phaseDate = PHASES[$currentPhase][$numPlayers];
 
-        if($currentDate < $phaseDate){
+        if ($currentDate < $phaseDate) {
             self::debug("$currentDate/$phaseDate");
             return $currentPhase;
         }
@@ -487,15 +517,15 @@ class Wolves extends Table {
 
         // init player score states
 
-        $player_ids =  array_keys($this->loadPlayersBasicInfos());  
+        $player_ids =  array_keys($this->loadPlayersBasicInfos());
         $playerStates = [];
-        foreach($player_ids as $playerId){
+        foreach ($player_ids as $playerId) {
             $playerStates[$playerId] = [
                 "first_place" => 0,
                 "second_place" => 0
             ];
         }
-        if(count($player_ids) === 2){
+        if (count($player_ids) === 2) {
             $playerStates["ai"] = [
                 "first_place" => 0,
                 "second_place" => 0
@@ -508,69 +538,68 @@ class Wolves extends Table {
         $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE moon_phase & $phaseBitMask > 0");
         $score = ($currentPhase * 2) + 4;
         $winners = [];
-        foreach($scoringRegions as $region){
+        foreach ($scoringRegions as $region) {
 
             //Gather region presence and sort based off most score, then most alphas
             $presence = $this->getRegionPresence($region['region_id']);
 
             //If no one is in the region, no one scores
-            if(count($presence) == 0){
+            if (count($presence) == 0) {
                 continue;
             }
 
             //Determine who won
 
             //At least 2 people in region
-            if(count($presence) > 1){
+            if (count($presence) > 1) {
 
                 //Determine how many players won first place
                 $firstWinner = $presence[0];
-                $winners = array_filter($presence, fn($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
+                $winners = array_filter($presence, fn ($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
 
                 self::dump('presence', $presence);
                 self::dump('winners', $winners);
                 //multiple winners, no second place, and everyone gets half score
-                if(count($winners) > 1){
-                    foreach($winners as ["owner" => $winner]){
+                if (count($winners) > 1) {
+                    foreach ($winners as ["owner" => $winner]) {
                         $playerStates[$winner]["second_place"]++;
                     }
                 }
                 //If one winner, maybe second place?
-                
-                else{
+
+                else {
                     //Set first player points/score token
                     $firstPlace = $presence[0]['owner'];
                     $playerStates[$firstPlace]["first_place"]++;
 
                     //Only 2 people in region, second place is guaranteed
-                    if(count($presence) === 2){
+                    if (count($presence) === 2) {
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
                     }
                     //Otherwise, there can only be one player who wins second place
-                    else if($presence[1]['points'] !== $presence[2]['points'] && $presence[1]['alphas'] !== $presence[2]['alphas']){
+                    else if ($presence[1]['score'] !== $presence[2]['score'] && $presence[1]['alphas'] !== $presence[2]['alphas']) {
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
                     }
                 }
             }
             //Only 1 person with presence in region, so they win first place
-            else{
+            else {
                 $winner = $presence[0]['owner'];
                 $playerStates[$winner]["first_place"]++;
             }
-            
         }
 
         self::DbQuery("UPDATE regions SET moon_phase=moon_phase ^ $phaseBitMask WHERE moon_phase & $phaseBitMask > 0");
 
-        if(isset($playerStates["ai"])){
+        if (isset($playerStates["ai"])) {
             unset($playerStates["ai"]);
         }
-        
-        foreach($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]){
+
+        foreach ($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]) {
             self::DbQuery("UPDATE player SET player_score=player_score + ($score * $firstPlace) + (($score/2) * $secondPlace) WHERE player_id=$playerId");
-            if($firstPlace > 0){
+            if ($firstPlace > 0) {
                 $args = implode(",", array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
                 self::DbQuery("UPDATE player SET player_score_aux=player_score_aux + 100 WHERE player_id=$playerId");
@@ -587,7 +616,7 @@ class Wolves extends Table {
         $secondPlace = [clienttranslate('Second Place Score')];
         $total = [clienttranslate('Total')];
 
-        foreach($player_ids as $player_id){
+        foreach ($player_ids as $player_id) {
             $playerName = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player_id");
             $firstRow[] = [
                 "str" => '${player_name}',
@@ -627,18 +656,20 @@ class Wolves extends Table {
         return $currentPhase + 1;
     }
 
-    function getPreyCount(string $playerId){
+    function getPreyCount(string $playerId)
+    {
         $preyVal = (int)self::getUniqueValueFromDB("SELECT prey_data FROM player_status WHERE player_id=$playerId");
         $numPrey = 0;
-        while($preyVal > 0){
+        while ($preyVal > 0) {
             $numPrey += $preyVal & 1;
             $preyVal = $preyVal >> 1;
         }
         return $numPrey;
     }
 
-    function giveDenAward(int $denType, int $deployedDens, string $playerId): array {
-        $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
+    function giveDenAward(int $denType, int $deployedDens, string $playerId): array
+    {
+        $denCol = 'deployed_' . DEN_COLS[$denType] . '_dens';
         $award = $this->getDenAwards($denType, $deployedDens);
         $rewardString = "";
         $reverseString = "";
@@ -664,55 +695,55 @@ class Wolves extends Table {
         return $changes;
     }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Player actions
-//////////// 
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Player actions
+    //////////// 
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
         (note: each method below must match an input method in wolves.action.php)
     */
 
-    function draftPlace(int $x, int $y): void {
+    function draftPlace(int $x, int $y): void
+    {
         self::checkAction('draftPlace');
         $player_id = self::getActivePlayerId();
         $query = "SELECT COUNT(*) FROM pieces WHERE x = $x AND y = $y";
-        if ((int)self::getUniqueValueFromDB($query) > 0 ) {
+        if ((int)self::getUniqueValueFromDB($query) > 0) {
             throw new BgaUserException(_("This place is already occupied"));
         }
 
         $numPlayers = self::getPlayersNumber();
-        
+
         $selectedRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
-        if($numPlayers > 2){
+        if ($numPlayers > 2) {
             $chasmType = T_CHASM;
             $chasmRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
-        
-            if($selectedRegion !== $chasmRegion){
+
+            if ($selectedRegion !== $chasmRegion) {
                 throw new BgaUserException(_("You may only draft into the chasm region!"));
             }
 
             $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$player_id GROUP BY x, y");
-            if(!is_null($drafted)){
+            if (!is_null($drafted)) {
                 $draftedY = (int)$drafted['y'];
                 $centerY = (int)self::getUniqueValueFromDB("SELECT center_y FROM regions WHERE region_id=$chasmRegion");
                 $hasDraftedTop = $draftedY - $centerY < 0;
                 $isChoosingTop = $y - $centerY < 0;
-                if($hasDraftedTop === $isChoosingTop){
+                if ($hasDraftedTop === $isChoosingTop) {
                     throw new BgaUserException(_('Second draft location must be on the opposite side of the chasm!'));
                 }
             }
-        }
-        else{
+        } else {
             $regionPhase = (int)self::getUniqueValueFromDB("SELECT moon_phase FROM regions WHERE region_id=$selectedRegion");
-            if($regionPhase & M_CRESCENT > 0){
+            if ($regionPhase & M_CRESCENT > 0) {
                 throw new BgaUserException(_("You cannot draft to a region with a crescent moon!"));
             }
         }
 
 
         $kinds = [P_ALPHA, P_PACK];
-        $values = array_map(fn($piece) => "($x, $y, $player_id, $piece)", $kinds);
+        $values = array_map(fn ($piece) => "($x, $y, $player_id, $piece)", $kinds);
         $args = implode(", ", $values);
         $query = "INSERT INTO pieces (x, y, owner, kind) VALUES $args";
         self::DbQuery($query);
@@ -730,7 +761,8 @@ class Wolves extends Table {
         $this->gamestate->nextState('draftPlace');
     }
 
-    function selectAction(int $action, array $tiles, int $bonusTerrain, ?int $forceTerrain): void {
+    function selectAction(int $action, array $tiles, int $bonusTerrain, ?int $forceTerrain): void
+    {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
             throw new BgaUserException(_('Invalid action selected'));
@@ -748,19 +780,19 @@ class Wolves extends Table {
             throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
         }
 
-        if($forceTerrain && count($tiles) > 0){
+        if ($forceTerrain && count($tiles) > 0) {
             throw new BgaUserException(_('Cannot force terrain when flipping tiles'));
         }
 
         $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
 
         $flipTilesState = 0;
-        foreach($tiles as $tileIndex){
+        foreach ($tiles as $tileIndex) {
             $flipTilesState |= (1 << $tileIndex);
         }
 
         $actionName = $this->actionNames[$action];
-        switch($actionName){
+        switch ($actionName) {
             case 'move':
                 $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
@@ -768,13 +800,13 @@ class Wolves extends Table {
                 break;
             case 'howl':
                 $deployedWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-                if($deployedWolves > count(WOLF_DEPLOYMENT)){
+                if ($deployedWolves > count(WOLF_DEPLOYMENT)) {
                     throw new BgaUserException(_('You have no wolves to deploy!'));
                 }
                 break;
             case 'den':
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT (deployed_howl_dens + deployed_pack_dens + deployed_speed_dens) as deployed_dens FROM player_status WHERE player_id=$playerId");
-                if($deployedDens >= count(HOWL_RANGE) + count(PACK_SPREAD) + count(WOLF_SPEED)){
+                if ($deployedDens >= count(HOWL_RANGE) + count(PACK_SPREAD) + count(WOLF_SPEED)) {
                     throw new BgaUserException(_('You have no dens to deploy!'));
                 }
                 break;
@@ -782,7 +814,7 @@ class Wolves extends Table {
                 break;
         }
 
-        if($bonusTerrain){
+        if ($bonusTerrain) {
             $this->logDBUpdate("player_status", "terrain_tokens = terrain_tokens - $bonusTerrain", "player_id = $playerId", "terrain_tokens = terrain_tokens + $bonusTerrain");
         }
 
@@ -817,12 +849,13 @@ class Wolves extends Table {
         $this->gamestate->nextState("${actionName}Select");
     }
 
-    function move(int $wolfId, array $path): void {
+    function move(int $wolfId, array $path): void
+    {
         self::checkAction('move');
 
         $movedWolves = $this->getMovedWolves();
-        
-        if(in_array($wolfId, $movedWolves)){
+
+        if (in_array($wolfId, $movedWolves)) {
             throw new BgaUserException(_('This wolf has already been moved this turn!'));
         }
 
@@ -831,7 +864,7 @@ class Wolves extends Table {
         $wolf = self::getObjectFromDB(
             "SELECT * FROM pieces WHERE id=$wolfId"
         );
-        if($wolf === null || $wolf['owner'] !== $playerId || $wolf['kind'] > P_PACK){
+        if ($wolf === null || $wolf['owner'] !== $playerId || $wolf['kind'] > P_PACK) {
             throw new BgaUserException(_('The wolf you selected is not valid!'));
         }
         $isAlpha = (int)$wolf['kind'] === P_ALPHA;
@@ -840,33 +873,33 @@ class Wolves extends Table {
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
         $max_distance = WOLF_SPEED[$deployedDens];
-        if(count($path) > $max_distance){
+        if (count($path) > $max_distance) {
             throw new BgaUserException(_('The selected tile is out of range'));
         }
 
-        $pathCheck = function($x, $y) {
+        $pathCheck = function ($x, $y) {
             $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($hex === NULL || $this->isImpassableTerrain($hex['terrain'])){
+            if ($hex === NULL || $this->isImpassableTerrain($hex['terrain'])) {
                 throw new BgaUserException(_('Cannot find a clear path to the given tile'));
-            } 
+            }
         };
 
-        $finalCheck = function($x, $y) use ($isAlpha, $playerId, $terrain) {
+        $finalCheck = function ($x, $y) use ($isAlpha, $playerId, $terrain) {
             $finalHex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if($finalHex['terrain'] != $terrain){
+            if ($finalHex['terrain'] != $terrain) {
                 throw new BgaUserException(_('Invalid terrain for destination!'));
             }
             $finalPieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x AND y=$y");
-            switch(count($finalPieces)){
+            switch (count($finalPieces)) {
                 case 0:
                     break;
                 case 1:
                     ['owner' => $owner, 'kind' => $kind] = $finalPieces[0];
-                    if($owner !== $playerId && (int)$kind !== P_DEN && (!$isAlpha || (int)$kind !== P_PACK)){
+                    if ($owner !== $playerId && (int)$kind !== P_DEN && (!$isAlpha || (int)$kind !== P_PACK)) {
                         throw new BgaUserException(_('Invalid move location'));
                     }
                     break;
-                default:    
+                default:
                     throw new BgaUserException(_('Hex is full!'));
             }
         };
@@ -892,7 +925,7 @@ class Wolves extends Table {
             'moveUpdate' => ['id' => $wolfId, 'path' => $path],
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'),$args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'), $args);
 
         $pack = P_PACK;
         $packWolf = self::getUniqueValueFromDB(<<<EOF
@@ -901,31 +934,31 @@ class Wolves extends Table {
               AND kind=$pack AND owner <> $playerId
             EOF);
 
-        if($packWolf !== null){
+        if ($packWolf !== null) {
             $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $packWolf);
             $this->gamestate->nextState(TR_DISPLACE);
-        }
-        else{
-            if($remainingMoves > 0){
+        } else {
+            if ($remainingMoves > 0) {
                 $this->gamestate->nextState(TR_MOVE);
-            }
-            else{
+            } else {
                 $this->giveExtraTime($playerId);
                 $this->gamestate->nextState(TR_END_MOVE);
             }
-        }  
+        }
     }
 
-    function skip(): void {
+    function skip(): void
+    {
         $this->checkAction('skip');
         $this->gamestate->nextState(TR_END_MOVE);
     }
 
-    function getMaxDisplacement(int $x, int $y, string $playerId): int {
-            $water = T_WATER;
-            $chasm = T_CHASM;
-            $query = <<<EOF
-                SELECT {$this->sql_hex_range('l.x', 'l.y', $x, $y)} AS dist
+    function getMaxDisplacement(int $x, int $y, string $playerId): int
+    {
+        $water = T_WATER;
+        $chasm = T_CHASM;
+        $query = <<<EOF
+                SELECT {$this->sql_hex_range('l.x', 'l.y',$x,$y)} AS dist
                 FROM land l NATURAL LEFT JOIN pieces p
                 WHERE (l.terrain <> $water AND l.terrain <> $chasm)
                 AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
@@ -933,18 +966,19 @@ class Wolves extends Table {
                 ORDER BY dist
                 LIMIT 1
                 EOF;
-            return (int)self::getUniqueValueFromDB($query) ?? -1;
+        return (int)self::getUniqueValueFromDB($query) ?? -1;
     }
 
-    function displace(array $path): void {
+    function displace(array $path): void
+    {
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
         $range = $this->getMaxDisplacement($wolf['x'], $wolf['y'], $playerId);
-        $finalCheck = function($x, $y) use ($playerId, $range, $wolf) {
+        $finalCheck = function ($x, $y) use ($playerId, $range, $wolf) {
             $dist = (abs($wolf['x'] - $x) + abs($wolf['y'] - $y) + abs($x - $y - $wolf['x'] + $wolf['y'])) / 2;
-            if($dist > $range){
+            if ($dist > $range) {
                 throw new BgaUserException(_('Tile is too far'));
             }
             $water = T_WATER;
@@ -960,10 +994,9 @@ class Wolves extends Table {
                 EOF;
 
             $land = self::getObjectFromDB($query);
-            if($land === NULL){
+            if ($land === NULL) {
                 throw new BgaUserException(_('Cannot move wolf to this tile'));
             }
-
         };
         ['x' => $wolfX, 'y' => $wolfY] = $wolf;
         [$x, $y] = $this->checkPath([$wolfX, $wolfY], $path, $finalCheck, [$this, "validityCheck"]);
@@ -985,16 +1018,16 @@ class Wolves extends Table {
         self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'), $args);
 
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
-        if($remainingMoves > 0){
+        if ($remainingMoves > 0) {
             $this->gamestate->nextState(TR_MOVE);
-        }
-        else{
+        } else {
             $this->giveExtraTime($playerId);
             $this->gamestate->nextState(TR_POST_ACTION);
         }
     }
 
-    function howl(int $wolfId, int $x, int $y): void {
+    function howl(int $wolfId, int $x, int $y): void
+    {
         self::checkAction('howl');
         $playerId = self::getActivePlayerId();
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
@@ -1016,7 +1049,7 @@ class Wolves extends Table {
         $targetId = self::getUniqueValueFromDb(<<<EOF
             SELECT id FROM pieces NATURAL JOIN land
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-                AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
+                AND {$this->sql_hex_in_range('x', 'y',$wolf['x'],$wolf['y'],$maxRange)}
             EOF);
 
         if ($targetId === null) {
@@ -1054,18 +1087,19 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function placeDen(int $wolfId, ?int $path, int $denType): void {
+    function placeDen(int $wolfId, ?int $path, int $denType): void
+    {
         self::checkAction('den');
 
         $playerId = self::getActivePlayerId();
-        $denCol = 'deployed_'.DEN_COLS[$denType].'_dens';
+        $denCol = 'deployed_' . DEN_COLS[$denType] . '_dens';
         $numDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
-        if($numDens >= DEN_COUNT){
+        if ($numDens >= DEN_COUNT) {
             throw new BgaUserException(_('No more dens of this type!'));
         }
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
+        if ($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
@@ -1086,7 +1120,7 @@ class Wolves extends Table {
                 AND (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
                 AND (p.owner IS NULL OR p.kind < $denValue)
             EOF;
-        if ((int)self::getUniqueValueFromDB($query) === 0){
+        if ((int)self::getUniqueValueFromDB($query) === 0) {
             throw new BgaUserException(_('Invalid hex selected!'));
         }
 
@@ -1116,17 +1150,18 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function placeLair(int $wolfId, ?int $path): void {
+    function placeLair(int $wolfId, ?int $path): void
+    {
         self::checkAction('lair');
 
         $playerId = self::getActivePlayerId();
         $numLairs = (int)self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
-        if($numLairs >= LAIR_COUNT){
+        if ($numLairs >= LAIR_COUNT) {
             throw new BgaUserException(_('No more lairs!'));
         }
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        if($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId){
+        if ($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
@@ -1152,11 +1187,11 @@ class Wolves extends Table {
                     FROM land 
                     WHERE x BETWEEN $x - 1 AND $x + 1
                         AND y BETWEEN $y - 1 AND $y + 1
-                        AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                        AND {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
                     AND terrain=$water) > 0
             EOF;
         ["id" => $updateId, "region_id" => $regionId] = self::getObjectFromDB($query);
-        if(is_null($updateId)){
+        if (is_null($updateId)) {
             throw new BgaUserException(_('No valid den at given hex!'));
         }
 
@@ -1166,10 +1201,10 @@ class Wolves extends Table {
             WHERE region_id = $regionId AND kind = $lairValue AND owner = $playerId
             EOF;
         $lairsInRegion = (int)self::getUniqueValueFromDB($query);
-        if($lairsInRegion > 0){
+        if ($lairsInRegion > 0) {
             throw new BgaUserException(_('You already have a lair in this region!'));
         }
-        
+
         $alpha = P_ALPHA;
         $pack = P_PACK;
         $lairScore = LAIR_SCORE;
@@ -1204,19 +1239,20 @@ class Wolves extends Table {
               AND kind IN ($alpha, $pack) AND owner <> $playerId
             EOF);
 
-        if($displaceWolf !== null){
+        if ($displaceWolf !== null) {
             $this->logSetGameStateValue(G_DISPLACEMENT_WOLF, $displaceWolf);
             $this->logSetGameStateValue(G_MOVES_REMAINING, 0);
             $this->gamestate->nextState(TR_DISPLACE);
             return;
         }
-        
+
         $this->logIncStat(STAT_PLAYER_DENS_UPGRADED, 1, $playerId);
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function dominate(int $wolfId, int $targetId, int $denType): void {
+    function dominate(int $wolfId, int $targetId, int $denType): void
+    {
         self::checkAction('dominate');
         $playerId = self::getActivePlayerId();
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
@@ -1224,7 +1260,7 @@ class Wolves extends Table {
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
         $maxRange = HOWL_RANGE[$deployedDens];
 
-        if($wolf === NULL || $wolf['owner'] !== $playerId || (int)$wolf['kind'] !== P_ALPHA){
+        if ($wolf === NULL || $wolf['owner'] !== $playerId || (int)$wolf['kind'] !== P_ALPHA) {
             throw new BgaUserException(_('Invalid wolf!'));
         }
 
@@ -1233,7 +1269,7 @@ class Wolves extends Table {
             SELECT * FROM pieces AS target NATURAL JOIN land
             WHERE id=$targetId AND owner <> $playerId 
                 AND terrain = $terrain AND kind IN ($pack, $den)
-                AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
+                AND {$this->sql_hex_in_range('x', 'y',$wolf['x'],$wolf['y'],$maxRange)}
                 AND (SELECT COUNT(*) FROM pieces WHERE x = target.x AND y = target.y AND owner = target.owner) = 1
             EOF);
         if ($target === null) {
@@ -1242,13 +1278,13 @@ class Wolves extends Table {
 
         $oldKind = $target['kind'];
         $oldOwner = $target['owner'];
-        if((int)$oldKind === P_DEN){
-            if(!array_key_exists($denType, DEN_COLS)){
+        if ((int)$oldKind === P_DEN) {
+            if (!array_key_exists($denType, DEN_COLS)) {
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
             }
-            $denName = 'deployed_'.DEN_COLS[$denType].'_dens';
+            $denName = 'deployed_' . DEN_COLS[$denType] . '_dens';
             $numDens = (int)self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
-            if($numDens >= 4){
+            if ($numDens >= 4) {
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
 
@@ -1256,7 +1292,7 @@ class Wolves extends Table {
             $newKind = P_DEN;
         } else {
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
-            if($numWolves >= count(WOLF_DEPLOYMENT)){
+            if ($numWolves >= count(WOLF_DEPLOYMENT)) {
                 throw new BgaUserException(_('You have no more wolves you can deploy!'));
             }
             $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
@@ -1298,12 +1334,13 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function extraTurn(){
+    function extraTurn()
+    {
         self::checkAction('extraTurn');
 
         $playerId = self::getActivePlayerId();
         $turnTokens = (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
-        if($turnTokens == 0){
+        if ($turnTokens == 0) {
             throw new BgaUserException(_('You have no extra turn tokens to play!'));
         }
         $this->logDBUpdate("player_status", "turn_tokens=turn_tokens - 1", "player_id=$playerId", "turn_tokens=turn_tokens + 1");
@@ -1327,7 +1364,8 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
 
-    function endTurn(){
+    function endTurn()
+    {
         self::checkAction('endTurn');
         $playerId = self::getActivePlayerId();
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
@@ -1335,14 +1373,15 @@ class Wolves extends Table {
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
-    function undo(){
+    function undo()
+    {
         self::checkAction("undo");
         $this->undoAction();
     }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state arguments
-////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state arguments
+    ////////////
 
     /*
         Here, you can create methods defined as "game state arguments" (see "args" property in states.inc.php).
@@ -1350,7 +1389,8 @@ class Wolves extends Table {
         game state.
     */
 
-    function argsMove(){
+    function argsMove()
+    {
         return [
             'numMoves' => $this->getGameStateValue(G_MOVES_REMAINING),
             'selectedTerrain' => $this->getGameStateValue(G_SELECTED_TERRAIN),
@@ -1358,7 +1398,8 @@ class Wolves extends Table {
         ];
     }
 
-    function argActionSelection(){
+    function argActionSelection()
+    {
         $returnArr = [];
         $playerId = self::getActivePlayerId();
         $returnArr["remainingActions"] = $this->getGameStateValue(G_ACTIONS_REMAINING);
@@ -1366,69 +1407,74 @@ class Wolves extends Table {
         return $returnArr;
     }
 
-    function argTerrain(){
+    function argTerrain()
+    {
         return [
             "selectedTerrain" => $this->getGameStateValue(G_SELECTED_TERRAIN)
         ];
     }
 
-    function argDisplaceSelection(){
+    function argDisplaceSelection()
+    {
         return [
             "displacementWolf" => $this->getGameStateValue(G_DISPLACEMENT_WOLF)
         ];
     }
 
-    function argConfirmEnd(){
+    function argConfirmEnd()
+    {
         $playerId = self::getActivePlayerId();
         return [
             "remainingTokens" => (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
         ];
     }
-    
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Game state actions
-////////////
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Game state actions
+    ////////////
 
     /*
         Here, you can create methods defined as "game state actions" (see "action" property in states.inc.php).
         The action method of state X is called everytime the current game state is set to X.    */
 
-    function stDraftResolution(): void {
+    function stDraftResolution(): void
+    {
         $wolvesDrafted = (int)self::getUniqueValueFromDB(
-            "SELECT COUNT(*)/2 FROM pieces WHERE owner IS NOT NULL");
+            "SELECT COUNT(*)/2 FROM pieces WHERE owner IS NOT NULL"
+        );
         $numPlayers = self::getPlayersNumber();
         $draftCompleted = $wolvesDrafted >= (2 * $numPlayers);
-        
+
 
         $type = gettype($wolvesDrafted);
         self::debug("TESTING: $type");
         self::debug("Wolves drafted: $wolvesDrafted, numPlayers: $numPlayers");
         if ($wolvesDrafted % $numPlayers !== 0 && !$draftCompleted) {
-            if($wolvesDrafted > $numPlayers){
+            if ($wolvesDrafted > $numPlayers) {
                 $this->activePrevPlayer();
-            }
-            else{
+            } else {
                 $this->activeNextPlayer();
             }
         }
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
-    function stPostAction(): void {
+    function stPostAction(): void
+    {
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
         $this->doHunt();
         $noActionsRemaining = $remainingActions === 0;
         $this->gamestate->nextState($noActionsRemaining ? TR_CONFIRM_END : TR_SELECT_ACTION);
     }
 
-    function stNextTurn(): void {
+    function stNextTurn(): void
+    {
         $currentPhase = $this->regionScoring();
         //Determine if the game should end
-        if($currentPhase > 2){
+        if ($currentPhase > 2) {
             $this->gamestate->nextState(TR_END_GAME);
-        }
-        else{
+        } else {
             $this->activeNextPlayer();
             $this->giveExtraTime(self::getActivePlayerId());
 
@@ -1437,7 +1483,8 @@ class Wolves extends Table {
         }
     }
 
-    function stPreActionSelection(): void {
+    function stPreActionSelection(): void
+    {
         $this->logSetGameStateValue(G_SELECTED_TERRAIN, -1);
         $this->logSetGameStateValue(G_MOVES_REMAINING, -1);
         $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
@@ -1445,37 +1492,44 @@ class Wolves extends Table {
         $this->newTurnLog();
     }
 
-    function stMove(): void {
+    function stMove(): void
+    {
         $this->newTurnLog(ST_MOVE_SELECTION);
     }
 
-    function stDisplace(): void {
+    function stDisplace(): void
+    {
         $this->newTurnLog(ST_DISPLACE);
     }
 
-    function stHowl(): void {
+    function stHowl(): void
+    {
         $this->newTurnLog(ST_HOWL_SELECTION);
     }
 
-    function stDen(): void {
+    function stDen(): void
+    {
         $this->newTurnLog(ST_DEN_SELECTION);
     }
 
-    function stLair(): void {
+    function stLair(): void
+    {
         $this->newTurnLog(ST_LAIR_SELECTION);
     }
 
-    function stDominate(): void {
+    function stDominate(): void
+    {
         $this->newTurnLog(ST_DOMINATE_SELECTION);
     }
 
-    function stConfirmEnd(): void {
+    function stConfirmEnd(): void
+    {
         $this->newTurnLog(ST_CONFIRM_END);
     }
 
-//////////////////////////////////////////////////////////////////////////////
-//////////// Zombie
-////////////
+    //////////////////////////////////////////////////////////////////////////////
+    //////////// Zombie
+    ////////////
 
     /*
         zombieTurn:
@@ -1490,7 +1544,8 @@ class Wolves extends Table {
         you must _never_ use getCurrentPlayerId() or getCurrentPlayerName(), otherwise it will fail with a "Not logged" error message. 
     */
 
-    function zombieTurn($state, $active_player): void {
+    function zombieTurn($state, $active_player): void
+    {
         $statename = $state['name'];
 
         if ($state['type'] === "activeplayer") {
@@ -1508,17 +1563,17 @@ class Wolves extends Table {
 
         if ($state['type'] === "multipleactiveplayer") {
             // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive( $active_player, '' );
-            
+            $this->gamestate->setPlayerNonMultiactive($active_player, '');
+
             return;
         }
 
-        throw new feException( "Zombie mode not supported at this game state: ".$statename );
+        throw new feException("Zombie mode not supported at this game state: " . $statename);
     }
-    
-///////////////////////////////////////////////////////////////////////////////////:
-////////// DB upgrade
-//////////
+
+    ///////////////////////////////////////////////////////////////////////////////////:
+    ////////// DB upgrade
+    //////////
 
     /*
         upgradeTableDb:
@@ -1530,48 +1585,54 @@ class Wolves extends Table {
         update the game database and allow the game to continue to run with your new version.
     
     */
-    
-    function upgradeTableDb($from_version): void {
+
+    function upgradeTableDb($from_version): void
+    {
         // $from_version is the current version of this game database, in numerical form.
         // For example, if the game was running with a release of your game named "140430-1345",
         // $from_version is equal to 1404301345
-        
+
         // Example:
-//        if( $from_version <= 1404301345 )
-//        {
-//            // ! important ! Use DBPREFIX_<table_name> for all tables
-//
-//            $sql = "ALTER TABLE DBPREFIX_xxxxxxx ....";
-//            self::applyDbUpgradeToAllDB( $sql );
-//        }
-//        if( $from_version <= 1405061421 )
-//        {
-//            // ! important ! Use DBPREFIX_<table_name> for all tables
-//
-//            $sql = "CREATE TABLE DBPREFIX_xxxxxxx ....";
-//            self::applyDbUpgradeToAllDB( $sql );
-//        }
-//        // Please add your future database scheme changes here
-//
-//
+        //        if( $from_version <= 1404301345 )
+        //        {
+        //            // ! important ! Use DBPREFIX_<table_name> for all tables
+        //
+        //            $sql = "ALTER TABLE DBPREFIX_xxxxxxx ....";
+        //            self::applyDbUpgradeToAllDB( $sql );
+        //        }
+        //        if( $from_version <= 1405061421 )
+        //        {
+        //            // ! important ! Use DBPREFIX_<table_name> for all tables
+        //
+        //            $sql = "CREATE TABLE DBPREFIX_xxxxxxx ....";
+        //            self::applyDbUpgradeToAllDB( $sql );
+        //        }
+        //        // Please add your future database scheme changes here
+        //
+        //
     }
 
-    function ___debugAddTokens($type): void {
+    function ___debugAddTokens($type): void
+    {
         $playerId = self::getActivePlayerId();
         $tokens = 100;
         self::DbQuery("UPDATE player_status SET ${type}_tokens = $tokens WHERE player_id = $playerId");
-        self::notifyAllPlayers('update', '${player_name} gained bonus tokens by cheating',
+        self::notifyAllPlayers(
+            'update',
+            '${player_name} gained bonus tokens by cheating',
             [
                 'player_name' => self::getActivePlayerName(),
                 'newAttributes' => [
                     'playerId' => $playerId,
                     'terrain_tokens' => $tokens
                 ]
-            ]);
+            ]
+        );
     }
 
-    function ___debugRegionScoring(int $phase){
-        if($phase > 2 || $phase < 0){
+    function ___debugRegionScoring(int $phase)
+    {
+        if ($phase > 2 || $phase < 0) {
             throw new BgaUserException("This ain't it");
         }
 
@@ -1581,7 +1642,7 @@ class Wolves extends Table {
         self::DbQuery("DELETE FROM moonlight_board");
         $entries = [];
         $loneWolfKind = P_LONE;
-        for($i = 0; $i<PHASES[$phase][$numPlayers]; $i++){
+        for ($i = 0; $i < PHASES[$phase][$numPlayers]; $i++) {
             $entries[] = "($loneWolfKind)";
         }
         $args = implode(",", $entries);
@@ -1593,15 +1654,15 @@ class Wolves extends Table {
         self::DbQuery($query);
 
         $this->regionScoring();
-
     }
 
 
 
-///////////////////////////////////////////////////////////////////////////////////:
-////////// Action Logging
-//////////
-    function logDBUpdate($table, $updates, $condition, $reversions){
+    ///////////////////////////////////////////////////////////////////////////////////:
+    ////////// Action Logging
+    //////////
+    function logDBUpdate($table, $updates, $condition, $reversions)
+    {
         $query = "UPDATE $table SET $updates WHERE $condition";
         self::DbQuery($query);
         $reverseQuery = "UPDATE $table SET $reversions WHERE $condition";
@@ -1610,7 +1671,8 @@ class Wolves extends Table {
         ]);
     }
 
-    function logDBInsert($table, $skeleton, $values): int{
+    function logDBInsert($table, $skeleton, $values): int
+    {
         self::DbQuery("INSERT INTO $table $skeleton VALUES $values");
         $rowId = self::DbGetLastId();
         $reverseExpression = "DELETE FROM $table WHERE id=$rowId";
@@ -1620,14 +1682,15 @@ class Wolves extends Table {
         return $rowId;
     }
 
-    function logDBDelete($table, $condition){
+    function logDBDelete($table, $condition)
+    {
         $prevObj = self::getObjectFromDB("SELECT * FROM $table WHERE $condition");
-        if(is_null($prevObj)){
+        if (is_null($prevObj)) {
             return;
         }
         self::DbQuery("DELETE FROM $table WHERE $condition");
-        $skeleton = '(`'.implode("`,`", array_keys($prevObj)).'`)';
-        $values = "('".implode("','", array_values($prevObj))."')";
+        $skeleton = '(`' . implode("`,`", array_keys($prevObj)) . '`)';
+        $values = "('" . implode("','", array_values($prevObj)) . "')";
         $values = str_replace("''", "NULL", $values);
         $reverseExpression = "INSERT INTO $table $skeleton VALUES $values";
         $this->updateNewestLog([
@@ -1635,19 +1698,21 @@ class Wolves extends Table {
         ]);
     }
 
-    function logNotification(string $message, array $args) {
+    function logNotification(string $message, array $args)
+    {
         if (!array_key_exists("player_name", $args)) {
             $args['player_name'] = self::getActivePlayerName();
         }
         $this->updateNewestLog([
-           'NOTIFY' => [
-               'message' => $message,
-               'args' => $args
-           ]
+            'NOTIFY' => [
+                'message' => $message,
+                'args' => $args
+            ]
         ]);
     }
 
-    function logIncStat(string $statName, int $delta, $playerId=NULL){
+    function logIncStat(string $statName, int $delta, $playerId = NULL)
+    {
         $prevVal = self::getStat($statName, $playerId);
         self::incStat($delta, $statName, $playerId);
         $this->updateNewestLog([
@@ -1659,7 +1724,8 @@ class Wolves extends Table {
         ]);
     }
 
-    function logSetStat($statName, int $newVal, $playerId=NULL){
+    function logSetStat($statName, int $newVal, $playerId = NULL)
+    {
         $prevVal = self::getStat($statName, $playerId);
         self::incStat($newVal, $statName, $playerId);
         $this->updateNewestLog([
@@ -1671,7 +1737,8 @@ class Wolves extends Table {
         ]);
     }
 
-    function logSetGamestateValue(string $label, int $value): int{
+    function logSetGamestateValue(string $label, int $value): int
+    {
         self::debug("Logging Game state value ($label) -> $value");
         $prevVal = $this->getGameStateValue($label);
         $this->setGameStateValue($label, $value);
@@ -1684,7 +1751,8 @@ class Wolves extends Table {
         return $value;
     }
 
-    function logIncGamestateValue($label, int $delta): int{
+    function logIncGamestateValue($label, int $delta): int
+    {
         $prevVal = $this->getGameStateValue($label);
         $this->updateNewestLog([
             'GAMESTATE_VALUE' => [
@@ -1695,16 +1763,18 @@ class Wolves extends Table {
         return $this->incGameStatevalue($label, $delta);
     }
 
-    function updateNewestLog(array $data){
+    function updateNewestLog(array $data)
+    {
         $jsonString = json_encode($data, JSON_HEX_QUOT + JSON_HEX_APOS + JSON_HEX_TAG + JSON_HEX_AMP);
         self::DbQuery("UPDATE turn_log SET data=JSON_ARRAY_APPEND(data, '$', CAST('$jsonString' AS JSON)) ORDER BY id DESC LIMIT 1");
     }
 
-    function getNewestLog(bool $createLog = true): ?array {
+    function getNewestLog(bool $createLog = true): ?array
+    {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         $newestLog = self::getObjectFromDB("SELECT id, data, state FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
-        if(is_null($newestLog)){
-            if(!$createLog){
+        if (is_null($newestLog)) {
+            if (!$createLog) {
                 return NULL;
             }
             $newestLog = $this->newTurnLog();
@@ -1712,37 +1782,40 @@ class Wolves extends Table {
         return $newestLog;
     }
 
-    function deleteNewestLog(){
+    function deleteNewestLog()
+    {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         self::DbQuery("DELETE FROM turn_log WHERE turn=$currentTurn ORDER BY id DESC LIMIT 1");
     }
 
-    function newTurnLog($state=ST_ACTION_SELECTION): array {
+    function newTurnLog($state = ST_ACTION_SELECTION): array
+    {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         self::DbQuery("INSERT INTO turn_log (turn, data, state) VALUES ($currentTurn, '[]', '$state')");
         $rowId = self::DbGetLastId();
         return ["id" => $rowId, 'data' => '[]'];
     }
 
-    function undoAction(){
+    function undoAction()
+    {
         $JSONData = [];
-        while(count($JSONData) === 0){
+        while (count($JSONData) === 0) {
             $newestLog = $this->getNewestLog(false);
 
-            if(is_null($newestLog)){
+            if (is_null($newestLog)) {
                 $this->gamestate->jumpToState(ST_ACTION_SELECTION);
                 throw new BgaUserException(_('There are no more actions to undo!'));
             }
-    
+
             $JSONData = json_decode($newestLog['data'], true);
             $newState = $newestLog['state'];
             self::dump("Action Log", $JSONData);
             $this->deleteNewestLog();
         }
-        
-        foreach(array_reverse($JSONData) as $actionLog){
-            foreach($actionLog as $actionType => $actionValue) {
-                switch($actionType){
+
+        foreach (array_reverse($JSONData) as $actionLog) {
+            foreach ($actionLog as $actionType => $actionValue) {
+                switch ($actionType) {
                     case 'DB':
                         self::DbQuery($actionValue);
                         break;
@@ -1755,7 +1828,7 @@ class Wolves extends Table {
                     case 'GAMESTATE_VALUE':
                         $this->setGameStateValue($actionValue['label'], (int)$actionValue['restore']);
                         break;
-                    default: 
+                    default:
                         break;
                 }
             }
@@ -1764,13 +1837,12 @@ class Wolves extends Table {
         self::debug("Undo action completed");
 
         $this->gamestate->jumpToState($newState);
-
     }
 
-    function canUndo(){
+    function canUndo()
+    {
         $currentTurn = self::getStat(STAT_TURNS_TAKEN);
         $thisRoundLogs = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM turn_log WHERE turn=$currentTurn");
         return $thisRoundLogs > 1;
     }
-
 }
