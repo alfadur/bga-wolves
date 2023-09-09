@@ -440,6 +440,7 @@ class Wolves extends Table
 
     function doHunt(): void
     {
+        $currTurnPlayerId = self::getActivePlayerId();
         $preyType = P_PREY;
         $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
 
@@ -451,13 +452,9 @@ class Wolves extends Table
                 $args[] = "(p.x=$newX AND p.y=$newY)";
             }
 
-            $numPrey = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM pieces WHERE x=$x AND y=$y AND kind=$preyType");
-
             $condition = implode(" OR ", $args);
-            $numPlayers = self::getPlayersNumber();
 
-            $currTurnPlayerId = self::getActivePlayerId();
-            $currentTurnIndex = (int)self::getUniqueValueFromDB("SELECT player_no FROM player WHERE player_id=$currTurnPlayerId");
+
             $alphaKind = P_ALPHA;
             $packKind = P_PACK;
             $query = <<<EOF
@@ -468,34 +465,35 @@ class Wolves extends Table
                         WHERE ($condition)
                         AND s.prey_data & $preyData = 0
                         AND p.kind IN ($packKind, $alphaKind)
+                        AND p.owner=$currTurnPlayerId
                         GROUP BY p.owner
                         HAVING COUNT(DISTINCT p.x, p.y) >= 3
-                        ORDER BY (pl.player_no + $numPlayers - $currentTurnIndex) % $numPlayers ASC
-                        LIMIT $numPrey
                         EOF;
 
-            $playerPresence = self::getObjectListFromDB($query);
-
-            foreach ($playerPresence as ["player_id" => $playerId, 'name' => $playerName]) {
-                $this->logDBUpdate(
-                    "player_status",
-                    "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData",
-                    "player_id=$playerId",
-                    "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
-                );
-
-                $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
-                self::notifyAllPlayers(
-                    "hunted",
-                    clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
-                    [
-                        'player_id' => $playerId,
-                        'player_name' => $playerName,
-                        'prey_type' => PREY_NAMES[$preyData]
-                    ]
-                );
-                $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);
+            $result = self::getObjectFromDB($query);
+            if (is_null($result)) {
+                continue;
             }
+
+            ["player_id" => $playerId, 'name' => $playerName] = $result;
+            $this->logDBUpdate(
+                "player_status",
+                "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData",
+                "player_id=$playerId",
+                "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
+            );
+
+            $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
+            self::notifyAllPlayers(
+                "hunted",
+                clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
+                [
+                    'player_id' => $playerId,
+                    'player_name' => $playerName,
+                    'prey_type' => PREY_NAMES[$preyData]
+                ]
+            );
+            $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);
         }
     }
 
