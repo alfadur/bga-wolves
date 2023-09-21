@@ -108,10 +108,12 @@ class view_wolves_wolves extends game_view {
                 $this->page->insert_block('playerBoardSpaceGroup', ['ITEM' => $item]);
             }
 
+            $terrain = count($players) === 2 ? "2p-$player[terrain]" : $player['terrain'];
             $this->page->insert_block('playerBoard', [
                 'ID' => $player['id'],
                 'NAME' => $player['name'],
                 'COLOR' => "#${player['color']}",
+                'TERRAIN' => $terrain
             ]);
         }
     }

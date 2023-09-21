@@ -40,7 +40,7 @@
                 <div class="wolves-terrain-tile wolves-player-tile"></div>
                 <!-- END playerTile -->
             </div>
-            <div id="wolves-player-board-{ID}" class="wolves-player-board">
+            <div id="wolves-player-board-{ID}" class="wolves-player-board" data-terrain="{TERRAIN}">
                 <!-- BEGIN playerBoardSpaceGroup -->
                 <div class="wolves-space-group wolves-{ITEM}-group">
                     <!-- BEGIN playerBoardSpace -->
