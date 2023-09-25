@@ -8,11 +8,6 @@
  * -----
  */
 
-html {
-    background-color: #18A7AA;
-    background-image: unset;
-}
-
 :root {
     --hex-width: 118px;
     --hex-height: 102px;
@@ -220,7 +215,7 @@ html {
     right: 0;
     bottom: 0;
     margin: auto;
-    background-position-y: -424px;
+    background-position-y: -320px;
     background-image: url("img/pieces.png");
     transform: scale(var(--piece-scale));
 }
@@ -244,7 +239,7 @@ html {
     width: 62px;
     height: 62px;
     background-image: url("img/pieces.png");
-    background-position: -350px -154px;
+    background-position: -284px -71px;
     transform: scale(var(--piece-scale));
 }
 
@@ -310,6 +305,38 @@ html {
 .wolves-piece.wolves-selected > .wolves-piece-sprite,
 .wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite {
     filter: contrast(150%) saturate(130%);
+}
+
+.wolves-piece.wolves-selected > .wolves-piece-sprite:after,
+.wolves-selectable > .wolves-piece-selector:hover + .wolves-piece-sprite:after {
+    position: absolute;
+    display: block;
+    content: "";
+    background-image: url("img/pieces.png");
+}
+
+.wolves-piece[data-kind="0"] > .wolves-piece-sprite:after {
+    width: 101px;
+    height: 91px;
+    left: 1px;
+    top: -1px;
+    background-position: -102px -228px;
+}
+
+.wolves-piece[data-kind="1"] > .wolves-piece-sprite:after {
+    width: 91px;
+    height: 60px;
+    left: -1px;
+    top: -3px;
+    background-position: -223px -250px;
+}
+
+.wolves-piece[data-kind="2"] > .wolves-piece-sprite:after {
+    width: 67px;
+    height: 61px;
+    left: 1px;
+    top: -3px;
+    background-position: -403px -150px;
 }
 
 @keyframes pulse {
@@ -379,14 +406,14 @@ html {
 .wolves-piece[data-kind="4"] > .wolves-piece-sprite {
     --piece-width:  100px;
     --piece-height: 100px;
-    --piece-sprite-y: 320px;
+    background-position: -91px -126px;
     transform: scale(var(--piece-scale))
 }
 
 .wolves-piece[data-kind="5"] > .wolves-piece-sprite {
     --piece-width:  90px;
     --piece-height: 74px;
-    --piece-sprite-y: 546px;
+    --piece-sprite-y: 440px;
     transform: scale(var(--piece-scale))
 }
 
