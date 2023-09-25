@@ -351,28 +351,33 @@
 .wolves-piece[data-kind="3"] > .wolves-piece-sprite {
     background-blend-mode: multiply;
     mask-image: url("img/pieces.png");
-    mask-position: 0 calc(var(--piece-sprite-y) * -1);;
+    mask-position: 0 calc(var(--piece-sprite-y) * -1);
     -webkit-mask-image: url("img/pieces.png");
-    -webkit-mask-position: 0 calc(var(--piece-sprite-y) * -1);;
+    -webkit-mask-position: 0 calc(var(--piece-sprite-y) * -1);
 }
 
-.wolves-piece[data-owner="0"]:not([data-kind="5"]) > .wolves-piece-sprite {
+.wolves-piece[data-owner="0"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-player-board[data-terrain$="0"] .wolves-player-board-space:after {
     background-color: #32cd32;
 }
 
-.wolves-piece[data-owner="1"]:not([data-kind="5"]) > .wolves-piece-sprite {
+.wolves-piece[data-owner="1"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-player-board[data-terrain$="1"] .wolves-player-board-space:after {
     background-color: #976dee;
 }
 
-.wolves-piece[data-owner="2"]:not([data-kind="5"]) > .wolves-piece-sprite {
+.wolves-piece[data-owner="2"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-player-board[data-terrain$="2"] .wolves-player-board-space:after {
     background-color: #ffff00;
 }
 
-.wolves-piece[data-owner="3"]:not([data-kind="5"]) > .wolves-piece-sprite {
+.wolves-piece[data-owner="3"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-player-board[data-terrain$="3"] .wolves-player-board-space:after {
     background-color: #70cfee;
 }
 
-.wolves-piece[data-owner="4"]:not([data-kind="5"]) > .wolves-piece-sprite {
+.wolves-piece[data-owner="4"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-player-board[data-terrain$="4"] .wolves-player-board-space:after {
     background-color: #b76327;
 }
 
@@ -618,26 +623,47 @@
 .wolves-pack-group { left: 5.5%; top: 30% }
 .wolves-speed-group { left: 40%; top: 35.5% }
 .wolves-howl-group { left: 74.2%; top: 30% }
-.wolves-lair-group { left: 6.5%; top: 75.5% }
+.wolves-lair-group { left: 5.5%; top: 75.5% }
 .wolves-prey-group { left: 29.5%; top: 77% }
 .wolves-wolf-group { left: 76.5%; top: 63% }
 
 .wolves-player-board-space {
     position: absolute;
-    border-radius: 4%;
-    background-color: black;
-    transition: transform 500ms ease-in;
     pointer-events: all;
 }
 
-.wolves-player-board-space:hover {
-    transform: translateY(-100%);
+.wolves-player-board-space:after {
+    position: absolute;
+    display: block;
+    content: "";
+    pointer-events: none;
+    transition: transform 400ms ease-in;
+    background-image: url("img/pieces.png");
+    background-position: calc(var(--board-space-x) * -1) calc(var(--board-space-y) * -1);
+    background-blend-mode: multiply;
+    mask-image: url("img/pieces.png");
+    mask-position: calc(var(--board-space-x) * -1) calc(var(--board-space-y) * -1);
+    -webkit-mask-image: url("img/pieces.png");
+    -webkit-mask-position: calc(var(--board-space-x) * -1) calc(var(--board-space-y) * -1);
+    transform: scale(0.72);
+    transform-origin: top left;
+}
+
+.wolves-player-board-space:hover:after {
+    transform: translateY(-70%) scale(0.8);
     transition-timing-function: ease-out;
 }
 
 .wolves-den-space {
     width: 5.3%;
     height: 6.7%;
+}
+
+.wolves-den-space:after {
+    width: 69px;
+    height: 52px;
+    --board-space-x: 288px;
+    --board-space-y: 20px;
 }
 
 .wolves-den-space:nth-child(1) { left: 5.9% }
@@ -648,6 +674,13 @@
 .wolves-lair-space {
     width: 4.2%;
     height: 14%;
+}
+
+.wolves-lair-space:after {
+    width: 64px;
+    height: 103px;
+    --board-space-x: 215px;
+    --board-space-y: 13px;
 }
 
 .wolves-lair-space:nth-child(2) { left: 5.2% }
@@ -668,6 +701,21 @@
 .wolves-wolf-space {
     width: 3.8%;
     height: 16%;
+}
+
+.wolves-wolf-space:after {
+    width: 49px;
+    height: 97px;
+    --board-space-x: 161px;
+    --board-space-y: 19px;
+}
+
+.wolves-wolf-space:nth-child(3n + 3):after {
+    width: 48px;
+    height: 111px;
+    --board-space-x: 110px;
+    --board-space-y: 8px;
+    margin-top: -5px;
 }
 
 .wolves-wolf-space:nth-child(n + 5) { top: 17.2% }
