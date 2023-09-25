@@ -11,8 +11,8 @@
 :root {
     --hex-width: 118px;
     --hex-height: 102px;
-    --tile-width: 196px;
-    --tile-height: 297px;
+    --tile-width: 96px;
+    --tile-height: 142px;
     --piece-scale: 0.8;
 }
 
@@ -59,9 +59,10 @@
 }
 
 .wolves-active-tile {
-    border-radius: 52px;
     flex-shrink: 0;
     background-image: url("img/tiles.jpg");
+    border-radius: 25px;
+    background-size: 479px 426px;
     background-clip: content-box;
     background-repeat: no-repeat;
     box-shadow: 0 4px 8px black;
@@ -442,7 +443,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 16px;
 }
 
 #wolves-calendar {
@@ -506,7 +507,7 @@
     --tile-height: 142px;
     border-radius: 25px;
     background-size: 479px 426px;
-    box-shadow: 0 2px 4px black;
+    box-shadow: 0 4px 8px black;
 }
 
 .wolves-player-tile:nth-child(1) { left: 3.9%; top: 6% }
@@ -521,6 +522,26 @@
     width: 100%;
     height: 74%;
     bottom: 0;
+}
+
+.wolves-player-board:before {
+    position: absolute;
+    display: block;
+    content: "";
+    width: calc(1538px * 0.62);
+    height: 40px;
+    bottom: 0;
+    box-shadow: 0 4px 8px black;
+    z-index: -2;
+    border-radius: 12px;
+}
+
+.wolves-player-board[data-terrain^="2p"]:before {
+    left: 4px;
+}
+
+.wolves-player-board:not([data-terrain^="2p"]):before {
+    right: 4px;
 }
 
 .wolves-player-board:after {
@@ -594,12 +615,12 @@
     pointer-events: none;
 }
 
-.wolves-pack-group { left: 6.9%; top: 30.8% }
-.wolves-speed-group { left: 40.8%; top: 36.8% }
-.wolves-howl-group { left: 74.2%; top: 30.8% }
-.wolves-lair-group { left: 7.5%; top: 75.8% }
-.wolves-prey-group { left: 30.8%; top: 76.4% }
-.wolves-wolf-group { left: 76.9%; top: 63% }
+.wolves-pack-group { left: 5.5%; top: 30% }
+.wolves-speed-group { left: 40%; top: 35.5% }
+.wolves-howl-group { left: 74.2%; top: 30% }
+.wolves-lair-group { left: 6.5%; top: 75.5% }
+.wolves-prey-group { left: 29.5%; top: 77% }
+.wolves-wolf-group { left: 76.5%; top: 63% }
 
 .wolves-player-board-space {
     position: absolute;
@@ -639,10 +660,10 @@
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
 }
 
-.wolves-prey-space:nth-child(2) { left: 8.3% }
-.wolves-prey-space:nth-child(3) { left: 16.6% }
-.wolves-prey-space:nth-child(4) { left: 24.9% }
-.wolves-prey-space:nth-child(5) { left: 33.2% }
+.wolves-prey-space:nth-child(2) { left: 9% }
+.wolves-prey-space:nth-child(3) { left: 17.5% }
+.wolves-prey-space:nth-child(4) { left: 25.5% }
+.wolves-prey-space:nth-child(5) { left: 34% }
 
 .wolves-wolf-space {
     width: 3.8%;
