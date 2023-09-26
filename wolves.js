@@ -483,9 +483,11 @@ define([
     constructor() {
         console.log('wolves constructor');
 
+        this.boardScale = 1.0;
         this.pieces = new Pieces;
         this.attributes = {};
         this.selectedAction = {};
+
         try {
             this.useOffsetAnimation = CSS.supports("offset-path", "path('M 0 0')");
         } catch (e) {
@@ -663,16 +665,20 @@ define([
 
             this.pieces.update(destination);
             const node = getHexNode(destination);
-            node.appendChild(getPieceNode(id));
+            const pieceNode = getPieceNode(id);
+            const sourceRect = pieceNode.getBoundingClientRect();
+            node.appendChild(pieceNode);
 
             updateHexSharing(source, node);
+            this.animateTranslation(pieceNode, sourceRect, this.boardScale);
         }
     },
 
-    animateTranslation(node, source) {
-        const start = source.getBoundingClientRect();
+    animateTranslation(node, source, scale) {
+        scale ||= 1.0;
+        const start = source instanceof HTMLElement ? source.getBoundingClientRect() : source;
         const end = node.getBoundingClientRect();
-        const [dX, dY] = [end.left - start.left, end.top - start.top];
+        const [dX, dY] = [(end.left - start.left) / scale, (end.top - start.top) / scale];
 
         if (this.useOffsetAnimation) {
             node.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
@@ -1269,6 +1275,7 @@ define([
         const scale = Math.min(1.0, areaWidth / parseInt(land.style.width));
         container.style.height = `${parseInt(land.style.height) * scale}px`;
         land.style.transform = `scale(${scale})`;
+        this.boardScale = scale;
     }
 }));
 

@@ -69,7 +69,7 @@
 }
 
 .wolves-active-tile.wolves-selected {
-    box-shadow: inset 0 0 4px 12px #f00c, 0 4px 8px black;
+    box-shadow: inset 0 0 4px 6px #f00c, 0 4px 8px black;
 }
 
 #wolves-game {
@@ -496,7 +496,7 @@
     offset-rotate: 0deg;
     offset-anchor: top left;
     animation-name: follow-path;
-    animation-duration: 1500ms;
+    animation-duration: 1200ms;
     animation-timing-function: ease;
     animation-fill-mode: forwards;
     z-index: 2;
@@ -514,7 +514,7 @@
 
 .wolves-moving-simple {
     animation-name: follow-path-simple;
-    animation-duration: 1200ms;
+    animation-duration: 900ms;
     animation-timing-function: ease;
     animation-fill-mode: forwards;
     z-index: 2;
