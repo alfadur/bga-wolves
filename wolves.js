@@ -485,9 +485,9 @@ define([
         this.attributes = {};
         this.selectedAction = {};
         try {
-            this.useMoveAnimation = CSS.supports("offset-path", "path('M 0 0')");
+            this.offsetMoveAnimation = CSS.supports("offset-path", "path('M 0 0')");
         } catch (e) {
-            this.useMoveAnimation = false;
+            this.offsetMoveAnimation = false;
         }
     },
 
@@ -644,16 +644,23 @@ define([
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
                 const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
 
-                if (this.useMoveAnimation) {
-                    const start = node.getBoundingClientRect();
-                    const end = calendarNode.getBoundingClientRect();
+                const start = node.getBoundingClientRect();
+                const end = calendarNode.getBoundingClientRect();
+                const [dX, dY] = [end.left - start.left, end.top - start.top];
 
-                    const [dX, dY] = [end.left - start.left, end.top - start.top];
+                if (this.offsetMoveAnimation) {
                     newNode.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
                     newNode.classList.add("wolves-moving");
                     newNode.addEventListener("animationend", () => {
                         newNode.classList.remove("wolves-moving");
                         newNode.style.offsetPath = "unset";
+                    }, {once: true});
+                } else {
+                    newNode.style.transform = `translate(${-dX}px, ${-dY}px)`;
+                    newNode.classList.add("wolves-moving-simple");
+                    newNode.addEventListener("animationend", () => {
+                        newNode.classList.remove("wolves-moving-simple");
+                        newNode.style.transform = "none";
                     }, {once: true});
                 }
             }
