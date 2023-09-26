@@ -1135,14 +1135,15 @@ class Wolves extends Table
                 'owner' => $playerId,
                 'x' => $x,
                 'y' => $y,
-                'kind' => P_DEN
+                'kind' => P_DEN,
+                'attribute' => $denType
             ],
             'attributesUpdate' => $this->giveDenAward($denType, $deployedDens, $playerId)
         ];
 
         $this->logNotification(clienttranslate('${player_name} takes the den back'), $args);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} placed a den'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} places a den'), $args);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1313,7 +1314,8 @@ class Wolves extends Table
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $target['owner'],
-                'newKind' => (int)$target['kind']
+                'newKind' => (int)$target['kind'],
+                'attribute' => $denType
             ]
         ]);
 
@@ -1322,7 +1324,8 @@ class Wolves extends Table
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
-                'newKind' => $newKind
+                'newKind' => $newKind,
+                'attribute' => $denType
             ],
             'targetPlayer' => self::getPlayerNameById($target['owner']),
             'preserve' => ['targetPlayer']

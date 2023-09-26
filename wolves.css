@@ -254,10 +254,13 @@
     bottom: 20%;
 }
 
-.wolves-piece-selector {
+.wolves-piece, .wolves-piece-selector {
     position: absolute;
     width: 100%;
     height: 100%;
+}
+
+.wolves-piece-selector {
     clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
     pointer-events: none;
 }
@@ -453,11 +456,20 @@
 
 #wolves-calendar {
     position: relative;
-    background-image: url("img/calendar2_3p.jpg");
     width: 718px;
     height: 450px;
+}
+
+#wolves-calendar:before {
+    position: absolute;
+    display: block;
+    content: "";
+    width: 100%;
+    height: 100%;
     border-radius: 30px;
     box-shadow: 0 4px 8px black;
+    background-image: url("img/calendar2_3p.jpg");
+    z-index: -1;
 }
 
 #wolves-calendar.wolves-reverse {
@@ -492,7 +504,8 @@
 
 @keyframes follow-path {
     from { offset-distance: 100%; }
-    50% { offset-rotate: -8deg; }
+    50% { offset-rotate: -12deg; }
+    70% { offset-rotate: -8deg; }
     to {
         offset-distance: 0;
         offset-rotate: 0deg;

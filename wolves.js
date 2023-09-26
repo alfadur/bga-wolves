@@ -35,6 +35,8 @@ const hexOffsets = Object.freeze(hexDirections
 
 const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
+const attributeNames = Object.freeze(["howl", "pack", "speed"]);
+
 const actionNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
 const actionCosts = Object.freeze({
     move: 1,
@@ -485,9 +487,9 @@ define([
         this.attributes = {};
         this.selectedAction = {};
         try {
-            this.offsetMoveAnimation = CSS.supports("offset-path", "path('M 0 0')");
+            this.useOffsetAnimation = CSS.supports("offset-path", "path('M 0 0')");
         } catch (e) {
-            this.offsetMoveAnimation = false;
+            this.useOffsetAnimation = false;
         }
     },
 
@@ -626,6 +628,7 @@ define([
                 }
             });
             updateHexSharing(node);
+            return newNode;
         }
     },
 
@@ -644,25 +647,7 @@ define([
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
                 const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
 
-                const start = node.getBoundingClientRect();
-                const end = calendarNode.getBoundingClientRect();
-                const [dX, dY] = [end.left - start.left, end.top - start.top];
-
-                if (this.offsetMoveAnimation) {
-                    newNode.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
-                    newNode.classList.add("wolves-moving");
-                    newNode.addEventListener("animationend", () => {
-                        newNode.classList.remove("wolves-moving");
-                        newNode.style.offsetPath = "unset";
-                    }, {once: true});
-                } else {
-                    newNode.style.transform = `translate(${-dX}px, ${-dY}px)`;
-                    newNode.classList.add("wolves-moving-simple");
-                    newNode.addEventListener("animationend", () => {
-                        newNode.classList.remove("wolves-moving-simple");
-                        newNode.style.transform = "none";
-                    }, {once: true});
-                }
+                this.animateTranslation(newNode, node);
             }
             dojo.destroy(node);
             updateHexSharing(hexNode);
@@ -681,6 +666,51 @@ define([
             node.appendChild(getPieceNode(id));
 
             updateHexSharing(source, node);
+        }
+    },
+
+    animateTranslation(node, source) {
+        const start = source.getBoundingClientRect();
+        const end = node.getBoundingClientRect();
+        const [dX, dY] = [end.left - start.left, end.top - start.top];
+
+        if (this.useOffsetAnimation) {
+            node.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
+            node.classList.add("wolves-moving");
+            node.addEventListener("animationend", () => {
+                node.classList.remove("wolves-moving");
+                node.style.offsetPath = "unset";
+            }, {once: true});
+        } else {
+            node.style.transform = `translate(${-dX}px, ${-dY}px)`;
+            node.classList.add("wolves-moving-simple");
+            node.addEventListener("animationend", () => {
+                node.classList.remove("wolves-moving-simple");
+                node.style.transform = "none";
+            }, {once: true});
+        }
+    },
+
+    animatePlacement(playerId, pieceNode, kind, attribute) {
+        const groupName =
+            kind === PieceKind.Den ? attributeNames[attribute] :
+            kind === PieceKind.Lair ? "lair" :
+                "wolf";
+        const boardNode = document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group .wolves-player-board-space:not(.hidden)`)[0];
+        if (boardNode) {
+            this.animateTranslation(pieceNode, boardNode);
+            boardNode.classList.add("hidden");
+        }
+    },
+
+    restorePlayerBoardNode(playerId, kind, attribute) {
+        const groupName =
+            kind === PieceKind.Den ? attributeNames[attribute] :
+            kind === PieceKind.Lair ? "lair" :
+                    "wolf";
+        const hiddenNodes = document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group .hidden`);
+        if (hiddenNodes.length > 0) {
+            hiddenNodes[hiddenNodes.length - 1].classList.remove("hidden");
         }
     },
 
@@ -1062,7 +1092,7 @@ define([
     },
 
     onSelectDen(attributeName) {
-        const attribute = ["howl", "pack", "speed"].indexOf(attributeName);
+        const attribute = attributeNames.indexOf(attributeName);
         const playerId = this.getActivePlayerId();
         if (this.checkAction("clientDen", true)) {
             const hex = this.selectedHex;
@@ -1137,25 +1167,31 @@ define([
         if (convert) {
             const piece = this.pieces.getById(convert.targetId);
             this.removePiece(piece.id, true);
-            this.addPiece({
+            const node = this.addPiece({
                 id: piece.id,
                 owner: convert.newOwner,
                 x: piece.x,
                 y: piece.y,
                 kind: convert.newKind
             });
+            if (node) {
+                this.animatePlacement(convert.newOwner, node, convert.newKind, convert.attribute);
+            }
         }
 
-        const buildData = data.args.buildUpdate;
-        if (buildData) {
-            this.removePiece(buildData.id, true);
-            this.addPiece(buildData);
+        const build = data.args.buildUpdate;
+        if (build) {
+            this.removePiece(build.id, true);
+            const node = this.addPiece(build);
+            if (node) {
+                this.animatePlacement(build.owner, node, build.kind, build.attribute);
+            }
         }
 
-        const attributesData = data.args.attributesUpdate;
-        if (attributesData) {
-            const playerId = attributesData.playerId;
-            this.attributes[playerId].update(attributesData);
+        const attribute = data.args.attributesUpdate;
+        if (attribute) {
+            const playerId = attribute.playerId;
+            this.attributes[playerId].update(attribute);
             this.updateStatus(playerId);
         }
     },
@@ -1198,27 +1234,30 @@ define([
                 kind: convert.newKind
             });
             undoCalendar.call(this);
+            this.restorePlayerBoardNode(piece.owner, piece.kind, convert.attribute);
         }
 
-        const buildData = data.args.buildUpdate;
-        if (buildData) {
-            this.removePiece(buildData.id, false);
-            if (buildData.kind === PieceKind.Lair) {
-                buildData.kind = PieceKind.Den;
-                this.addPiece(buildData);
+        const build = data.args.buildUpdate;
+        if (build) {
+            this.removePiece(build.id, false);
+            const kind = build.kind;
+            if (kind === PieceKind.Lair) {
+                build.kind = PieceKind.Den;
+                this.addPiece(build);
                 undoCalendar.call(this);
             }
+            this.restorePlayerBoardNode(build.owner, kind, build.attribute);
         }
 
-        const attributesData = data.args.attributesUpdate;
-        if (attributesData) {
-            Object.getOwnPropertyNames(attributesData).forEach(name => {
-                if (typeof attributesData[name] === "number") {
-                    attributesData[name] *= -1;
+        const attribute = data.args.attributesUpdate;
+        if (attribute) {
+            Object.getOwnPropertyNames(attribute).forEach(name => {
+                if (typeof attribute[name] === "number") {
+                    attribute[name] *= -1;
                 }
             });
-            const playerId = attributesData.playerId;
-            this.attributes[playerId].update(attributesData);
+            const playerId = attribute.playerId;
+            this.attributes[playerId].update(attribute);
             this.updateStatus(playerId);
         }
     },
