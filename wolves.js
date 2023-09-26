@@ -590,6 +590,11 @@ define([
                         dojo.stopEvent(e);
                     }
                 })
+                dojo.connect(hex.children[0], "mouseleave", e => {
+                    if (this.onHexLeave(x, y)) {
+                        dojo.stopEvent(e);
+                    }
+                })
             }
         });
 
@@ -901,6 +906,12 @@ define([
             .getElementById("wolves-svg-path")
             .setAttribute("d", "");
         return false;
+    },
+
+    onHexLeave(x, y) {
+        document
+            .getElementById("wolves-svg-path")
+            .setAttribute("d", "");
     },
 
     onPieceClick(id) {
