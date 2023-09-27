@@ -449,7 +449,7 @@ class Wolves extends Table
             $query = <<<EOF
                 SELECT COUNT(DISTINCT x, y)
                 FROM pieces JOIN player_status ON owner = player_id
-                WHERE {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                WHERE {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
                     AND prey_data & $preyData = 0
                     AND kind IN ($packKind, $alphaKind)
                 EOF;
@@ -1679,9 +1679,15 @@ class Wolves extends Table
             return;
         }
         self::DbQuery("DELETE FROM $table WHERE $condition");
+
         $skeleton = '(`' . implode("`,`", array_keys($prevObj)) . '`)';
-        $values = "('" . implode("','", array_values($prevObj)) . "')";
-        $values = str_replace("''", "NULL", $values);
+        $array_values = array_map(function ($val) {
+            if (is_null($val)) {
+                return 'NULL';
+            }
+            return $val;
+        }, array_values($prevObj));
+        $values = "(" . implode(",", $array_values) . ")";
         $reverseExpression = "INSERT INTO $table $skeleton VALUES $values";
         $this->updateNewestLog([
             'DB' => $reverseExpression
