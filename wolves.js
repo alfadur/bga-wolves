@@ -556,6 +556,14 @@ define([
             removeSpaces("howl", attributes.deployedHowlDens);
             removeSpaces("lair", attributes.deployedLairs);
             removeSpaces("wolf", attributes.deployedWolves);
+
+            const preySpaces = Array.from(document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-prey-space`));
+            const prey = parseInt(status.prey_data);
+            for (let i = 0; i < 5; ++i) {
+                if ((prey & (0x1 << i)) !== 0) {
+                    preySpaces.splice(0, 1)[0].dataset.preyType = i.toString();
+                }
+            }
         }
 
         gameData.pieces.forEach(this.addPiece, this);
@@ -1200,6 +1208,17 @@ define([
             this.attributes[playerId].update(attribute);
             this.updateStatus(playerId);
         }
+
+        const hunt = data.args.huntUpdate;
+        if (hunt) {
+            const source = getPieceNode(hunt.id).getBoundingClientRect();
+            this.removePiece(hunt.id);
+            const preyNode = document.querySelector(`#wolves-player-board-${hunt.hunter} .wolves-prey-space:not([data-prey-type])`);
+            if (preyNode) {
+                preyNode.dataset.preyType = (31 - Math.clz32(hunt.preyData)).toString();
+                this.animateTranslation(preyNode, source);
+            }
+        }
     },
 
     onUndoNotification(data) {
@@ -1265,6 +1284,21 @@ define([
             const playerId = attribute.playerId;
             this.attributes[playerId].update(attribute);
             this.updateStatus(playerId);
+        }
+
+        const hunt = data.args.huntUpdate;
+        if (hunt) {
+            const preyNode = Array.from(document.querySelectorAll(`#wolves-player-board-${hunt.hunter} .wolves-prey-space:not([data-prey-type])`)).pop();
+            preyNode.removeAttribute("data-prey-type");
+
+            this.addPiece({
+                id: hunt.id,
+                owner: null,
+                x: hunt.x,
+                y: hunt.y,
+                kind: PieceKind.Prey,
+                prey_metadata: hunt.preyData
+            });
         }
     },
 

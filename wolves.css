@@ -726,13 +726,37 @@
 .wolves-prey-space {
     width: 7.5%;
     height: 10.9%;
-    clip-path: polygon(0 50%, 25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%);
 }
 
 .wolves-prey-space:nth-child(2) { left: 9% }
 .wolves-prey-space:nth-child(3) { left: 17.5% }
 .wolves-prey-space:nth-child(4) { left: 25.5% }
 .wolves-prey-space:nth-child(5) { left: 34% }
+
+.wolves-prey-space[data-prey-type]:after {
+    width: 90px;
+    height: 74px;
+    --board-space-y: 440px;
+    background-color: transparent !important;
+    background-blend-mode: normal;
+    mask-image: none;
+}
+
+.wolves-prey-space[data-prey-type="1"]:after {
+    --board-space-x: 90px;
+}
+
+.wolves-prey-space[data-prey-type="2"]:after {
+    --board-space-x: 180px;
+}
+
+.wolves-prey-space[data-prey-type="3"]:after {
+    --board-space-x: 270px;
+}
+
+.wolves-prey-space[data-prey-type="4"]:after {
+    --board-space-x: 360px;
+}
 
 .wolves-wolf-space {
     width: 3.8%;

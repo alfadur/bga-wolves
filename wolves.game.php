@@ -222,13 +222,12 @@ class Wolves extends Table
     {
         $values = [];
         $kind = P_LONE;
-        $prey_kind = P_PREY;
+        $preyKind = P_PREY;
         $available_prey = AVAILABLE_PREY[count($players)];
         shuffle($available_prey);
 
         foreach (BOARD_SETUP[count($players)] as $tile) {
             if (!array_key_exists('chasm', $tile)) {
-
                 $center = $tile['center'];
                 $scale = array_key_exists('rotate', $tile) ? -1 : 1;
                 foreach (REGION_LONE_WOLVES as [$x, $y]) {
@@ -242,7 +241,7 @@ class Wolves extends Table
                 $x = $center[0] + $preyX * $scale;
                 $y = $center[1] + $preyY * $scale;
                 for ($i = 0; $i < $numPrey; $i++) {
-                    $values[] = "($x, $y, $prey_kind, $preyType)";
+                    $values[] = "($x, $y, $preyKind, $preyType)";
                 }
             }
         }
@@ -311,12 +310,12 @@ class Wolves extends Table
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
 
-    static function sql_hex_range($x1, $y1, $x2, $y2)
+    static function sql_hex_range($x1, $y1, $x2, $y2): string
     {
         return "(ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1)) / 2";
     }
 
-    static function sql_hex_in_range($x1, $y1, $x2, $y2, $range)
+    static function sql_hex_in_range($x1, $y1, $x2, $y2, $range): string
     {
         return "ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1) <= 2 * $range";
     }
@@ -440,42 +439,25 @@ class Wolves extends Table
 
     function doHunt(): void
     {
-        $currTurnPlayerId = self::getActivePlayerId();
+        $playerId = self::getActivePlayerId();
         $preyType = P_PREY;
-        $preyTokens = self::getObjectListFromDB("SELECT DISTINCT x, y, prey_metadata FROM pieces WHERE kind=$preyType");
+        $preyTokens = self::getObjectListFromDB("SELECT DISTINCT id, x, y, prey_metadata FROM pieces WHERE kind=$preyType");
 
-        foreach ($preyTokens as ["x" => $x, "y" => $y, "prey_metadata" => $preyData]) {
-            $args = [];
-            foreach (HEX_DIRECTIONS as [$dx, $dy]) {
-                $newX = $x + $dx;
-                $newY = $y + $dy;
-                $args[] = "(p.x=$newX AND p.y=$newY)";
-            }
-
-            $condition = implode(" OR ", $args);
-
-
+        foreach ($preyTokens as ['id' => $id, 'x' => $x, 'y' => $y, 'prey_metadata' => $preyData]) {
             $alphaKind = P_ALPHA;
             $packKind = P_PACK;
             $query = <<<EOF
-                        SELECT p.owner as player_id, pl.player_name as name
-                        FROM player_status s
-                        LEFT JOIN pieces p ON s.player_id = p.owner
-                        LEFT JOIN player pl ON s.player_id = pl.player_id
-                        WHERE ($condition)
-                        AND s.prey_data & $preyData = 0
-                        AND p.kind IN ($packKind, $alphaKind)
-                        AND p.owner=$currTurnPlayerId
-                        GROUP BY p.owner
-                        HAVING COUNT(DISTINCT p.x, p.y) >= 3
-                        EOF;
+                SELECT COUNT(DISTINCT x, y)
+                FROM pieces JOIN player_status ON owner = player_id
+                WHERE {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                    AND prey_data & $preyData = 0
+                    AND kind IN ($packKind, $alphaKind)
+                EOF;
 
-            $result = self::getObjectFromDB($query);
-            if (is_null($result)) {
+            if (self::getUniqueValueFromDB($query) < 3) {
                 continue;
             }
 
-            ["player_id" => $playerId, 'name' => $playerName] = $result;
             $this->logDBUpdate(
                 "player_status",
                 "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData",
@@ -483,15 +465,24 @@ class Wolves extends Table
                 "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
             );
 
+            $args = [
+                'player_name' => self::getActivePlayerName(),
+                'huntUpdate' => [
+                    'id' => $id,
+                    'hunter' => $playerId,
+                    'x' => $x,
+                    'y' => $y,
+                    'preyData' => $preyData
+                ]
+            ];
+
+            $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
+
             $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
             self::notifyAllPlayers(
-                "hunted",
-                clienttranslate('${player_name} has hunted a ${prey_type} and received a bonus turn token'),
-                [
-                    'player_id' => $playerId,
-                    'player_name' => $playerName,
-                    'prey_type' => PREY_NAMES[$preyData]
-                ]
+                'update',
+                clienttranslate('${player_name} hunts down a prey'),
+                $args
             );
             $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);
         }
@@ -649,7 +640,7 @@ class Wolves extends Table
                 $secondPlace,
                 $total
             ],
-            'closing' => clienttranslate('Okay')
+            'closing' => clienttranslate('Close')
         ]);
         return $currentPhase + 1;
     }
@@ -1656,8 +1647,6 @@ class Wolves extends Table
 
         $this->regionScoring();
     }
-
-
 
     ///////////////////////////////////////////////////////////////////////////////////:
     ////////// Action Logging
