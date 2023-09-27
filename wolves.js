@@ -1288,7 +1288,7 @@ define([
 
         const hunt = data.args.huntUpdate;
         if (hunt) {
-            const preyNode = Array.from(document.querySelectorAll(`#wolves-player-board-${hunt.hunter} .wolves-prey-space:not([data-prey-type])`)).pop();
+            const preyNode = Array.from(document.querySelectorAll(`#wolves-player-board-${hunt.hunter} .wolves-prey-space[data-prey-type]`)).pop();
             preyNode.removeAttribute("data-prey-type");
 
             this.addPiece({
