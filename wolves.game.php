@@ -838,7 +838,7 @@ class Wolves extends Table
         $this->gamestate->nextState("${actionName}Select");
     }
 
-    function move(int $wolfId, array $path): void
+    function move(int $wolfId, array $steps): void
     {
         self::checkAction('move');
 
@@ -862,7 +862,7 @@ class Wolves extends Table
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
         $max_distance = WOLF_SPEED[$deployedDens];
-        if (count($path) > $max_distance) {
+        if (count($steps) > $max_distance) {
             throw new BgaUserException(_('The selected tile is out of range'));
         }
 
@@ -893,7 +893,7 @@ class Wolves extends Table
             }
         };
 
-        [$targetX, $targetY] = $this->checkPath([$wolf['x'], $wolf['y']], $path, $finalCheck, $pathCheck);
+        [$targetX, $targetY] = $this->checkPath([$wolf['x'], $wolf['y']], $steps, $finalCheck, $pathCheck);
 
         $this->logDBUpdate("pieces", "x=$targetX, y=$targetY", "id=$wolfId", "x=$wolf[x], y=$wolf[y]");
 
@@ -902,7 +902,7 @@ class Wolves extends Table
         $this->logIncStat(STAT_PLAYER_WOLVES_MOVED, 1, $playerId);
 
         $args = [
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+            'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ];
         $this->logNotification(clienttranslate('${player_name} undoes a wolf movement'), $args);
 
@@ -911,7 +911,7 @@ class Wolves extends Table
             'x' => $targetX,
             'y' => $targetY,
             'preserve' => ['x', 'y'],
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path],
+            'moveUpdate' => ['id' => $wolfId, 'steps' => $steps],
         ]);
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'), $args);
@@ -958,7 +958,7 @@ class Wolves extends Table
         return (int)self::getUniqueValueFromDB($query) ?? -1;
     }
 
-    function displace(array $path): void
+    function displace(array $steps): void
     {
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
@@ -988,11 +988,11 @@ class Wolves extends Table
             }
         };
         ['x' => $wolfX, 'y' => $wolfY] = $wolf;
-        [$x, $y] = $this->checkPath([$wolfX, $wolfY], $path, $finalCheck, [$this, "validityCheck"]);
+        [$x, $y] = $this->checkPath([$wolfX, $wolfY], $steps, $finalCheck, [$this, "validityCheck"]);
         $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
         $args = [
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+            'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ];
 
         $this->logNotification(clienttranslate('${player_name} undoes a wolf displacement'), $args);
@@ -1001,7 +1001,7 @@ class Wolves extends Table
             'player_name' => self::getActivePlayerName(),
             'owner' => self::getPlayerNameById($wolf['owner']),
             'preserve' => ['owner'],
-            'moveUpdate' => ['id' => $wolfId, 'path' => $path]
+            'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ]);
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'), $args);
@@ -1076,7 +1076,7 @@ class Wolves extends Table
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function placeDen(int $wolfId, ?int $path, int $denType): void
+    function placeDen(int $wolfId, ?int $direction, int $denType): void
     {
         self::checkAction('den');
 
@@ -1095,8 +1095,8 @@ class Wolves extends Table
         $denValue = P_DEN;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
-        if ($path !== null) {
-            [$dx, $dy] = HEX_DIRECTIONS[$path];
+        if ($direction !== null) {
+            [$dx, $dy] = HEX_DIRECTIONS[$direction];
             $x += $dx;
             $y += $dy;
         }
@@ -1140,7 +1140,7 @@ class Wolves extends Table
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function placeLair(int $wolfId, ?int $path): void
+    function placeLair(int $wolfId, ?int $direcion): void
     {
         self::checkAction('lair');
 
@@ -1158,8 +1158,8 @@ class Wolves extends Table
         $lairValue = P_LAIR;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
-        if ($path !== null) {
-            [$dx, $dy] = HEX_DIRECTIONS[$path];
+        if ($direcion !== null) {
+            [$dx, $dy] = HEX_DIRECTIONS[$direcion];
             $x += $dx;
             $y += $dy;
         }

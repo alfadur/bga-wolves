@@ -16,7 +16,7 @@ $this->terrainNames = [
     T_DESERT => 'desert',
     T_FOREST => 'forest',
     T_WATER => 'water',
-    T_CHASM => 'water'
+    T_CHASM => 'chasm'
 ];
 
 $this->actionNames = [

@@ -66,32 +66,32 @@ class action_wolves extends APP_GameAction {
     function move(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = explode(',', self::getArg('path', AT_numberlist, true));
-        $this->game->move($wolfId, $path);
+        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
+        $this->game->move($wolfId, $steps);
         self::ajaxResponse();
     }
 
     function displace(): void {
         self::setAjaxMode();
-        $path = explode(',', self::getArg('path', AT_numberlist, true));
-        $this->game->displace($path);
+        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
+        $this->game->displace($steps);
         self::ajaxResponse();
     }
 
     function den(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = self::getArg('path', AT_int, false);
+        $direction = self::getArg('direction', AT_int, false);
         $denType = self::getArg('denType', AT_int, true);
-        $this->game->placeDen($wolfId, $path, $denType);
+        $this->game->placeDen($wolfId, $direction, $denType);
         self::ajaxResponse();
     }
 
     function lair(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $path = self::getArg('path', AT_int, false);
-        $this->game->placeLair($wolfId, $path);
+        $direction = self::getArg('direction', AT_int, false);
+        $this->game->placeLair($wolfId, $direction);
         self::ajaxResponse();
     }
 
@@ -100,7 +100,7 @@ class action_wolves extends APP_GameAction {
         $wolfId = self::getArg('wolfId', AT_int, true);
         $targetId = self::getArg('targetId', AT_int, true);
         $denType = self::getArg('denType', AT_int, true);
-        //$path = explode(',', self::getArg('path', AT_numberlist, true));
+        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
         $this->game->dominate($wolfId, $targetId, $denType);
         self::ajaxResponse();
     }

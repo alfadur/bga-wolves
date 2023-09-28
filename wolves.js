@@ -268,6 +268,11 @@ function getPieceHexNode(id) {
     }
 }
 
+function isHexPassable(hexNode) {
+    const classList = hexNode.classList;
+    return !classList.contains("wolves-hex-water") && !classList.contains("wolves-hex-chasm");
+}
+
 function hexAdd(hex1, hex2) {
     return {
         x: hex1.x + hex2.x,
@@ -303,39 +308,38 @@ function updateHexSharing(...hexNodes) {
     }
 }
 
-function collectPaths(from, range, terrain, canStopPredicate) {
+function* collectPaths(from, range) {
     const queue = new Queue;
     const visited = new Set;
 
-    queue.enqueue({hex: from, path: [], canStop: false});
-    visited.add(JSON.stringify(from));
+    queue.enqueue({hex: from, steps: []});
+    visited.add(JSON.stringify({x: from.x, y: from.y}));
 
     while (!queue.isEmpty()) {
-        const {hex, path} = queue.dequeue();
-
-        if (path.length < range) {
-            hexDirections.forEach((direction, index) => {
+        const {hex, steps} = queue.dequeue();
+        if (range === undefined || steps.length < range) {
+            let directionIndex = 0;
+            for (const direction of hexDirections) {
                 const newHex = hexAdd(hex, direction);
                 const value = JSON.stringify(newHex);
+                const node = getHexNode(newHex);
 
-                if (!visited.has(value)) {
-                    const node = getHexNode(newHex);
-                    if (node && !node.classList.contains("wolves-hex-water")) {
-                        const terrainMatch = terrain === undefined
-                            || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)
-                        queue.enqueue({
-                            hex: newHex,
-                            path: [...path, index],
-                            canStop: terrainMatch && canStopPredicate(newHex)
-                        });
-                        visited.add(value);
+                if (node && !visited.has(value)) {
+                    visited.add(value);
+                    const newPath = {
+                        node,
+                        hex: newHex,
+                        steps: [...steps, directionIndex]
+                    };
+                    const isPassable = yield newPath;
+                    if (isPassable === undefined || isPassable) {
+                        queue.enqueue(newPath);
                     }
                 }
-            });
+                ++directionIndex;
+            }
         }
     }
-
-    return queue.values.slice(1);
 }
 
 function makeHexSelectable(hex, terrain) {
@@ -395,65 +399,103 @@ function prepareLairSelection(playerId, pieces, terrain) {
     }
 }
 
-function prepareDominateSelection(playerId, pieces, terrain, range) {
-    const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
-    const otherPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], p => p.owner !== playerId);
-    for (const piece of otherPieces) {
-        if (getHexNode(piece).classList.contains(`wolves-hex-${terrainNames[terrain]}`)
-            && alphaWolves.some(alpha => hexDistance(piece, alpha) <= range)
-            && Array.from(pieces.getByHex(piece, p => p.owner === piece.owner)).length === 1)
-        {
-            getPieceNode(piece.id, terrain).classList.add("wolves-selectable");
-        }
+function prepareDominateSelection(playerId, range, terrain, pieces) {
+    const terrainClass = `wolves-hex-${terrainNames[terrain]}`;
+
+    function canDominate(piece) {
+        return piece.owner !== playerId
+            && getPieceHexNode(piece.id).classList.contains(terrainClass)
+            && Array.from(pieces.getByHex(piece, p =>
+                p.owner === piece.owner)).length === 1
     }
-}
 
-function moveStopPredicate(playerId, pieces, kind) {
-    return hex => {
-        const otherPieces = Array.from(pieces.getByHex(hex));
-        return otherPieces.length < 2 && otherPieces.every(p =>
-            p.owner === playerId || kind === PieceKind.Alpha && p.kind === PieceKind.Pack || p.kind === PieceKind.Den);
-    };
-}
+    const validPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], canDominate);
 
-function displaceStopPredicate(playerId, pieces) {
-    return hex => {
-        const otherPieces = Array.from(pieces.getByHex(hex));
-        return otherPieces.length < 2 && otherPieces.every(p => p.owner === playerId);
-    };
-}
+    for (const piece of validPieces) {
+        const iterable = collectPaths(piece, range);
+        let item = iterable.next();
 
-function selectWolf(id, canStopPredicate, range, terrain) {
-    const sourceHex = getPieceHexNode(id);
-    if (sourceHex) {
-        const paths = collectPaths({
-            x: parseInt(sourceHex.dataset.x),
-            y: parseInt(sourceHex.dataset.y),
-        }, range, terrain, canStopPredicate);
-        clearTag("wolves-selectable");
-        getPieceNode(id).classList.add("wolves-selected");
-        for (const path of paths) {
-            if (path.canStop) {
-                makeHexSelectable(path.hex);
+        while (!item.done) {
+            const alpha = pieces.getByHex(item.value.hex, p =>
+                p.owner === playerId && p.kind === PieceKind.Alpha).next();
+
+            if (!alpha.done) {
+                getPieceNode(piece.id).classList.add("wolves-selectable");
+                break;
             }
+
+            item = iterable.next();
         }
-        return paths;
     }
 }
 
-function buildPath(path, fillet) {
+function selectWolfToMove(wolf, range, terrain, pieces) {
+    clearTag("wolves-selectable");
+    getPieceNode(wolf.id).classList.add("wolves-selected");
+
+    const paths = [];
+    const iterable = collectPaths(wolf, range);
+    let item = iterable.next();
+
+    while (!item.done) {
+        const path = item.value;
+        const otherPieces = Array.from(pieces.getByHex(path.hex));
+
+        const canStop = path.node.classList.contains(`wolves-hex-${terrainNames[terrain]}`)
+            && otherPieces.length < 2
+            && otherPieces.every(p =>
+                p.owner === wolf.owner || p.kind === PieceKind.Den || wolf.kind === PieceKind.Alpha && p.kind === PieceKind.Pack);
+
+        if (canStop) {
+            paths.push(path);
+            makeHexSelectable(path.hex);
+        }
+
+        item = iterable.next(isHexPassable(path.node));
+    }
+
+    return paths;
+}
+
+function selectWolfToDisplace(wolf, pieces) {
+    getPieceNode(wolf.id).classList.add("wolves-selected");
+
+    const paths = [];
+    const iterable = collectPaths(wolf);
+    let item = iterable.next();
+    let maxDistance = Number.MAX_VALUE;
+
+    while (!item.done && item.value.steps.length <= maxDistance) {
+        const path = item.value;
+        const otherPieces = Array.from(pieces.getByHex(path.hex));
+
+        path.canStop = otherPieces.length < 2 && otherPieces.every(p => p.owner === wolf.owner);
+
+        if (path.canStop) {
+            maxDistance = path.steps.length;
+            paths.push(path);
+            makeHexSelectable(path.hex);
+        }
+
+        item = iterable.next(isHexPassable(path.node));
+    }
+
+    return paths;
+}
+
+function buildPath(steps, fillet) {
     const svg = ["M "];
     let point = {x: 0, y: 0};
     let center = point;
     let extend = false;
 
-    for (let i = 0; i < path.length - 1; ++i) {
+    for (let i = 0; i < steps.length - 1; ++i) {
         if (!extend) {
             svg.push(`${point.x} ${point.y} `);
         }
-        const nextPoint = hexAdd(center, hexOffsets[path[i]]);
+        const nextPoint = hexAdd(center, hexOffsets[steps[i]]);
 
-        if (path[i + 1] === path[i]) {
+        if (steps[i + 1] === steps[i]) {
             point = nextPoint;
             center = nextPoint;
             extend = true;
@@ -463,14 +505,14 @@ function buildPath(path, fillet) {
             extend = false;
             center = nextPoint;
             point = lerp(nextPoint,
-                hexAdd(nextPoint, hexOffsets[path[i + 1]]),
+                hexAdd(nextPoint, hexOffsets[steps[i + 1]]),
                 fillet);
         }
     }
     if (!extend) {
         svg.push(`${point.x} ${point.y} `);
     }
-    const end = hexAdd(center, hexOffsets[path[path.length - 1]]);
+    const end = hexAdd(center, hexOffsets[steps[steps.length - 1]]);
     svg.push(`L ${end.x} ${end.y}`);
     return svg.join("");
 }
@@ -664,11 +706,11 @@ define([
         }
     },
 
-    movePiece(id, path) {
+    movePiece(id, steps) {
         const piece = this.pieces.getById(id);
         if (piece) {
             const source = getHexNode(piece);
-            const destination = path.reduce((hex, step) => hexAdd(hex, hexDirections[step]), piece);
+            const destination = steps.reduce((hex, step) => hexAdd(hex, hexDirections[step]), piece);
             destination.id = id;
 
             this.pieces.update(destination);
@@ -762,11 +804,10 @@ define([
                     break;
                 case "displaceWolf":
                     const wolfId = parseInt(state.args.displacementWolf);
-                    const predicate = displaceStopPredicate(playerId, this.pieces);
-                    this.paths = selectWolf(wolfId, predicate, 1);
+                    this.paths = selectWolfToDisplace(this.pieces.getById(wolfId), this.pieces);
                     break;
                 case "dominateSelection":
-                    prepareDominateSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
+                    prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces);
                     break;
                 case "clientSelectTiles":
                     this.updateTiles(this.getActivePlayerId());
@@ -882,9 +923,9 @@ define([
             p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= 1).next().value;
 
         const args = {lock: true, wolfId: wolf.id}
-        const path = hexDirection(wolf, {x, y});
-        if (path >= 0) {
-            args.path = path.toString();
+        const direction = hexDirection(wolf, {x, y});
+        if (direction >= 0) {
+            args.direction = direction.toString();
         }
         Object.assign(args, extraArgs);
 
@@ -903,7 +944,7 @@ define([
             wolfId,
             targetId: target.id,
             denType: attribute || 0,
-            path: ""
+            steps: ""
         }, () => {});
     },
 
@@ -938,7 +979,7 @@ define([
 
     onHexEnter(x, y) {
         if (this.checkAction("clientMove", true)) {
-            const path = this.paths.filter(({hex, canStop}) => hex.x === x && hex.y === y && canStop)[0];
+            const path = this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0];
             if (path && this.selectedPiece) {
                 const src = getPieceHexNode(this.selectedPiece)
                 const from = {
@@ -949,7 +990,7 @@ define([
                 svg.style = `left: ${from.x - 500}px; top: ${from.y - 500}px; position: absolute; z-index: 100; pointer-events: none; width: 1000px; height: 1000px`;
                 document
                     .getElementById("wolves-svg-path")
-                    .setAttribute("d", buildPath(path.path, 0.3));
+                    .setAttribute("d", buildPath(path.steps, 0.3));
                 return true;
             }
         }
@@ -967,13 +1008,13 @@ define([
 
     onPieceClick(id) {
         console.log(`Click piece(${id})`);
-        const piece = getPieceNode(id);
-        if (piece.classList.contains("wolves-selectable")) {
+        const pieceNode = getPieceNode(id);
+        if (pieceNode.classList.contains("wolves-selectable")) {
             let playerId = this.getActivePlayerId();
             if (this.checkAction("move", false)) {
-                const predicate = moveStopPredicate(playerId, this.pieces, this.pieces.getById(id).kind);
+                const wolf = this.pieces.getById(id);
                 const moveRange = this.activeAttributes().moveRange;
-                this.paths = selectWolf(id, predicate, moveRange, this.selectedTerrain);
+                this.paths = selectWolfToMove(wolf, moveRange, this.selectedTerrain, this.pieces);
                 if (this.paths) {
                     this.selectedPiece = id;
                     this.setClientState("clientSelectMoveTarget", {
@@ -1020,7 +1061,7 @@ define([
             this.ajaxcall("/wolves/wolves/move.html", {
                 lock: true,
                 wolfId: this.selectedPiece,
-                path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
+                steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
             }, () => clearTag("wolves-selected"));
         } else if (this.checkAction("howl", true)) {
             const howlRange = this.activeAttributes().howlRange;
@@ -1041,7 +1082,7 @@ define([
         } else if (this.checkAction('displace')) {
             this.ajaxcall("/wolves/wolves/displace.html", {
                 lock: true,
-                path: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].path.join(',')
+                steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
             }, () => {});
         }
     },
@@ -1167,7 +1208,7 @@ define([
 
         const move = data.args.moveUpdate;
         if (move) {
-            this.movePiece(move.id, move.path);
+            this.movePiece(move.id, move.steps);
         }
 
         const tiles = data.args.tilesUpdate;
@@ -1234,10 +1275,8 @@ define([
 
         const move = data.args.moveUpdate;
         if (move) {
-            console.log("path to", move.path);
-            const path = move.path.map(d => (parseInt(d) + 3) % 6).reverse();
-            console.log("path from", path);
-            this.movePiece(move.id, path);
+            const steps = move.steps.map(d => (parseInt(d) + 3) % 6).reverse();
+            this.movePiece(move.id, steps);
         }
 
         const tiles = data.args.tilesUpdate;
