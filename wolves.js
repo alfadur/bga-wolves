@@ -366,6 +366,8 @@ function prepareHowlSelection(playerId, pieces, terrain, range) {
 function prepareMoveSelection(playerId, pieces) {
     clearTag("wolves-selected");
     clearTag("wolves-selectable");
+    document.getElementById("wolves-land").classList.add("wolves-selectable");
+
     const wolves = pieces.getByOwner(playerId, p => PieceKind.isMovable(p.kind));
     for (const wolf of wolves) {
         getPieceNode(wolf.id).classList.add("wolves-selectable");
@@ -404,6 +406,9 @@ function prepareLairSelection(playerId, pieces, terrain) {
 function prepareDominateSelection(playerId, range, terrain, pieces) {
     const terrainClass = `wolves-hex-${terrainNames[terrain]}`;
     const paths = [];
+
+    clearTag("wolves-selectable");
+    document.getElementById("wolves-land").classList.add("wolves-selectable");
 
     function canDominate(piece) {
         return piece.owner !== playerId
