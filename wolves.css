@@ -208,6 +208,7 @@
 }
 
 .wolves-moon {
+    --moon-offset: 0;
     position: absolute;
     width: 120px;
     height: 120px;
@@ -218,7 +219,7 @@
     margin: auto;
     background-position-y: -320px;
     background-image: url("img/pieces.png");
-    transform: scale(var(--piece-scale));
+    transform: scale(var(--piece-scale)) translate(0, var(--moon-offset));
 }
 
 .wolves-moon[data-phase="1"] {
@@ -230,7 +231,23 @@
 }
 
 .wolves-moon:nth-child(3) {
-    transform: scale(var(--piece-scale)) translateY(-12px);
+    --moon-offset: -12px;
+}
+
+.wolves-moon.wolves-disappearing {
+    animation-name: disappear;
+    animation-duration: 1000ms;
+    animation-timing-function: ease-out;
+    animation-fill-mode: forwards;
+}
+
+@keyframes disappear {
+    to {
+        opacity: 0;
+        transform:
+            scale(calc(var(--piece-scale) * 1.2))
+            translate(-12px, calc(var(--moon-offset) - 12px));
+    }
 }
 
 #wolves-marker-scoring, .wolves-moon.wolves-upcoming:after {
@@ -242,6 +259,12 @@
     background-image: url("img/pieces.png");
     background-position: -284px -71px;
     transform: scale(var(--piece-scale));
+    transition: opacity 1000ms ease-out;
+}
+
+.wolves-moon.wolves-upcoming.wolves-fade-in:after {
+    opacity: 0;
+    transition: opacity 0ms;
 }
 
 #wolves-marker-scoring {
@@ -341,11 +364,6 @@
     left: 1px;
     top: -3px;
     background-position: -403px -150px;
-}
-
-@keyframes pulse {
-    from { opacity: 100% }
-    to { opacity: 20% }
 }
 
 .wolves-piece[data-kind="0"] > .wolves-piece-sprite,

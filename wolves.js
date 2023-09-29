@@ -564,7 +564,7 @@ define([
             const mask = parseInt(region.phase);
             for (let phase = 2; phase >= 0; --phase) {
                 if (mask & (0x1 << phase)) {
-                    dojo.place(this.format_block("jstpl_moon", {phase}), hex)
+                    dojo.place(this.format_block("jstpl_moon", {phase, regionId: region.id}), hex)
                 }
             }
         }
@@ -1209,6 +1209,8 @@ define([
 
         dojo.subscribe("update", this, "onUpdateNotification");
         dojo.subscribe("undo", this, "onUndoNotification");
+
+        dojo.subscribe("scoring", this, "onScoringNotification");
     },
 
     onDraftNotification(data) {
@@ -1357,6 +1359,44 @@ define([
                 kind: PieceKind.Prey,
                 prey_metadata: hunt.preyData
             });
+        }
+    },
+
+    onScoringNotification(data) {
+        console.log("Scoring notification:");
+        console.log(data);
+
+        const scoring = data.args;
+
+        for (const {regionId, winner} of scoring.awards) {
+            const moonNode = document.querySelector(`.wolves-moon[data-region="${regionId}"]:last-child`);
+            const playerBoard = document.getElementById(`#player_board_${winner}`);
+
+            if (playerBoard) {
+                //TODO move the token to the player board for display
+            }
+
+            moonNode.classList.add("wolves-disappearing");
+            moonNode.addEventListener("animationend", () => {dojo.destroy(moonNode)}, {once: true})
+        }
+
+        if ("nextScoring" in scoring) {
+            const marker = document.getElementById("wolves-marker-scoring");
+            const bounds = marker.getBoundingClientRect();
+            const nextScoringNode = document.getElementById(`wolves-calendar-space-${scoring.nextScoring - 1}`);
+
+            nextScoringNode.appendChild(marker);
+            this.animateTranslation(marker, bounds);
+        }
+
+        if ("nextPhase" in scoring) {
+            const moons = document.querySelectorAll(`.wolves-moon[data-phase="${scoring.nextPhase}"]`);
+
+            moons.forEach(moon => moon.classList.add("wolves-upcoming", "wolves-fade-in"));
+
+            setTimeout(() => {
+                moons.forEach(moon => moon.classList.remove("wolves-fade-in"));
+            }, 0);
         }
     },
 

@@ -63,7 +63,7 @@ const jstpl_piece =
         <div class="wolves-piece-sprite"></div>
     </div>`;
 const jstpl_moon =
-    `<div class="wolves-moon" data-phase="\${phase}"></div>`;
+    `<div class="wolves-moon" data-region="\${regionId}" data-phase="\${phase}"></div>`;
 const jstpl_player_status =
     `<div class="wolves-player-status">
         <div>Move \${moveRange}</div>

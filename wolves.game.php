@@ -269,7 +269,7 @@ class Wolves extends Table
         );
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
         $result['regions'] = self::getObjectListFromDb(
-            'SELECT center_x AS x, center_y AS y, moon_phase AS phase FROM regions'
+            'SELECT region_id AS id, center_x AS x, center_y AS y, moon_phase AS phase FROM regions'
         );
         $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
@@ -453,7 +453,7 @@ class Wolves extends Table
         return null;
     }
 
-    function getRegionPresence(int $regionId): array
+    static function getRegionPresence(int $regionId): array
     {
         $lair = P_LAIR;
         $den = P_DEN;
@@ -540,23 +540,23 @@ class Wolves extends Table
             return $currentPhase;
         }
 
-        self::debug("Region scoring");
+        self::debug('Region scoring');
         $this->incGameStateValue(G_MOON_PHASE, 1);
 
         // init player score states
 
-        $player_ids =  array_keys($this->loadPlayersBasicInfos());
+        $playerIds = array_keys($this->loadPlayersBasicInfos());
         $playerStates = [];
-        foreach ($player_ids as $playerId) {
+        foreach ($playerIds as $playerId) {
             $playerStates[$playerId] = [
-                "first_place" => 0,
-                "second_place" => 0
+                'first_place' => 0,
+                'second_place' => 0
             ];
         }
-        if (count($player_ids) === 2) {
-            $playerStates["ai"] = [
-                "first_place" => 0,
-                "second_place" => 0
+        if (count($playerIds) === 2) {
+            $playerStates['ai'] = [
+                'first_place' => 0,
+                'second_place' => 0
             ];
         }
 
@@ -565,11 +565,9 @@ class Wolves extends Table
 
         $scoringRegions = self::getObjectListFromDB("SELECT * FROM regions WHERE moon_phase & $phaseBitMask > 0");
         $score = ($currentPhase * 2) + 4;
-        $winners = [];
-        foreach ($scoringRegions as $region) {
 
-            //Gather region presence and sort based off most score, then most alphas
-            $presence = $this->getRegionPresence($region['region_id']);
+        foreach ($scoringRegions as &$region) {
+            $presence = self::getRegionPresence($region['region_id']);
 
             //If no one is in the region, no one scores
             if (count($presence) == 0) {
@@ -580,7 +578,6 @@ class Wolves extends Table
 
             //At least 2 people in region
             if (count($presence) > 1) {
-
                 //Determine how many players won first place
                 $firstWinner = $presence[0];
                 $winners = array_filter($presence, fn ($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
@@ -589,46 +586,62 @@ class Wolves extends Table
                 self::dump('winners', $winners);
                 //multiple winners, no second place, and everyone gets half score
                 if (count($winners) > 1) {
-                    foreach ($winners as ["owner" => $winner]) {
-                        $playerStates[$winner]["second_place"]++;
+                    foreach ($winners as ['owner' => $winner]) {
+                        $playerStates[$winner]['second_place']++;
                     }
-                }
-                //If one winner, maybe second place?
-
-                else {
+                } else {
+                    $region['winner'] = $winners[0]['owner'];
+                    //If one winner, maybe second place?
                     //Set first player points/score token
                     $firstPlace = $presence[0]['owner'];
-                    $playerStates[$firstPlace]["first_place"]++;
+                    $playerStates[$firstPlace]['first_place']++;
 
                     //Only 2 people in region, second place is guaranteed
                     if (count($presence) === 2) {
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
-                    }
-                    //Otherwise, there can only be one player who wins second place
-                    else if ($presence[1]['score'] !== $presence[2]['score'] && $presence[1]['alphas'] !== $presence[2]['alphas']) {
+                    } else if ($presence[1]['score'] !== $presence[2]['score'] && $presence[1]['alphas'] !== $presence[2]['alphas']) {
+                        //Otherwise, there can only be one player who wins second place
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
                     }
                 }
-            }
-            //Only 1 person with presence in region, so they win first place
-            else {
+            } else {
+                //Only 1 person with presence in region, so they win first place
                 $winner = $presence[0]['owner'];
-                $playerStates[$winner]["first_place"]++;
+                $region['winner'] = $winner;
+                $playerStates[$winner]['first_place']++;
             }
         }
 
-        self::DbQuery("UPDATE regions SET moon_phase=moon_phase ^ $phaseBitMask WHERE moon_phase & $phaseBitMask > 0");
+        self::DbQuery("UPDATE regions SET moon_phase = moon_phase ^ $phaseBitMask WHERE moon_phase & $phaseBitMask <> 0");
 
-        if (isset($playerStates["ai"])) {
-            unset($playerStates["ai"]);
+        if (isset($playerStates['ai'])) {
+            unset($playerStates['ai']);
         }
+
+        $notificationArgs = [
+            'awards' => array_map(
+                fn($region) => [
+                    'regionId' => $region['region_id'],
+                    'winner' => $region['winner']
+                ],
+                $scoringRegions)
+        ];
+
+        $nextPhase = $currentPhase + 1;
+        if ($nextPhase < count(PHASES)) {
+            $notificationArgs['nextPhase'] = $nextPhase;
+            $notificationArgs['nextScoring'] =
+                PHASES[$nextPhase][$this->getPlayersNumber()];
+        }
+
+        $this->notifyAllPlayers('scoring', clienttranslate('Regions are scored'), $notificationArgs);
 
         foreach ($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]) {
-            self::DbQuery("UPDATE player SET player_score=player_score + ($score * $firstPlace) + (($score/2) * $secondPlace) WHERE player_id=$playerId");
+            self::DbQuery("UPDATE player SET player_score = player_score + $score * $firstPlace + $score / 2 * $secondPlace WHERE player_id=$playerId");
             if ($firstPlace > 0) {
-                $args = implode(",", array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
+                $args = implode(',', array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
                 self::DbQuery("UPDATE player SET player_score_aux=player_score_aux + 100 WHERE player_id=$playerId");
             }
@@ -644,33 +657,33 @@ class Wolves extends Table
         $secondPlace = [clienttranslate('Second Place Score')];
         $total = [clienttranslate('Total')];
 
-        foreach ($player_ids as $player_id) {
-            $playerName = self::getUniqueValueFromDB("SELECT player_name FROM player WHERE player_id=$player_id");
+        foreach ($playerIds as $playerId) {
+            $playerName = self::getPlayerNameById($playerId);
             $firstRow[] = [
-                "str" => '${player_name}',
+                'str' => '${player_name}',
                 'args' => ['player_name' => $playerName],
                 'type' => 'header'
             ];
 
             $firstPlace[] = [
-                "str" => '${points}',
-                'args' => ['points' => $playerStates[$player_id]['first_place']],
+                'str' => '${points}',
+                'args' => ['points' => $playerStates[$playerId]['first_place']],
                 'type' => 'footer'
             ];
 
             $secondPlace[] = [
-                "str" => '${points}',
-                'args' => ['points' => $playerStates[$player_id]['second_place']],
+                'str' => '${points}',
+                'args' => ['points' => $playerStates[$playerId]['second_place']],
                 'type' => 'footer'
             ];
 
             $total[] = [
-                "str" => '${points}',
-                'args' => ['points' => array_sum($playerStates[$player_id])]
+                'str' => '${points}',
+                'args' => ['points' => array_sum($playerStates[$playerId])]
             ];
         }
 
-        $this->notifyAllPlayers("tableWindow", '', [
+        $this->notifyAllPlayers('tableWindow', '', [
             'id' => 'scoreTable',
             'title' => clienttranslate('Region Scoring'),
             'table' => [
@@ -681,7 +694,7 @@ class Wolves extends Table
             ],
             'closing' => clienttranslate('Close')
         ]);
-        return $currentPhase + 1;
+        return $nextPhase;
     }
 
     function getPreyCount(string $playerId)
@@ -1383,7 +1396,6 @@ class Wolves extends Table
     function argActionSelection()
     {
         $returnArr = [];
-        $playerId = self::getActivePlayerId();
         $returnArr["remainingActions"] = $this->getGameStateValue(G_ACTIONS_REMAINING);
         $returnArr["canUndo"] = $this->canUndo();
         return $returnArr;
@@ -1454,7 +1466,7 @@ class Wolves extends Table
     {
         $currentPhase = $this->regionScoring();
         //Determine if the game should end
-        if ($currentPhase > 2) {
+        if ($currentPhase >= count(PHASES)) {
             $this->gamestate->nextState(TR_END_GAME);
         } else {
             $this->activeNextPlayer();

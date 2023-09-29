@@ -13,7 +13,6 @@ const ST_DISPLACE = 10;
 const ST_POST_ACTION = 11;
 const ST_CONFIRM_END = 12;
 const ST_NEXT_TURN = 13;
-const ST_HUNT_CONFLICT = 14;
 const ST_GAME_END = 99;
 
 const A_MOVE = 0;
@@ -80,8 +79,6 @@ const TR_NEXT_TURN = 'nextTurn';
 const TR_START_TURN = 'startTurn';
 const TR_END_GAME = 'endGame';
 const TR_SKIP = 'skip';
-const TR_HUNT_CONFLICT = 'hunt_conflict';
-const TR_HUNT_CHOICE = 'hunt_choice';
 const TR_ZOMBIE_PASS = 'zombiePass';
 
 const BOARD_SETUP = [
@@ -170,12 +167,6 @@ const REGION_LONE_WOLVES = [
 ];
 
 const REGION_PREY = [-2, -1];
-
-// const PR_DEER = 0b1;
-// const PR_BOAR = 0b10;
-// const PR_RACCOON = 0b100;
-// const PR_HARE = 0b1000;
-// const PR_MOOSE = 0b10000;
 
 const AVAILABLE_PREY = [
     2 => [
@@ -382,10 +373,6 @@ const START_MOON_PHASES = [
         M_FULL,
         M_FULL
     ]
-];
-
-const MOON_SCORES = [
-    4, 6, 8
 ];
 
 const DEPLOYED_WOLF_SCORE = [
