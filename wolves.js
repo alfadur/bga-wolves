@@ -363,14 +363,16 @@ function prepareHowlSelection(playerId, pieces, terrain, range) {
     }
 }
 
-function prepareMoveSelection(playerId, pieces) {
+function prepareMoveSelection(playerId, pieces, movedWolves) {
     clearTag("wolves-selected");
     clearTag("wolves-selectable");
     document.getElementById("wolves-land").classList.add("wolves-selectable");
 
     const wolves = pieces.getByOwner(playerId, p => PieceKind.isMovable(p.kind));
     for (const wolf of wolves) {
-        getPieceNode(wolf.id).classList.add("wolves-selectable");
+        if (!(movedWolves.indexOf(wolf.id) >= 0)) {
+            getPieceNode(wolf.id).classList.add("wolves-selectable");
+        }
     }
 }
 
@@ -811,7 +813,7 @@ define([
                     prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
                     break;
                 case "moveSelection":
-                    prepareMoveSelection(playerId, this.pieces);
+                    prepareMoveSelection(playerId, this.pieces, state.args.movedWolves);
                     break;
                 case "denSelection":
                     prepareDenSelection(playerId, this.pieces, this.selectedTerrain);
