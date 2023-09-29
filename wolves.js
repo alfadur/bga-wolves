@@ -907,7 +907,9 @@ define([
             }
 
             if (!stateName.startsWith("client")) {
-                this.ensureButton("button_undo", _("Undo"), "onUndo", null, null, "red");
+                if (!("canUndo" in args) || args.canUndo ) {
+                    this.ensureButton("button_undo", _("Undo"), "onUndo", null, null, "gray");
+                }
             }
         }
     },
