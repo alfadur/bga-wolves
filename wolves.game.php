@@ -983,6 +983,10 @@ class Wolves extends Table
 
         self::checkDestination($x, $y, $wolf['owner']);
 
+        if (count($steps) > 1) {
+            ///TODO check that no shorter paths exist
+        }
+
         $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
         $args = [
@@ -1263,10 +1267,6 @@ class Wolves extends Table
             EOF);
         if ($target === null) {
             throw new BgaUserException(_('Selected target is invalid!'));
-        }
-
-        if (count($steps) > 1) {
-            ///TODO check that no shorter paths exist
         }
 
         $oldKind = $target['kind'];

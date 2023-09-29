@@ -403,6 +403,7 @@ function prepareLairSelection(playerId, pieces, terrain) {
 
 function prepareDominateSelection(playerId, range, terrain, pieces) {
     const terrainClass = `wolves-hex-${terrainNames[terrain]}`;
+    const paths = [];
 
     function canDominate(piece) {
         return piece.owner !== playerId
@@ -418,10 +419,14 @@ function prepareDominateSelection(playerId, range, terrain, pieces) {
         let item = iterable.next();
 
         while (!item.done) {
-            const alpha = pieces.getByHex(item.value.hex, p =>
+            const path = item.value;
+            const alpha = pieces.getByHex(path.hex, p =>
                 p.owner === playerId && p.kind === PieceKind.Alpha).next();
 
             if (!alpha.done) {
+                path.targetId = piece.id;
+                path.alphaId = alpha.value.id;
+                paths.push(path);
                 getPieceNode(piece.id).classList.add("wolves-selectable");
                 break;
             }
@@ -429,6 +434,8 @@ function prepareDominateSelection(playerId, range, terrain, pieces) {
             item = iterable.next();
         }
     }
+
+    return paths;
 }
 
 function selectWolfToMove(wolf, range, terrain, pieces) {
@@ -812,7 +819,7 @@ define([
                     this.paths = selectWolfToDisplace(this.pieces.getById(this.selectedPiece), this.pieces);
                     break;
                 case "dominateSelection":
-                    prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces);
+                    this.paths = prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces);
                     break;
                 case "clientSelectTiles":
                     this.updateTiles(this.getActivePlayerId());
@@ -944,16 +951,15 @@ define([
     },
 
     dominatePiece(playerId, target, attribute) {
-        const howlRange = this.activeAttributes().howlRange;
-        const wolfId = this.pieces.getByOwner(playerId, p =>
-            p.kind === PieceKind.Alpha && hexDistance(p, target) <= howlRange).next().value.id;
+        const path = this.paths.filter(p => p.targetId === target.id)[0];
+        const steps = path.steps.map(d => (parseInt(d) + 3) % hexDirections.length).reverse();
 
         this.ajaxcall("/wolves/wolves/dominate.html", {
             lock: true,
-            wolfId,
+            wolfId: path.alphaId,
             targetId: target.id,
             denType: attribute || 0,
-            steps: ""
+            steps: steps.join(',')
         }, () => {});
     },
 
@@ -1296,7 +1302,7 @@ define([
 
         const move = data.args.moveUpdate;
         if (move) {
-            const steps = move.steps.map(d => (parseInt(d) + 3) % 6).reverse();
+            const steps = move.steps.map(d => (parseInt(d) + 3) % hexDirections.length).reverse();
             this.movePiece(move.id, steps);
         }
 
