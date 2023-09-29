@@ -101,7 +101,7 @@ class action_wolves extends APP_GameAction {
         $targetId = self::getArg('targetId', AT_int, true);
         $denType = self::getArg('denType', AT_int, true);
         $steps = explode(',', self::getArg('steps', AT_numberlist, true));
-        $this->game->dominate($wolfId, $targetId, $denType);
+        $this->game->dominate($wolfId, $steps, $targetId, $denType);
         self::ajaxResponse();
     }
 

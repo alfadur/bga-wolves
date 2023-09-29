@@ -328,22 +328,59 @@ class Wolves extends Table
             EOF);
     }
 
-    function getLand(): array
+    static function getLand(): array
     {
         return self::getObjectListFromDB('SELECT * FROM land');
     }
 
-    function checkPath(array $start, array $moves, $finalCheck, $pathCheck): array
+    static function checkPath(array $start, array $steps,
+        ?array $impassableTerrains = null, ?string $sharedPlayerId = null): array
     {
-        $checks = [];
-        foreach (array_map(fn ($move) => HEX_DIRECTIONS[$move], $moves) as [$dx, $dy]) {
+        $terrainCheck = $impassableTerrains === null ? '' :
+            ' AND terrain NOT IN (' . implode(',', $impassableTerrains) . ')';
+        $stepChecks = [];
+        foreach ($steps as $i => $step) {
+            [$dx, $dy] = HEX_DIRECTIONS[$step];
             $start[0] += $dx;
             $start[1] += $dy;
-            $pathCheck($start[0], $start[1]);
+            if ($i < count($steps) - 1) {
+                $sharingCheck = $sharedPlayerId === null ? '' : <<<EOF
+                    AND EXISTS (SELECT * FROM pieces 
+                        WHERE x = $start[0] AND y = $start[1] 
+                            AND owner <> $sharedPlayerId)'
+                    EOF;
+                $stepChecks[] = "(x = $start[0] AND y = $start[1]$sharingCheck$sharingCheck)";
+            }
         }
 
-        $finalCheck($start[0], $start[1]);
-        return [$start[0], $start[1]];
+        if (count($steps) > 1) {
+            $stepChecks = implode(" OR ", $stepChecks);
+            $validSteps = self::getUniqueValueFromDB(
+                "SELECT COUNT(*) FROM land WHERE ($stepChecks)$terrainCheck");
+            if ((int)$validSteps !== count($steps) - 1) {
+                throw new BgaUserException(_("Invalid action"));
+            }
+        }
+
+        return $start;
+    }
+
+    static function checkDestination(int $targetX, int $targetY, $playerId, array $sharedKinds = [], ?int $terrain = null) {
+        $sharedKinds[] = 'NULL';
+        $terrainCheck = $terrain === null ? '' :
+            " AND terrain = $terrain";
+        $kinds = implode(',', $sharedKinds);
+        $query = <<<EOF
+            SELECT COUNT(*) FROM land NATURAL LEFT JOIN pieces
+            WHERE x = $targetX AND y = $targetY$terrainCheck
+            HAVING COUNT(*) < 2 AND COUNT(
+                CASE WHEN owner <> $playerId AND kind NOT IN ($kinds) 
+                    THEN 1 END) = 0
+            EOF;
+
+        if ((int)self::getUniqueValueFromDB($query) === 0) {
+            throw new BgaUserException(_('Invalid action'));
+        }
     }
 
     function addMovedWolf(int $wolfId)
@@ -396,8 +433,8 @@ class Wolves extends Table
         }
 
         if (count($sets) > 0) {
-            $update = implode(", ", $sets);
-            $this->logDBUpdate("player_status", $update, "player_id=$playerId", $update);
+            $update = implode(', ', $sets);
+            $this->logDBUpdate('player_status', $update, "player_id=$playerId", $update);
         }
 
         return $terrain;
@@ -449,7 +486,9 @@ class Wolves extends Table
             $query = <<<EOF
                 SELECT COUNT(DISTINCT x, y)
                 FROM pieces JOIN player_status ON owner = player_id
-                WHERE {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
+                WHERE x BETWEEN $x - 1 AND $x + 1
+                    AND y BETWEEN $y - 1 AND $y + 1 
+                    AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND prey_data & $preyData = 0
                     AND kind IN ($packKind, $alphaKind)
                 EOF;
@@ -861,39 +900,16 @@ class Wolves extends Table
         //Verify move is valid
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
-        $max_distance = WOLF_SPEED[$deployedDens];
-        if (count($steps) > $max_distance) {
+        $maxDistance = WOLF_SPEED[$deployedDens];
+        if (count($steps) > $maxDistance) {
             throw new BgaUserException(_('The selected tile is out of range'));
         }
 
-        $pathCheck = function ($x, $y) {
-            $hex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if ($hex === NULL || $this->isImpassableTerrain($hex['terrain'])) {
-                throw new BgaUserException(_('Cannot find a clear path to the given tile'));
-            }
-        };
+        [$targetX, $targetY] =
+            self::checkPath([$wolf['x'], $wolf['y']], $steps, [T_WATER, T_CHASM]);
 
-        $finalCheck = function ($x, $y) use ($isAlpha, $playerId, $terrain) {
-            $finalHex = self::getObjectFromDB("SELECT * FROM land WHERE x=$x AND y=$y");
-            if ($finalHex['terrain'] != $terrain) {
-                throw new BgaUserException(_('Invalid terrain for destination!'));
-            }
-            $finalPieces = self::getObjectListFromDB("SELECT * FROM pieces WHERE x=$x AND y=$y");
-            switch (count($finalPieces)) {
-                case 0:
-                    break;
-                case 1:
-                    ['owner' => $owner, 'kind' => $kind] = $finalPieces[0];
-                    if ($owner !== $playerId && (int)$kind !== P_DEN && (!$isAlpha || (int)$kind !== P_PACK)) {
-                        throw new BgaUserException(_('Invalid move location'));
-                    }
-                    break;
-                default:
-                    throw new BgaUserException(_('Hex is full!'));
-            }
-        };
-
-        [$targetX, $targetY] = $this->checkPath([$wolf['x'], $wolf['y']], $steps, $finalCheck, $pathCheck);
+        $sharedKinds = $isAlpha ? [P_PACK, P_DEN] : [P_DEN];
+        self::checkDestination($targetX, $targetY, $playerId, $sharedKinds, $terrain);
 
         $this->logDBUpdate("pieces", "x=$targetX, y=$targetY", "id=$wolfId", "x=$wolf[x], y=$wolf[y]");
 
@@ -942,53 +958,18 @@ class Wolves extends Table
         $this->gamestate->nextState(TR_END_MOVE);
     }
 
-    function getMaxDisplacement(int $x, int $y, string $playerId): int
-    {
-        $water = T_WATER;
-        $chasm = T_CHASM;
-        $query = <<<EOF
-                SELECT {$this->sql_hex_range('l.x', 'l.y',$x,$y)} AS dist
-                FROM land l NATURAL LEFT JOIN pieces p
-                WHERE (l.terrain <> $water AND l.terrain <> $chasm)
-                AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
-                AND (p.kind IS NULL OR p.owner = $playerId)
-                ORDER BY dist
-                LIMIT 1
-                EOF;
-        return (int)self::getUniqueValueFromDB($query) ?? -1;
-    }
-
     function displace(array $steps): void
     {
         self::checkAction('displace');
         $playerId = self::getActivePlayerId();
         $wolfId = $this->getGameStateValue(G_DISPLACEMENT_WOLF);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $range = $this->getMaxDisplacement($wolf['x'], $wolf['y'], $playerId);
-        $finalCheck = function ($x, $y) use ($playerId, $range, $wolf) {
-            $dist = (abs($wolf['x'] - $x) + abs($wolf['y'] - $y) + abs($x - $y - $wolf['x'] + $wolf['y'])) / 2;
-            if ($dist > $range) {
-                throw new BgaUserException(_('Tile is too far'));
-            }
-            $water = T_WATER;
-            $chasm = T_CHASM;
-            $query = <<<EOF
-                SELECT l.*
-                FROM land l
-                LEFT JOIN pieces p ON l.x = p.x AND l.y = p.y
-                WHERE (l.terrain <> $water AND l.terrain <> $chasm)
-                AND (SELECT COUNT(*) FROM pieces WHERE x = l.x AND y = l.y) < 2
-                AND (p.kind IS NULL OR p.owner <=> $playerId)
-                AND l.x = $x AND l.y = $y
-                EOF;
 
-            $land = self::getObjectFromDB($query);
-            if ($land === NULL) {
-                throw new BgaUserException(_('Cannot move wolf to this tile'));
-            }
-        };
         ['x' => $wolfX, 'y' => $wolfY] = $wolf;
-        [$x, $y] = $this->checkPath([$wolfX, $wolfY], $steps, $finalCheck, [$this, "validityCheck"]);
+        [$x, $y] = self::checkPath([$wolfX, $wolfY], $steps, [T_WATER, T_CHASM], $wolf['owner']);
+
+        self::checkDestination($x, $y, $wolf['owner']);
+
         $this->logDBUpdate("pieces", "x=$x, y=$y", "id=$wolfId", "x=$wolfX, y=$wolfY");
 
         $args = [
@@ -1038,7 +1019,7 @@ class Wolves extends Table
         $targetId = self::getUniqueValueFromDb(<<<EOF
             SELECT id FROM pieces NATURAL JOIN land
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-                AND {$this->sql_hex_in_range('x', 'y',$wolf['x'],$wolf['y'],$maxRange)}
+                AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
             EOF);
 
         if ($targetId === null) {
@@ -1177,7 +1158,7 @@ class Wolves extends Table
                     FROM land 
                     WHERE x BETWEEN $x - 1 AND $x + 1
                         AND y BETWEEN $y - 1 AND $y + 1
-                        AND {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
+                        AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
                     AND terrain=$water) > 0
             EOF;
         ["id" => $updateId, "region_id" => $regionId] = self::getObjectFromDB($query);
@@ -1241,29 +1222,38 @@ class Wolves extends Table
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
-    function dominate(int $wolfId, int $targetId, int $denType): void
+    function dominate(int $wolfId, array $steps, int $targetId, int $denType): void
     {
         self::checkAction('dominate');
         $playerId = self::getActivePlayerId();
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
-        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
-        $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id=$playerId");
+        $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id = $wolfId");
+        $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id = $playerId");
         $maxRange = HOWL_RANGE[$deployedDens];
 
-        if ($wolf === NULL || $wolf['owner'] !== $playerId || (int)$wolf['kind'] !== P_ALPHA) {
+        if ($wolf === NULL || $wolf['owner'] !== $playerId
+            || (int)$wolf['kind'] !== P_ALPHA || count($steps) > $maxRange)
+        {
             throw new BgaUserException(_('Invalid wolf!'));
         }
+
+        [$targetX, $targetY] =
+            self::checkPath([$wolf['x'], $wolf['y']], $steps);
 
         [$pack, $den] = [P_PACK, P_DEN];
         $target = self::getObjectFromDB(<<<EOF
             SELECT * FROM pieces AS target NATURAL JOIN land
             WHERE id=$targetId AND owner <> $playerId 
                 AND terrain = $terrain AND kind IN ($pack, $den)
-                AND {$this->sql_hex_in_range('x', 'y',$wolf['x'],$wolf['y'],$maxRange)}
+                AND x = $targetX AND y = $targetY 
                 AND (SELECT COUNT(*) FROM pieces WHERE x = target.x AND y = target.y AND owner = target.owner) = 1
             EOF);
         if ($target === null) {
             throw new BgaUserException(_('Selected target is invalid!'));
+        }
+
+        if (count($steps) > 1) {
+            ///TODO check that no shorter paths exist
         }
 
         $oldKind = $target['kind'];

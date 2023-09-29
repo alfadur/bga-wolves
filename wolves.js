@@ -37,7 +37,7 @@ const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert
 
 const attributeNames = Object.freeze(["howl", "pack", "speed"]);
 
-const actionNames = Object.freeze(['move', 'howl', 'den', 'lair', 'dominate']);
+const actionNames = Object.freeze(["move", "howl", "den", "lair", "dominate"]);
 const actionCosts = Object.freeze({
     move: 1,
     howl: 2,
@@ -364,6 +364,8 @@ function prepareHowlSelection(playerId, pieces, terrain, range) {
 }
 
 function prepareMoveSelection(playerId, pieces) {
+    clearTag("wolves-selected");
+    clearTag("wolves-selectable");
     const wolves = pieces.getByOwner(playerId, p => PieceKind.isMovable(p.kind));
     for (const wolf of wolves) {
         getPieceNode(wolf.id).classList.add("wolves-selectable");
@@ -458,6 +460,8 @@ function selectWolfToMove(wolf, range, terrain, pieces) {
 }
 
 function selectWolfToDisplace(wolf, pieces) {
+    clearTag("wolves-selected");
+    clearTag("wolves-selectable");
     getPieceNode(wolf.id).classList.add("wolves-selected");
 
     const paths = [];
@@ -787,6 +791,7 @@ define([
                 case "actionSelection":
                     this.selectedAction = {};
                     clearTag("wolves-selected");
+                    clearTag("wolves-selectable");
                     this.updateTiles(this.getActivePlayerId());
                     document.getElementById("wolves-active-tiles").classList.remove("hidden");
                     break;
@@ -803,8 +808,8 @@ define([
                     prepareLairSelection(playerId, this.pieces, this.selectedTerrain);
                     break;
                 case "displaceWolf":
-                    const wolfId = parseInt(state.args.displacementWolf);
-                    this.paths = selectWolfToDisplace(this.pieces.getById(wolfId), this.pieces);
+                    this.selectedPiece = parseInt(state.args.displacementWolf);
+                    this.paths = selectWolfToDisplace(this.pieces.getById(this.selectedPiece), this.pieces);
                     break;
                 case "dominateSelection":
                     prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces);
@@ -812,6 +817,10 @@ define([
                 case "clientSelectTiles":
                     this.updateTiles(this.getActivePlayerId());
                     document.getElementById("wolves-active-tiles").classList.remove("hidden");
+                    break;
+                case "confirmEnd":
+                    clearTag("wolves-selected");
+                    clearTag("wolves-selectable");
                     break;
             }
         }
@@ -978,7 +987,9 @@ define([
     //// Player's action
 
     onHexEnter(x, y) {
-        if (this.checkAction("clientMove", true)) {
+        if (this.checkAction("clientMove", true)
+            || this.checkAction("displace", true))
+        {
             const path = this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0];
             if (path && this.selectedPiece) {
                 const src = getPieceHexNode(this.selectedPiece)
@@ -1062,7 +1073,11 @@ define([
                 lock: true,
                 wolfId: this.selectedPiece,
                 steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
-            }, () => clearTag("wolves-selected"));
+            }, () => {
+                document
+                    .getElementById("wolves-svg-path")
+                    .setAttribute("d", "");
+            });
         } else if (this.checkAction("howl", true)) {
             const howlRange = this.activeAttributes().howlRange;
             const wolfId = this.pieces.getByOwner(playerId, p =>
@@ -1079,11 +1094,15 @@ define([
             });
         } else if (this.checkAction("lair", true)) {
             this.placeStructure(playerId, x, y, "lair");
-        } else if (this.checkAction('displace')) {
+        } else if (this.checkAction("displace")) {
             this.ajaxcall("/wolves/wolves/displace.html", {
                 lock: true,
                 steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
-            }, () => {});
+            }, () => {
+                document
+                    .getElementById("wolves-svg-path")
+                    .setAttribute("d", "");
+            });
         }
     },
 
