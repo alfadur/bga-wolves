@@ -18,6 +18,8 @@ class view_wolves_wolves extends game_view {
     }
 
   	function build_page($viewArgs): void {
+        $players = $this->game->getPlayers();
+
         $this->page->begin_block('wolves_wolves', 'activeTile');
         $this->page->insert_block('activeTile', ['INDEX' => TILE_TERRAIN_TYPES]);
         for ($i = 0; $i < TILE_TERRAIN_TYPES; ++$i) {
@@ -81,7 +83,6 @@ class view_wolves_wolves extends game_view {
         $this->page->begin_block('wolves_wolves', 'playerBoardSpaceGroup');
         $this->page->begin_block('wolves_wolves', 'playerBoard');
 
-        $players = $this->game->getPlayers();
         foreach ($players as $player) {
             $this->page->reset_subblocks("playerTile");
 

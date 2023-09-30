@@ -933,7 +933,7 @@ define([
             }
 
             if (!stateName.startsWith("client")) {
-                if (!("canUndo" in args) || args.canUndo ) {
+                if (args && (!("canUndo" in args) || args.canUndo)) {
                     this.ensureButton("button_undo", _("Undo"), "onUndo", null, null, "gray");
                 }
             }
