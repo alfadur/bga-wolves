@@ -920,7 +920,7 @@ define([
                             buttons[name.toLowerCase()] = caption;
                         }
                     }
-                    
+
                     this.ensureButtonSet(buttons, this.onSelectDen);
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
