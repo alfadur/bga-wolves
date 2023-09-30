@@ -15,7 +15,6 @@ require_once('modules/constants.inc.php');
 
 class Wolves extends Table
 {
-
     function __construct()
     {
         // Your global variables labels:

@@ -9,7 +9,7 @@
  */
 
 :root {
-    --hex-width: 118px;
+    --hex-width: 120px;
     --hex-height: 102px;
     --tile-width: 96px;
     --tile-height: 142px;
@@ -92,8 +92,8 @@
 .wolves-region {
     background-image: url("img/regions.jpg");
     position: absolute;
-    width: 475px;
-    height: 411px;
+    width: 480px;
+    height: 408px;
     clip-path: polygon(
             18.75% 25%, 25% 12.25%, 37.25% 12.25%, 43.75% 0, 56.25% 0, 62.5% 12.25%, 75% 12.25%, 81.25% 0,
             93.75% 0, 100% 12.5%, 93.75% 25%, 100% 37.5%, 93.75% 50%, 100% 62.5%, 93.75% 75%,
@@ -103,28 +103,28 @@
 }
 
 .wolves-region[data-tile="0"] {
-    background-position: -620px -660px;
+    background-position: -616px -661px;
 }
 
 .wolves-region[data-tile="1"] {
-    background-position: 0 -404px;
+    background-position: 0 -406px;
 }
 
 .wolves-region[data-tile="2"] {
-    background-position: -444px -354px;
+    background-position: -441px -356px;
 }
 
 .wolves-region[data-tile="3"] {
-    background-position: -792px -964px;
+    background-position: -792px -966px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="4"] {
-    background-position: -1058px -608px;
+    background-position: -1058px -611px;
 }
 
 .wolves-region[data-tile="5"] {
-    background-position: -884px -302px;
+    background-position: -882px -306px;
 }
 
 .wolves-region[data-tile="6"] {
@@ -132,16 +132,16 @@
 }
 
 .wolves-region[data-tile="7"] {
-    background-position: -1236px -910px;
+    background-position: -1236px -914px;
     transform: rotate(180deg);
 }
 
 .wolves-region[data-tile="8"] {
-    background-position: -528px -1318px;
+    background-position: -528px -1320px;
 }
 
 .wolves-region[data-tile="9"] {
-    background-position: -708px 2px;
+    background-position: -708px 0;
     transform: rotate(180deg);
 }
 

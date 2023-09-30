@@ -24,7 +24,7 @@ class view_wolves_wolves extends game_view {
             $this->page->insert_block("activeTile", ['INDEX' => $i]);
         }
 
-        $hex_width = 118;
+        $hex_width = 120;
         $hex_height = 102;
 
         $this->page->begin_block('wolves_wolves', 'region');
