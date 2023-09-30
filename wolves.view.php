@@ -43,7 +43,7 @@ class view_wolves_wolves extends game_view {
         $maxCy = 0;
 
         $this->page->begin_block('wolves_wolves', 'hex');
-        foreach ($this->game->getLand() as ['x' => $x, 'y' => $y, 'terrain' => $terrain]) {
+        foreach ($this->game->getLand() as ['x' => $x, 'y' => $y, 'terrain' => $terrain, 'region_id' => $regionId]) {
             $cx = intdiv($x * 3 * $hex_width, 4);
             $cy = $y * $hex_height - $x * intdiv($hex_height, 2);
             if ($maxCx < $cx) {
@@ -57,6 +57,7 @@ class view_wolves_wolves extends game_view {
                 'Y' => $y,
                 'CX' => $cx,
                 'CY' => $cy,
+                'REGION_ID' => $regionId,
                 'TYPE' => $this->game->terrainNames[$terrain],
             ]);
         }

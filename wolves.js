@@ -395,11 +395,14 @@ function prepareLairSelection(playerId, pieces, terrain) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const dens = pieces.getByOwner(playerId, p => p.kind === PieceKind.Den);
     for (const den of dens) {
+        const regionId = getHexNode(den).dataset.regionId;
+        const uniqueLair = pieces.getByOwner(playerId, p =>
+            p.kind === PieceKind.Lair && getHexNode(p).dataset.regionId === regionId).next().done;
         const canBuild = hexDirections.some(d => {
             const node = getHexNode(hexAdd(den, d));
             return node && node.classList.contains("wolves-hex-water");
-        })
-        if (canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
+        });
+        if (uniqueLair && canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
             makeHexSelectable(den, terrain);
         }
     }

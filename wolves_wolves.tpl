@@ -13,7 +13,8 @@
             <!-- END region -->
 
             <!-- BEGIN hex -->
-            <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
+            <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" data-region-id="{REGION_ID}"
+                    class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
                 <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
             </div>
             <!-- END hex -->
