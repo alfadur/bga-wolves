@@ -892,7 +892,7 @@ define([
                         _(`Flip ${flippedTiles} tiles`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
                     if (tokens < remainingCost) {
-                        dojo.addClass("wolves-action-flip", "disabled");
+                        document.getElementById("wolves-action-flip").classList.add("disabled");
                     }
                 //fallthrough
                 case "clientSelectMoveTarget":
@@ -907,11 +907,21 @@ define([
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "clientSelectDenType":
-                    this.ensureButtonSet({
-                        howl: _("Howl Range"),
-                        pack: _("Pack Spread"),
-                        speed: _("Wolf Speed")
-                    }, this.onSelectDen);
+                    const attributes = this.activeAttributes();
+                    const entries = [
+                        [_("Pack Spread"), "Pack"],
+                        [_("Howl Range"), "Howl"],
+                        [_("Wolf Speed"), "Speed"]
+                    ]
+                    const buttons = {};
+
+                    for (const [caption, name] of entries) {
+                        if (attributes[`deployed${name}Dens`] < 4) {
+                            buttons[name.toLowerCase()] = caption;
+                        }
+                    }
+                    
+                    this.ensureButtonSet(buttons, this.onSelectDen);
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "confirmEnd":
@@ -945,10 +955,13 @@ define([
 
     ensureButtonSet(buttons, method) {
         Object.keys(buttons).forEach(name => {
-            this.ensureButton(`button_${name}`, buttons[name], event => {
-                dojo.stopEvent(event);
-                method.call(this, name);
-            });
+            const caption = buttons[name];
+            if (caption) {
+                this.ensureButton(`button_${name}`, caption, event => {
+                    dojo.stopEvent(event);
+                    method.call(this, name);
+                });
+            }
         });
     },
 
