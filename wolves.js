@@ -651,7 +651,7 @@ define([
         }, this);
 
         document.querySelectorAll(".wolves-active-tile").forEach(tile => {
-            const index = tile.dataset.index;
+            const index = parseInt(tile.dataset.index);
             dojo.connect(tile, 'onclick', e => {
                 dojo.stopEvent(e);
                 this.onTileClick(index, tile);
@@ -1162,10 +1162,20 @@ define([
         }
         console.log(this.selectedAction);
 
+        const terrain = this.activeAttributes().tiles[(index + 1) % 6].front;
+
         if (!this.selectedAction.tiles.delete(index) && this.selectedAction.tiles.size < this.selectedAction.cost) {
-            this.selectedAction.tiles.add(index);
-            tile.classList.add("wolves-selected");
+            if (this.selectedAction.terrain === undefined
+                || this.selectedAction.terrain === terrain)
+            {
+                this.selectedAction.tiles.add(index);
+                this.selectedAction.terrain = terrain;
+                tile.classList.add("wolves-selected");
+            }
         } else {
+            if (this.selectedAction.tiles.size === 0) {
+                this.selectedAction.terrain = undefined;
+            }
             tile.classList.remove("wolves-selected");
         }
         this.setClientState("clientSelectTiles", {
