@@ -600,6 +600,10 @@
     bottom: 0;
 }
 
+.wolves-player-board:not([data-terrain^="2p"]) .wolves-space-group:not(.wolves-prey-group) {
+    transform: translateX(-6px);
+}
+
 .wolves-player-board:before {
     position: absolute;
     display: block;
@@ -691,12 +695,12 @@
     pointer-events: none;
 }
 
-.wolves-pack-group { left: 5.5%; top: 30% }
+.wolves-pack-group { left: 5.5%; top: 29% }
 .wolves-speed-group { left: 40%; top: 35.5% }
-.wolves-howl-group { left: 74.2%; top: 30% }
-.wolves-lair-group { left: 5.5%; top: 75.5% }
-.wolves-prey-group { left: 29.5%; top: 77% }
-.wolves-wolf-group { left: 76.5%; top: 63% }
+.wolves-howl-group { left: 74%; top: 29% }
+.wolves-lair-group { left: 5.5%; top: 73.5% }
+.wolves-prey-group { left: 29.5%; top: 76% }
+.wolves-wolf-group { left: 76%; top: 63% }
 
 .wolves-player-board-space {
     position: absolute;
@@ -739,8 +743,8 @@
 
 .wolves-den-space:nth-child(1) { left: 5.9% }
 .wolves-den-space:nth-child(2) { left: 11.7% }
-.wolves-den-space:nth-child(3) { left: 2.9%; top: 7.6% }
-.wolves-den-space:nth-child(4) { left: 8.8%; top: 7.6% }
+.wolves-den-space:nth-child(3) { left: 2.9%; top: 8.5% }
+.wolves-den-space:nth-child(4) { left: 8.8%; top: 8.5% }
 
 .wolves-lair-space {
     width: 4.2%;
