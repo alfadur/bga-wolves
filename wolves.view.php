@@ -29,6 +29,8 @@ class view_wolves_wolves extends game_view {
         $hex_width = 120;
         $hex_height = 102;
 
+        $yOffset = count($players) > 2 ? 0 : -$hex_height / 2;
+
         $this->page->begin_block('wolves_wolves', 'region');
         foreach ($this->game->getRegions() as $region) {
             $offset = $region['rotated'] ? 1 : 3;
@@ -36,7 +38,7 @@ class view_wolves_wolves extends game_view {
                 'ID' => $region['region_id'],
                 'N' => $region['tile_number'],
                 'CX' => intdiv(($region['center_x'] - $offset) * 3 * $hex_width, 4),
-                'CY' => intdiv(($region['center_y'] * 2 - $region['center_x'] - 3) * $hex_height, 2),
+                'CY' => intdiv(($region['center_y'] * 2 - $region['center_x'] - 3) * $hex_height, 2) + $yOffset,
                 'ROTATE' => $region['rotated'] ? 'wolves-region-rotated' : ''
             ]);
         }
@@ -47,7 +49,7 @@ class view_wolves_wolves extends game_view {
         $this->page->begin_block('wolves_wolves', 'hex');
         foreach ($this->game->getLand() as ['x' => $x, 'y' => $y, 'terrain' => $terrain, 'region_id' => $regionId]) {
             $cx = intdiv($x * 3 * $hex_width, 4);
-            $cy = $y * $hex_height - $x * intdiv($hex_height, 2);
+            $cy = $y * $hex_height - $x * intdiv($hex_height, 2) + $yOffset;
             if ($maxCx < $cx) {
                 $maxCx = $cx;
             }
