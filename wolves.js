@@ -24,7 +24,11 @@ const PieceKind = Object.freeze({
     Prey: 5,
 
     isMovable(kind) { return kind === this.Pack || kind === this.Alpha; },
-    isStructure(kind) { return kind === this.Den || kind === this.Lair; }
+    isStructure(kind) { return kind === this.Den || kind === this.Lair; },
+    compare(kind1, kind2) {
+        const order = [this.Lair, this.Den, this.Alpha, this.Pack];
+        return order.indexOf(parseInt(kind2)) - order.indexOf(parseInt(kind1));
+    }
 });
 
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
@@ -299,11 +303,13 @@ function updateHexSharing(...hexNodes) {
     const classes = ["wolves-piece-top", "wolves-piece-bottom"];
     for (const node of hexNodes) {
         const pieces = Array.from(node.querySelectorAll(".wolves-piece"));
+        pieces.forEach(p => p.classList.remove(...classes));
         if (pieces.length > 1) {
-            pieces.sort((a, b) => parseInt(a.dataset.kind) - parseInt(b.dataset.kind) );
+            if (PieceKind.compare(pieces[0].dataset.kind, pieces[1].dataset.kind) < 0) {
+                node.insertBefore(pieces[1], pieces[0]);
+                classes.reverse();
+            }
             classes.forEach((name, index) => pieces[index].classList.add(name));
-        } else {
-            pieces.forEach(p => p.classList.remove(...classes));
         }
     }
 }

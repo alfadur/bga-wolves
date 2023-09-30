@@ -539,11 +539,11 @@
 
 @keyframes follow-path {
     from { offset-distance: 100%; }
-    50% { offset-rotate: -12deg; }
-    70% { offset-rotate: -8deg; }
+    30% { offset-rotate: -12deg; }
+    60% { offset-rotate: -8deg; }
+    85% { offset-rotate: 0; }
     to {
         offset-distance: 0;
-        offset-rotate: 0deg;
     }
 }
 
