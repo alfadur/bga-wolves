@@ -754,7 +754,7 @@ class Wolves extends Table
     function draftPlace(int $x, int $y): void
     {
         self::checkAction('draftPlace');
-        $player_id = self::getActivePlayerId();
+        $playerId = self::getActivePlayerId();
         $query = "SELECT COUNT(*) FROM pieces WHERE x = $x AND y = $y";
         if ((int)self::getUniqueValueFromDB($query) > 0) {
             throw new BgaUserException(_("This place is already occupied"));
@@ -771,7 +771,7 @@ class Wolves extends Table
                 throw new BgaUserException(_("You may only draft into the chasm region!"));
             }
 
-            $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$player_id GROUP BY x, y");
+            $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$playerId GROUP BY x, y");
             if (!is_null($drafted)) {
                 $draftedY = (int)$drafted['y'];
                 $centerY = (int)self::getUniqueValueFromDB("SELECT center_y FROM regions WHERE region_id=$chasmRegion");
@@ -790,19 +790,21 @@ class Wolves extends Table
 
 
         $kinds = [P_ALPHA, P_PACK];
-        $values = array_map(fn ($piece) => "($x, $y, $player_id, $piece)", $kinds);
+        $values = array_map(fn ($piece) => "($x, $y, $playerId, $piece)", $kinds);
         $args = implode(", ", $values);
         $query = "INSERT INTO pieces (x, y, owner, kind) VALUES $args";
         self::DbQuery($query);
 
         $insertId = self::DbGetLastId();
-        $this->notifyAllPlayers('draft', clienttranslate('${player_name} placed initial 🐺.'), [
+        $this->notifyAllPlayers('draft', clienttranslate('${player_name} places initial ${pieceIcon0}${pieceIcon1}.'), [
             'player_name' => self::getActivePlayerName(),
-            'player_id' => $player_id,
+            'playerId' => $playerId,
             'x' => $x,
             'y' => $y,
             'ids' => [$insertId, $insertId + 1],
-            'kinds' => $kinds
+            'kinds' => $kinds,
+            'pieceIcon0' => "$playerId,$kinds[0]",
+            'pieceIcon1' => "$playerId,$kinds[1]"
         ]);
 
         $this->gamestate->nextState('draftPlace');
@@ -939,17 +941,15 @@ class Wolves extends Table
         $args = [
             'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ];
-        $this->logNotification(clienttranslate('${player_name} undoes a wolf movement'), $args);
+        $this->logNotification(clienttranslate('${player_name} undoes a movement'), $args);
 
         $args = array_merge($args, [
             'player_name' => self::getActivePlayerName(),
-            'x' => $targetX,
-            'y' => $targetY,
-            'preserve' => ['x', 'y'],
-            'moveUpdate' => ['id' => $wolfId, 'steps' => $steps],
+            'pieceIcon' => "$playerId,$wolf[kind]",
+            'preserve' => ['pieceIcon']
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} has moved a wolf to (${x}, ${y})'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} moves a ${pieceIcon}'), $args);
 
         $pack = P_PACK;
         $packWolf = self::getUniqueValueFromDB(<<<EOF
@@ -999,16 +999,16 @@ class Wolves extends Table
             'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ];
 
-        $this->logNotification(clienttranslate('${player_name} undoes a wolf displacement'), $args);
+        $this->logNotification(clienttranslate('${player_name} undoes a displacement'), $args);
 
         $args = array_merge($args, [
             'player_name' => self::getActivePlayerName(),
-            'owner' => self::getPlayerNameById($wolf['owner']),
-            'preserve' => ['owner'],
+            'pieceIcon' => "$wolf[owner],$wolf[kind]",
+            'preserve' => ['pieceIcon'],
             'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a wolf belonging to ${owner}.'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a ${pieceIcon}.'), $args);
 
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
         if ($remainingMoves > 0) {
@@ -1067,8 +1067,10 @@ class Wolves extends Table
             ]
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} howls at a Lone Wolf'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf to ${pieceIcon}'), [
             'player_name' => self::getActivePlayerName(),
+            'pieceIcon' => "$playerId,$newKind",
+            'preserve' => ['pieceIcon'],
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
@@ -1096,7 +1098,7 @@ class Wolves extends Table
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
-        $denValue = P_DEN;
+        $denKind = P_DEN;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
         if ($direction !== null) {
@@ -1111,7 +1113,7 @@ class Wolves extends Table
             WHERE l.x = $x AND l.y = $y 
                 AND l.terrain = $terrain
                 AND (SELECT COUNT(*) FROM pieces WHERE x=l.x AND y=l.y) < 2
-                AND (p.owner IS NULL OR p.kind < $denValue)
+                AND (p.owner IS NULL OR p.kind < $denKind)
             EOF;
         if ((int)self::getUniqueValueFromDB($query) === 0) {
             throw new BgaUserException(_('Invalid hex selected!'));
@@ -1119,12 +1121,14 @@ class Wolves extends Table
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
 
-        $newId = $this->logDBInsert("pieces", "(owner, kind, x, y)", "($playerId, $denValue, $x, $y)");
+        $newId = $this->logDBInsert("pieces", "(owner, kind, x, y)", "($playerId, $denKind, $x, $y)");
 
         $this->logIncStat(STAT_PLAYER_DENS_PLACED, 1, $playerId);
 
         $args = [
             'player_name' => self::getActivePlayerName(),
+            'pieceIcon' => "$playerId,$denKind",
+            'preserve' => ['pieceIcon'],
             'buildUpdate' => [
                 'id' => $newId,
                 'owner' => $playerId,
@@ -1136,9 +1140,9 @@ class Wolves extends Table
             'attributesUpdate' => $this->giveDenAward($denType, $deployedDens, $playerId)
         ];
 
-        $this->logNotification(clienttranslate('${player_name} takes the den back'), $args);
+        $this->logNotification(clienttranslate('${player_name} takes the ${pieceIcon} back'), $args);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} places a den'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} places a ${pieceIcon}'), $args);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1159,7 +1163,7 @@ class Wolves extends Table
             throw new BgaUserException(_('Invalid wolf selected!'));
         }
 
-        $lairValue = P_LAIR;
+        $lairKind = P_LAIR;
         $x = (int)$wolf['x'];
         $y = (int)$wolf['y'];
         if ($direcion !== null) {
@@ -1192,7 +1196,7 @@ class Wolves extends Table
         $query = <<<EOF
             SELECT COUNT(*)
             FROM pieces NATURAL JOIN land
-            WHERE region_id = $regionId AND kind = $lairValue AND owner = $playerId
+            WHERE region_id = $regionId AND kind = $lairKind AND owner = $playerId
             EOF;
         $lairsInRegion = (int)self::getUniqueValueFromDB($query);
         if ($lairsInRegion > 0) {
@@ -1203,12 +1207,14 @@ class Wolves extends Table
         $pack = P_PACK;
         $lairScore = LAIR_SCORE;
         $this->logDBInsert("moonlight_board", "(kind, player_id)", "($den, $playerId)");
-        $this->logDBUpdate("pieces", "kind=$lairValue", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
+        $this->logDBUpdate("pieces", "kind=$lairKind", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
         $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
         $this->logDBUpdate("player", "player_score=player_score+$lairScore", "player_id=$playerId", "player_score=player_score-$lairScore");
 
         $args = [
             'player_name' => self::getActivePlayerName(),
+            'pieceIcon' => "$playerId,$lairKind",
+            'preserve' => ['pieceIcon'],
             'buildUpdate' => [
                 'id' => $updateId,
                 'owner' => $playerId,
@@ -1223,9 +1229,9 @@ class Wolves extends Table
             ]
         ];
 
-        $this->logNotification(clienttranslate('${player_name} takes the lair back'), $args);
+        $this->logNotification(clienttranslate('${player_name} takes the ${pieceIcon} back'), $args);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} places a lair'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} places a ${pieceIcon}'), $args);
 
         $displaceWolf = self::getUniqueValueFromDB(<<<EOF
             SELECT id FROM pieces 
@@ -1310,7 +1316,9 @@ class Wolves extends Table
         $stat = (int)$target['kind'] === P_DEN ? STAT_PLAYER_DENS_DOMINATED : STAT_PLAYER_WOLVES_DOMINATED;
         $this->logIncStat($stat, 1, $playerId);
 
-        $this->logNotification('${player_name} undoes domination', [
+        $this->logNotification('${player_name} returns the ${pieceIcon} back', [
+            'pieceIcon' => "$playerId,$target[kind]",
+            'preserve' => ['pieceIcon'],
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $target['owner'],
@@ -1319,16 +1327,17 @@ class Wolves extends Table
             ]
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a piece belonging to ${targetPlayer}'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places  ${pieceIcon1}'), [
             "player_name" => self::getActivePlayerName(),
+            'pieceIcon0' => "$target[owner],$target[kind]",
+            'pieceIcon1' => "$playerId,$newKind",
+            'preserve' => ['pieceIcon0', 'pieceIcon1'],
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
                 'newKind' => $newKind,
                 'attribute' => $denType
-            ],
-            'targetPlayer' => self::getPlayerNameById($target['owner']),
-            'preserve' => ['targetPlayer']
+            ]
         ]);
 
         $this->giveExtraTime($playerId);

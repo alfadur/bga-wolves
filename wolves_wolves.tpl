@@ -73,6 +73,10 @@ const jstpl_player_status =
         <div>Terrain \${terrainTokens}</div>
         <div>Actions \${actionTokens}</div>
      </div>`;
+const jstpl_log_icon =
+    `<span class="wolves-log-icon-\${iconType}"
+        data-owner="\${owner}" data-kind="\${kind}">
+    </span>`
 </script>  
 
 {OVERALL_GAME_FOOTER}

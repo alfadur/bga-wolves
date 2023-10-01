@@ -1267,7 +1267,7 @@ define([
     onDraftNotification(data) {
         console.log("Draft notification:");
         console.log(data);
-        const {player_id: playerId, x, y, ids, kinds} = data.args;
+        const {playerId, x, y, ids, kinds} = data.args;
 
         ids.forEach((id, index) => {
             this.addPiece({x, y, id, owner: playerId, kind: kinds[index]});
@@ -1469,6 +1469,31 @@ define([
         container.style.height = `${parseInt(land.style.height) * scale}px`;
         land.style.transform = `scale(${scale})`;
         this.boardScale = scale;
+    },
+
+    format_string_recursive(log, args) {
+        console.log("Formatting: ", args);
+        if (args) {
+            console.log("Keys: ", Object.keys(args));
+            const icons = Object.keys(args).filter(name => name.startsWith("pieceIcon"));
+            console.log("Icons: ", icons);
+            for (const icon of icons) {
+                console.log(`Processing log sprite ${icon}`);
+                const [owner, kind] = args[icon].toString().split(",");
+                const attributes = this.attributes[owner];
+                const terrain = attributes ? attributes.homeTerrain : "N/A";
+
+                const formatArgs = {
+                    iconType: "piece",
+                    owner: terrain,
+                    kind: kind || "N/A"
+                };
+                console.log("Format: ", formatArgs);
+
+                args[icon] = this.format_block("jstpl_log_icon", formatArgs);
+            }
+        }
+        return this.inherited({callee: this.format_string_recursive}, arguments);
     }
 }));
 

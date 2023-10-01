@@ -14,6 +14,12 @@
     --tile-width: 96px;
     --tile-height: 142px;
     --piece-scale: 0.8;
+
+    --player-color-forest: #32cd32;
+    --player-color-rock: #976dee;
+    --player-color-grass: #ffff00;
+    --player-color-tundra: #70cfee;
+    --player-color-desert: #b76327;
 }
 
 .wolves-terrain-tile {
@@ -396,59 +402,69 @@
 }
 
 .wolves-piece[data-owner="0"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-owner="0"],
 .wolves-player-board[data-terrain$="0"] .wolves-player-board-space:after {
-    background-color: #32cd32;
+    background-color: var(--player-color-forest);
 }
 
 .wolves-piece[data-owner="1"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-owner="1"],
 .wolves-player-board[data-terrain$="1"] .wolves-player-board-space:after {
-    background-color: #976dee;
+    background-color: var(--player-color-rock);
 }
 
 .wolves-piece[data-owner="2"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-owner="2"],
 .wolves-player-board[data-terrain$="2"] .wolves-player-board-space:after {
-    background-color: #ffff00;
+    background-color: var(--player-color-grass);
 }
 
 .wolves-piece[data-owner="3"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-owner="3"],
 .wolves-player-board[data-terrain$="3"] .wolves-player-board-space:after {
-    background-color: #70cfee;
+    background-color: var(--player-color-tundra);
 }
 
 .wolves-piece[data-owner="4"]:not([data-kind="5"]) > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-owner="4"],
 .wolves-player-board[data-terrain$="4"] .wolves-player-board-space:after {
-    background-color: #b76327;
+    background-color: var(--player-color-desert);
 }
 
 .wolves-piece[data-owner="N/A"]:not([data-kind="4"]) > .wolves-piece-sprite {
     background-color: #e4e4e4;
 }
 
-.wolves-piece[data-kind="0"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="0"] > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-kind="0"] {
     --piece-width:  101px;
     --piece-height: 95px;
     --piece-sprite-y: 0px;
 }
 
-.wolves-piece[data-kind="1"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="1"] > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-kind="1"] {
     --piece-width:  94px;
     --piece-height: 60px;
     --piece-sprite-y: 96px;
 }
 
-.wolves-piece[data-kind="2"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="2"] > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-kind="2"] {
     --piece-width:  72px;
     --piece-height: 60px;
     --piece-sprite-y: 156px;
 }
 
-.wolves-piece[data-kind="3"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="3"] > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-kind="3"] {
     --piece-width:  95px;
     --piece-height: 100px;
     --piece-sprite-y: 220px;
 }
 
-.wolves-piece[data-kind="4"] > .wolves-piece-sprite {
+.wolves-piece[data-kind="4"] > .wolves-piece-sprite,
+.wolves-log-icon-piece[data-kind="4"] {
     --piece-width:  100px;
     --piece-height: 100px;
     background-position: -91px -126px;
@@ -823,3 +839,29 @@
 .wolves-wolf-space:nth-child(4n + 2) { left: 4.1% }
 .wolves-wolf-space:nth-child(4n + 3) { left: 8.2% }
 .wolves-wolf-space:nth-child(4n + 4) { left: 12.3% }
+
+.wolves-log-icon-piece {
+    display: inline-block;
+    --log-spritesheet-width: 476px;
+    --log-spritesheet-height: 518px;
+    --log-sprite-scale: 0.35;
+    width: calc(var(--piece-width) * var(--log-sprite-scale));
+    height: calc(var(--piece-height) * var(--log-sprite-scale));
+    vertical-align: middle;
+    background-image: url("img/pieces.png");
+    background-size:
+        calc(var(--log-spritesheet-width) * var(--log-sprite-scale))
+        calc(var(--log-spritesheet-height) * var(--log-sprite-scale));
+    background-position:
+        0 calc(var(--piece-sprite-y) * var(--log-sprite-scale) * -1);;
+    background-blend-mode: multiply;
+    mask-image: url("img/pieces.png");
+    mask-position:
+        0 calc(var(--piece-sprite-y) * var(--log-sprite-scale) * -1);
+    -webkit-mask-image: url("img/pieces.png");
+    -webkit-mask-size:
+        calc(var(--log-spritesheet-width) * var(--log-sprite-scale))
+        calc(var(--log-spritesheet-height) * var(--log-sprite-scale));
+    -webkit-mask-position:
+        0 calc(var(--piece-sprite-y) * var(--log-sprite-scale) * -1);
+}
