@@ -13,7 +13,7 @@
 $gameinfos = array( 
 
 // Name of the game in English (will serve as the basis for translation) 
-'game_name' => "The Wolves",
+'game_name' => 'The Wolves',
 
 // Game designer (or game designers, separated by commas)
 'designer' => 'Ashwin Kamath, Clarence Simpson',       
@@ -50,7 +50,7 @@ $gameinfos = array(
 
 
 // Estimated game duration, in minutes (used only for the launch, afterward the real duration is computed)
-'estimated_duration' => 30,           
+'estimated_duration' => 75,
 
 // Time in second add to a player when "giveExtraTime" is called (speed profile = fast)
 'fast_additional_time' => 30,           
