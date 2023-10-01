@@ -1039,7 +1039,7 @@ define([
                     y: parseInt(src.style.top) + 56
                 };
                 const svg = document.getElementById("wolves-svg");
-                svg.style = `left: ${from.x - 500}px; top: ${from.y - 500}px; position: absolute; z-index: 100; pointer-events: none; width: 1000px; height: 1000px`;
+                svg.style = `left: ${from.x - 500}px; top: ${from.y - 500}px; position: absolute; pointer-events: none; width: 1000px; height: 1000px`;
                 document
                     .getElementById("wolves-svg-path")
                     .setAttribute("d", buildPath(path.steps, 0.3));

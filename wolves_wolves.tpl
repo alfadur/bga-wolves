@@ -12,17 +12,17 @@
             <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
             <!-- END region -->
 
+            <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
+                <path id="wolves-svg-path" fill="none" stroke="red"
+                      stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""/>
+            </svg>
+
             <!-- BEGIN hex -->
             <div id="wolves-hex-{X}-{Y}" data-x="{X}" data-y="{Y}" data-region-id="{REGION_ID}"
                     class="wolves-hex wolves-hex-{TYPE}" style="left: {CX}px; top: {CY}px">
                 <div id="wolves-hex-selector-{X}-{Y}" class="wolves-hex-selector"></div>
             </div>
             <!-- END hex -->
-
-            <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
-                <path id="wolves-svg-path" fill="none" stroke="red"
-                      stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""/>
-            </svg>
         </div>
     </div>
 
