@@ -605,6 +605,14 @@ define([
             }
         }
 
+        const currentPlayerIndex = parseInt(gameData.players[this.player_id].no);
+
+        for (const playerId of Object.keys(gameData.players)) {
+            const playerIndex = (gameData.players[playerId].no - currentPlayerIndex + playerCount) % playerCount;
+            const container = document.getElementById(`wolves-player-container-${playerId}`);
+            container.style.order = playerIndex.toString();
+        }
+
         for (const status of gameData.status) {
             const playerId = status.player_id;
             const attributes = new Attributes(status)
@@ -655,7 +663,7 @@ define([
             dojo.connect(tile, 'onclick', e => {
                 dojo.stopEvent(e);
                 this.onTileClick(index, tile);
-            })
+            });
         });
 
         document.querySelectorAll(".wolves-hex").forEach(hex => {

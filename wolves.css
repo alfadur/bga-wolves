@@ -494,6 +494,7 @@
     position: relative;
     width: 718px;
     height: 450px;
+    order: -1;
 }
 
 #wolves-calendar:before {
