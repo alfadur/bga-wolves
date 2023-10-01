@@ -264,7 +264,7 @@ class Wolves extends Table
 
         // Get information about players
         $result['players'] = self::getCollectionFromDb(
-            'SELECT player_id AS id, player_score AS score, player_color AS color, (player_no - 1) AS no FROM player'
+            'SELECT player_id AS id, player_score AS score, player_color AS color FROM player'
         );
         $result['status'] = self::getObjectListFromDb('SELECT * FROM player_status');
         $result['regions'] = self::getObjectListFromDb(

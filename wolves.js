@@ -605,13 +605,9 @@ define([
             }
         }
 
-        const currentPlayerIndex = parseInt(gameData.players[this.player_id].no);
-
-        for (const playerId of Object.keys(gameData.players)) {
-            const playerIndex = (gameData.players[playerId].no - currentPlayerIndex + playerCount) % playerCount;
-            const container = document.getElementById(`wolves-player-container-${playerId}`);
-            container.style.order = playerIndex.toString();
-        }
+        gameData.playerorder.forEach((playerId, playerIndex) =>
+            document.getElementById(`wolves-player-container-${playerId}`).style.order = playerIndex.toString()
+        );
 
         for (const status of gameData.status) {
             const playerId = status.player_id;
