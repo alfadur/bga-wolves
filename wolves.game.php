@@ -50,47 +50,35 @@ class Wolves extends Table
     */
     protected function setupNewGame($players, $options = []): void
     {
-        $gameinfos = self::getGameinfos();
-        $default_colors = $gameinfos['player_colors'];
+        $gameInfo = self::getGameinfos();
+        $colorTerrains = array_map(null, $gameInfo['player_colors'], range(0, TILE_TERRAIN_TYPES - 1));
+        shuffle($colorTerrains);
 
         // Create players
-        $values = [];
-        foreach ($players as $player_id => $player) {
-            $color = array_shift($default_colors);
+        $playerValues = [];
+        $statusValues = [];
+
+        foreach ($players as $playerId => $player) {
+            [$color, $terrain] = array_shift($colorTerrains);
+
             $name = addslashes($player['player_name']);
             $avatar = addslashes($player['player_avatar']);
-            $values[] = "('$player_id','$color','$player[player_canal]','$name','$avatar')";
+            $playerValues[] = "('$playerId','$color','$player[player_canal]','$name','$avatar')";
+
+            $statusValues[] = "($playerId, $terrain, '0', '0', '0', '0', '0')";
         }
-        $args = implode(',', $values);
+
+        $args = implode(',', $playerValues);
         $query = "INSERT INTO player (player_id, player_color, player_canal, player_name, player_avatar) VALUES $args";
+        self::DbQuery($query);
+
+        $args = implode(',', $statusValues);
+        $query = "INSERT INTO player_status (player_id, home_terrain, tile_0, tile_1, tile_2, tile_3, tile_4) VALUES $args";
         self::DbQuery($query);
 
         self::reloadPlayersBasicInfos();
 
         /************ Start the game initialization *****/
-
-        // Init global values with their initial values
-        //self::setGameStateInitialValue( 'my_first_global_variable', 0 );
-
-        // Init game statistics
-        // (note: statistics used in this file must be defined in your stats.inc.php file)
-        //self::initStat( 'table', 'table_teststat1', 0 );    // Init a table statistics
-        //self::initStat( 'player', 'player_teststat1', 0 );  // Init a player statistics (for all players)
-
-        //Initialize player tiles
-
-        $terrain = 0;
-        $values = [];
-        foreach ($players as $playerId => $player) {
-            $values[] = "($playerId, $terrain, '0', '0', '0', '0', '0')";
-            ++$terrain;
-        }
-        $args = implode(',', $values);
-        $query = "INSERT INTO player_status (player_id, home_terrain, tile_0, tile_1, tile_2, tile_3, tile_4) VALUES $args";
-        self::DbQuery($query);
-
-        $this->generateLand(count($players));
-        $this->generatePieces($players);
 
         self::setGameStateInitialValue(G_SELECTED_TERRAIN, -1);
         self::setGameStateInitialValue(G_ACTIONS_REMAINING, 2);
@@ -125,6 +113,9 @@ class Wolves extends Table
         foreach ($tableStats as $stat) {
             self::initStat("table", $stat, 0);
         }
+
+        $this->generateLand(count($players));
+        $this->generatePieces($players);
 
         // Activate first player (which is in general a good idea :) )
         $this->activeNextPlayer();
@@ -797,7 +788,7 @@ class Wolves extends Table
         self::DbQuery($query);
 
         $insertId = self::DbGetLastId();
-        $this->notifyAllPlayers('draft', clienttranslate('${player_name} places initial ${pieceIcon0}${pieceIcon1}.'), [
+        $this->notifyAllPlayers('draft', clienttranslate('${player_name} places initial ${pieceIcon0}${pieceIcon1}'), [
             'player_name' => self::getActivePlayerName(),
             'playerId' => $playerId,
             'x' => $x,
@@ -805,7 +796,8 @@ class Wolves extends Table
             'ids' => [$insertId, $insertId + 1],
             'kinds' => $kinds,
             'pieceIcon0' => "$playerId,$kinds[0]",
-            'pieceIcon1' => "$playerId,$kinds[1]"
+            'pieceIcon1' => "$playerId,$kinds[1]",
+            'preserve' => ['pieceIcon0', 'pieceIcon1']
         ]);
 
         $this->gamestate->nextState('draftPlace');
