@@ -498,6 +498,57 @@
     background-position-x: calc(var(--piece-width) * -4);
 }
 
+.wolves-player-status-terrain {
+    width: 60px;
+    height: 89px;
+    border-radius: 17px;
+    background-position: -318px -31px;
+}
+
+.wolves-2p .wolves-player-status-terrain {
+    background-position: -1171px -31px;
+}
+
+.wolves-player-status-terrain[data-terrain="0"] {
+    background-image: url("img/playerBoard1.jpg");
+}
+
+.wolves-player-status-terrain[data-terrain="1"] {
+    background-image: url("img/playerBoard2.jpg");
+}
+
+.wolves-player-status-terrain[data-terrain="2"] {
+    background-image: url("img/playerBoard3.jpg");
+}
+
+.wolves-player-status-terrain[data-terrain="3"] {
+    background-image: url("img/playerBoard4.jpg");
+}
+
+.wolves-player-status-terrain[data-terrain="4"] {
+    background-image: url("img/playerBoard5.jpg");
+}
+
+.wolves-2p .wolves-player-status-terrain[data-terrain="0"] {
+    background-image: url("img/playerBoard2p1.jpg");
+}
+
+.wolves-2p .wolves-player-status-terrain[data-terrain="1"] {
+    background-image: url("img/playerBoard2p2.jpg");
+}
+
+.wolves-2p .wolves-player-status-terrain[data-terrain="2"] {
+    background-image: url("img/playerBoard2p3.jpg");
+}
+
+.wolves-2p .wolves-player-status-terrain[data-terrain="3"] {
+    background-image: url("img/playerBoard2p4.jpg");
+}
+
+.wolves-2p .wolves-player-status-terrain[data-terrain="4"] {
+    background-image: url("img/playerBoard2p5.jpg");
+}
+
 .wolves-player-status {
     display: flex;
     gap: 4px

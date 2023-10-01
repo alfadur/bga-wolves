@@ -617,6 +617,9 @@ define([
             this.updateTiles(playerId);
 
             const node = document.getElementById(`player_board_${playerId}`);
+            if (playerCount === 2) {
+                node.classList.add("wolves-2p");
+            }
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
 
             function removeSpaces(groupName, count) {
