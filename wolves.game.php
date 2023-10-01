@@ -495,6 +495,7 @@ class Wolves extends Table
                 WHERE x BETWEEN $x - 1 AND $x + 1
                     AND y BETWEEN $y - 1 AND $y + 1 
                     AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                    AND player_id = $playerId
                     AND prey_data & $preyData = 0
                     AND kind IN ($packKind, $alphaKind)
                 EOF;
