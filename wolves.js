@@ -1336,6 +1336,11 @@ define([
                 this.animateTranslation(preyNode, source);
             }
         }
+
+        const score = data.args.scoreUpdate;
+        if (score) {
+            this.scoreCtrl[score.playerId].incValue(parseInt(score.increment));
+        }
     },
 
     onUndoNotification(data) {
@@ -1414,6 +1419,11 @@ define([
                 kind: PieceKind.Prey,
                 prey_metadata: hunt.preyData
             });
+        }
+
+        const score = data.args.scoreUpdate;
+        if (score) {
+            this.scoreCtrl[score.playerId].incValue(-parseInt(score.increment));
         }
     },
 
