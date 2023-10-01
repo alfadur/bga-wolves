@@ -472,7 +472,7 @@ class Wolves extends Table
             FROM pieces NATURAL JOIN land  
             WHERE region_id = $regionId AND kind IN ($alpha, $pack, $den, $lair)
             GROUP BY owner
-            ORDER BY score, alphas
+            ORDER BY score, alphas DESC
             EOF);
         foreach ($pieces as &$piece) {
             $piece['owner'] ??= "ai";
