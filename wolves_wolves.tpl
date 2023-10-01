@@ -8,9 +8,11 @@
 <div id="wolves-game">
     <div id="wolves-land-container" style="max-width: {LAND_WIDTH}px">
         <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
-            <!-- BEGIN region -->
-            <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
-            <!-- END region -->
+            <div id="wolves-regions">
+                <!-- BEGIN region -->
+                <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
+                <!-- END region -->
+            </div>
 
             <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
                 <path id="wolves-svg-path" fill="none" stroke="red"

@@ -96,6 +96,10 @@
     margin: auto;
 }
 
+#wolves-regions {
+    filter: drop-shadow(0 5px 3px #313131);
+}
+
 .wolves-region {
     background-image: url("img/regions.jpg");
     position: absolute;
