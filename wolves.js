@@ -725,6 +725,7 @@ define([
         this.pieces = new Pieces;
         this.attributes = {};
         this.selectedAction = {};
+        this.calendarOverflow = 0;
 
         try {
             this.useOffsetAnimation = CSS.supports("offset-path", "path('M 0 0')");
@@ -823,7 +824,11 @@ define([
                 locationClass: ""
             };
             const node = document.getElementById(`wolves-calendar-space-${index}`);
-            dojo.place(this.format_block("jstpl_piece", args), node);
+            if (node) {
+                dojo.place(this.format_block("jstpl_piece", args), node);
+            } else {
+                ++this.calendarOverflow;
+            }
         }, this);
 
         document.querySelectorAll(".wolves-active-tile").forEach(tile => {
@@ -900,9 +905,12 @@ define([
                     locationClass: ""
                 };
                 const calendarNode = document.getElementById(`wolves-calendar-space-${index}`);
-                const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
-
-                this.animateTranslation(newNode, node);
+                if (calendarNode) {
+                    const newNode = dojo.place(this.format_block("jstpl_piece", args), calendarNode);
+                    this.animateTranslation(newNode, node);
+                } else {
+                    ++this.calendarOverflow;
+                }
             }
             dojo.destroy(node);
             updateHexSharing(hexNode);
@@ -1522,9 +1530,13 @@ define([
 
         function undoCalendar() {
             --this.gameProgress;
-            const spacesCount = document.querySelectorAll(".wolves-calendar-space .wolves-piece").length;
-            const space = document.getElementById(`wolves-calendar-space-${spacesCount - 1}`);
-            space.removeChild(space.lastChild);
+            if (this.calendarOverflow > 0) {
+                --this.calendarOverflow;
+            } else {
+                const spacesCount = document.querySelectorAll(".wolves-calendar-space .wolves-piece").length;
+                const space = document.getElementById(`wolves-calendar-space-${spacesCount - 1}`);
+                space.removeChild(space.lastChild);
+            }
         }
 
         const move = data.args.moveUpdate;
