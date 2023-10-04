@@ -656,6 +656,7 @@
     --shadow-size: 2px;
     --shadow-blur: 2px;
     text-shadow:
+        0 1px black,
         var(--shadow-size) var(--shadow-size) var(--shadow-blur) var(--shadow-color),
         calc(var(--shadow-size) * -1) calc(var(--shadow-size) * -1) var(--shadow-blur) var(--shadow-color),
         var(--shadow-size) calc(var(--shadow-size) * -1) var(--shadow-blur) var(--shadow-color),
