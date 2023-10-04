@@ -649,9 +649,19 @@
 
 .wolves-player-name {
     position: absolute;
-    top: 39%;
+    top: 38%;
     width: 100%;
     text-align: center;
+    --shadow-color: white;
+    --shadow-size: 2px;
+    --shadow-blur: 2px;
+    text-shadow:
+        var(--shadow-size) var(--shadow-size) var(--shadow-blur) var(--shadow-color),
+        calc(var(--shadow-size) * -1) calc(var(--shadow-size) * -1) var(--shadow-blur) var(--shadow-color),
+        var(--shadow-size) calc(var(--shadow-size) * -1) var(--shadow-blur) var(--shadow-color),
+        calc(var(--shadow-size) * -1) var(--shadow-size) var(--shadow-blur) var(--shadow-color);
+    font-size: 22px;
+    font-family: sans-serif;
 }
 
 .wolves-tile-container {
