@@ -10,7 +10,7 @@
  * wolves.js
  *
  * Wolves user interface script
- * 
+ *
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
  */
@@ -31,11 +31,26 @@ const PieceKind = Object.freeze({
     }
 });
 
+const hexWidth = 120;
+const hexHeight = 102;
+
 const hexDirections = Object.freeze([[0, -1], [1, 0], [1, 1], [0, 1], [-1, 0], [-1, -1]]
     .map(([x, y]) => Object.freeze({x, y})));
 
-const hexOffsets = Object.freeze(hexDirections
-    .map(({x, y}) => ({x: x * 89.75, y: y * 103 - x * 51.5})))
+function hexCoords(hex) {
+    return {x: hex.x * hexWidth * 3 / 4, y: hex.y * hexHeight - hex.x * hexHeight / 2};
+}
+
+const hexOffsets = Object.freeze(hexDirections.map(hexCoords));
+
+const hexCorners = Object.freeze([
+    {x: hexWidth  / 4, y: -hexHeight / 2},
+    {x: hexWidth * 3 / 4, y:-hexHeight / 2},
+    {x: hexWidth, y:0},
+    {x: hexWidth * 3 / 4, y:hexHeight / 2},
+    {x: hexWidth  / 4, y: hexHeight / 2},
+    {x: 0, y: 0},
+])
 
 const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
@@ -247,6 +262,115 @@ class Pieces {
                 }
             }
         }
+    }
+}
+
+function swapRemove(array, index) {
+    if (index >= 0 && array.length > index) {
+        const result = array[index];
+        array[index] = array[array.length - 1];
+        array.pop();
+        return result;
+    }
+}
+
+class HexOutliner {
+    hexes = [];
+    lookup = new Map;
+
+    __key(hex) {
+        return hex.y * 1024 + hex.x;
+    }
+
+    __findNeighbor(hex, directionIndex) {
+        const neighbor = hexAdd(hex, hexDirections[directionIndex]);
+        return this.lookup.get(this.__key(neighbor));
+    }
+
+    __isOpen(hex, directionIndex) {
+        const neighbor = hexAdd(hex, hexDirections[directionIndex]);
+        return !this.lookup.has(this.__key(neighbor));
+    }_
+
+    constructor(hexes) {
+        for (const hex of hexes) {
+            const x = parseInt(hex.x);
+            const y = parseInt(hex.y);
+            const item = {x, y, visited: false};
+            this.lookup.set(this.__key(item), item);
+        }
+
+        const sides = hexDirections.length;
+
+        for (const [_, hex] of this.lookup) {
+            hex.openSides = [];
+            const startRange = {
+                start: 0,
+                length: 1,
+                isOpen: this.__isOpen(hex, 0)
+            };
+
+            let range = startRange;
+            if (range.isOpen) {
+                hex.openSides.push(range);
+            }
+
+            for (let i = 1; i < sides; ++i) {
+                const isOpen = this.__isOpen(hex, i);
+                if (isOpen === range.isOpen) {
+                    ++range.length;
+                } else {
+                    range = {
+                        start: i,
+                        length: 1,
+                        isOpen
+                    };
+                    if (range.isOpen) {
+                        hex.openSides.push(range);
+                    }
+                }
+            }
+
+            if (range !== startRange && range.isOpen && startRange.isOpen) {
+                startRange.start = range.start;
+                startRange.length += range.length;
+                hex.openSides.pop();
+            }
+
+            if (hex.openSides.length > 0) {
+                this.hexes.push(hex);
+            }
+        }
+    }
+
+    popOutline() {
+        const sides = hexDirections.length;
+        const result = [];
+        const index = this.hexes.findIndex(h => h.openSides.length > 0);
+
+        if (index >= 0) {
+            let hex = this.hexes[index];
+            let side = swapRemove(hex.openSides, 0);
+
+            while (hex && side) {
+                result.push({
+                    x: hex.x,
+                    y: hex.y,
+                    start: side.start,
+                    length: side.length
+                });
+
+                const connection = (side.start + side.length) % sides;
+                hex = this.__findNeighbor(hex, connection);
+
+                if (hex) {
+                    const sideIndex = hex.openSides.findIndex(s => s.start === (connection + 4) % sides);
+
+                    side = sideIndex >= 0 ? swapRemove(hex.openSides, sideIndex) : null;
+                }
+            }
+        }
+        return result;
     }
 }
 
@@ -462,6 +586,8 @@ function selectWolfToMove(wolf, range, terrain, pieces) {
     const iterable = collectPaths(wolf, range);
     let item = iterable.next();
 
+    const selection = [];
+
     while (!item.done) {
         const path = item.value;
         const otherPieces = Array.from(pieces.getByHex(path.hex));
@@ -473,11 +599,14 @@ function selectWolfToMove(wolf, range, terrain, pieces) {
 
         if (canStop) {
             paths.push(path);
+            selection.push(path.hex);
             makeHexSelectable(path.hex);
         }
 
         item = iterable.next(isHexPassable(path.node));
     }
+
+    buildSelection(selection);
 
     return paths;
 }
@@ -542,6 +671,27 @@ function buildPath(steps, fillet) {
     const end = hexAdd(center, hexOffsets[steps[steps.length - 1]]);
     svg.push(`L ${end.x} ${end.y}`);
     return svg.join("");
+}
+
+function buildSelection(hexes) {
+    const outliner = new HexOutliner(hexes);
+    const paths = [];
+
+    let outline = outliner.popOutline();
+    while (outline.length > 0) {
+        const points = [];
+        for (const side of outline) {
+            for (let i = 0; i < side.length; ++i) {
+                const direction = (side.start + i) % hexDirections.length;
+                points.push(hexAdd(hexCoords(side), hexCorners[direction]));
+            }
+        }
+        const path = points.map(p => `${p.x} ${p.y}`).join("L");
+        paths.push(`M${path}Z`);
+        outline = outliner.popOutline();
+    }
+
+    document.getElementById("wolves-selection-svg-path").setAttribute("d", paths.join(" "));
 }
 
 define([
@@ -1475,13 +1625,10 @@ define([
     },
 
     format_string_recursive(log, args) {
-        console.log("Formatting: ", args);
         if (args) {
-            console.log("Keys: ", Object.keys(args));
             const icons = Object.keys(args).filter(name => name.startsWith("pieceIcon"));
-            console.log("Icons: ", icons);
+
             for (const icon of icons) {
-                console.log(`Processing log sprite ${icon}`);
                 const [owner, kind] = args[icon].toString().split(",");
                 const attributes = this.attributes[owner];
                 const terrain = attributes ? attributes.homeTerrain : "N/A";
@@ -1499,4 +1646,3 @@ define([
         return this.inherited({callee: this.format_string_recursive}, arguments);
     }
 }));
-

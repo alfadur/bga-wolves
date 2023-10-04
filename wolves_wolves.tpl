@@ -14,6 +14,10 @@
                 <!-- END region -->
             </div>
 
+            <svg id="wolves-selection-svg" viewBox="0 0 {LAND_WIDTH} {LAND_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+                <path id="wolves-selection-svg-path" stroke-width="8" stroke-linecap="round" d=""/>
+            </svg>
+
             <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
                 <path id="wolves-svg-path" fill="none" stroke="red"
                       stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""/>

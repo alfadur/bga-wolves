@@ -54,6 +54,20 @@
     background-position-y: calc(var(--tile-height) * -2);
 }
 
+#wolves-selection-svg {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#wolves-selection-svg-path {
+    fill: white;
+    fill-opacity: 0.45;
+    stroke: #d9d92f;
+}
+
 #wolves-active-tiles {
     display: flex;
     gap: 8px;
@@ -193,12 +207,6 @@
 
 .wolves-hex-water > .wolves-hex-selector {
     pointer-events: none;
-}
-
-#wolves-land.wolves-selectable > .wolves-hex:not(.wolves-selectable) > .wolves-hex-selector {
-    background-color: #4b4b4b;
-    opacity: 0.5;
-    mix-blend-mode: multiply;
 }
 
 .wolves-selectable > .wolves-hex-selector {
