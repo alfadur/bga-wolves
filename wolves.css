@@ -63,9 +63,9 @@
 }
 
 #wolves-selection-svg-path {
-    fill: white;
-    fill-opacity: 0.45;
-    stroke: #d9d92f;
+    fill: url("#wolves-selection-fill-pattern");
+    fill-opacity: 0.5;
+    stroke: red;
 }
 
 #wolves-active-tiles {

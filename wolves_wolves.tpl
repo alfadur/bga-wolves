@@ -15,6 +15,12 @@
             </div>
 
             <svg id="wolves-selection-svg" viewBox="0 0 {LAND_WIDTH} {LAND_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <pattern id="wolves-selection-fill-pattern" width="16" height="16"
+                            patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                        <line stroke="red" stroke-width="10px" x2="5"/>
+                    </pattern>
+                </defs>
                 <path id="wolves-selection-svg-path" stroke-width="8" stroke-linecap="round" d=""/>
             </svg>
 

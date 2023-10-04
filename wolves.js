@@ -296,7 +296,7 @@ class HexOutliner {
         for (const hex of hexes) {
             const x = parseInt(hex.x);
             const y = parseInt(hex.y);
-            const item = {x, y, visited: false};
+            const item = {x, y};
             this.lookup.set(this.__key(item), item);
         }
 
@@ -473,57 +473,70 @@ function* collectPaths(from, range) {
 }
 
 function makeHexSelectable(hex, terrain) {
-    document.getElementById("wolves-land").classList.add("wolves-selectable");
-    let node = getHexNode(hex);
+    const node = getHexNode(hex);
     if (node && (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
         && !node.classList.contains("wolves-hex-water"))
     {
         node.classList.add("wolves-selectable");
+        return true;
     }
+    return false;
 }
 
 function prepareHowlSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
+    const selection = [];
 
     for (const wolf of loneWolves) {
         if (alphaWolves.some(alpha => hexDistance(wolf, alpha) <= range)) {
-            makeHexSelectable(wolf, terrain);
+            if (makeHexSelectable(wolf, terrain)) {
+                selection.push(wolf);
+            }
         }
     }
+    buildSelection(selection);
 }
 
 function prepareMoveSelection(playerId, pieces, movedWolves) {
     clearTag("wolves-selected");
     clearTag("wolves-selectable");
     document.getElementById("wolves-land").classList.add("wolves-selectable");
+    const selection = [];
 
     const wolves = pieces.getByOwner(playerId, p => PieceKind.isMovable(p.kind));
     for (const wolf of wolves) {
         if (!(movedWolves.indexOf(wolf.id) >= 0)) {
             getPieceNode(wolf.id).classList.add("wolves-selectable");
+            selection.push(wolf);
         }
     }
+    buildSelection(selection);
 }
 
 function prepareDenSelection(playerId, pieces, terrain) {
     const alphaWolves = pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha);
+    const selection = [];
+
     for (const wolf of alphaWolves) {
         for (const direction of [{x: 0, y: 0}, ...hexDirections]) {
             const hex = hexAdd(wolf, direction);
             const otherPieces = Array.from(pieces.getByHex(hex));
             const canBuild = otherPieces.length < 2
                 && otherPieces.every(p => p.owner === playerId && !PieceKind.isStructure(p.kind));
-            if (canBuild) {
-                makeHexSelectable(hex, terrain);
+            if (canBuild && makeHexSelectable(hex, terrain)) {
+                selection.push(hex);
             }
         }
     }
+    buildSelection(selection);
 }
 
 function prepareLairSelection(playerId, pieces, terrain) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const dens = pieces.getByOwner(playerId, p => p.kind === PieceKind.Den);
+    const selection = [];
+
     for (const den of dens) {
         const regionId = getHexNode(den).dataset.regionId;
         const uniqueLair = pieces.getByOwner(playerId, p =>
@@ -533,14 +546,18 @@ function prepareLairSelection(playerId, pieces, terrain) {
             return node && node.classList.contains("wolves-hex-water");
         });
         if (uniqueLair && canBuild && alphaWolves.some(alpha => hexDistance(alpha, den) <= 1)) {
-            makeHexSelectable(den, terrain);
+            if (makeHexSelectable(den, terrain)) {
+                selection.push(den);
+            }
         }
     }
+    buildSelection(selection);
 }
 
 function prepareDominateSelection(playerId, range, terrain, pieces) {
     const terrainClass = `wolves-hex-${terrainNames[terrain]}`;
     const paths = [];
+    const selection = [];
 
     clearTag("wolves-selectable");
     document.getElementById("wolves-land").classList.add("wolves-selectable");
@@ -568,13 +585,14 @@ function prepareDominateSelection(playerId, range, terrain, pieces) {
                 path.alphaId = alpha.value.id;
                 paths.push(path);
                 getPieceNode(piece.id).classList.add("wolves-selectable");
+                selection.push(piece);
                 break;
             }
 
             item = iterable.next();
         }
     }
-
+    buildSelection(selection);
     return paths;
 }
 
@@ -583,10 +601,9 @@ function selectWolfToMove(wolf, range, terrain, pieces) {
     getPieceNode(wolf.id).classList.add("wolves-selected");
 
     const paths = [];
+    const selection = [];
     const iterable = collectPaths(wolf, range);
     let item = iterable.next();
-
-    const selection = [];
 
     while (!item.done) {
         const path = item.value;
@@ -599,15 +616,14 @@ function selectWolfToMove(wolf, range, terrain, pieces) {
 
         if (canStop) {
             paths.push(path);
-            selection.push(path.hex);
-            makeHexSelectable(path.hex);
+            if (makeHexSelectable(path.hex)) {
+                selection.push(path.hex);
+            }
         }
 
         item = iterable.next(isHexPassable(path.node));
     }
-
     buildSelection(selection);
-
     return paths;
 }
 
@@ -617,6 +633,7 @@ function selectWolfToDisplace(wolf, pieces) {
     getPieceNode(wolf.id).classList.add("wolves-selected");
 
     const paths = [];
+    const selection = [];
     const iterable = collectPaths(wolf);
     let item = iterable.next();
     let maxDistance = Number.MAX_VALUE;
@@ -630,12 +647,14 @@ function selectWolfToDisplace(wolf, pieces) {
         if (path.canStop) {
             maxDistance = path.steps.length;
             paths.push(path);
-            makeHexSelectable(path.hex);
+            if (makeHexSelectable(path.hex)) {
+                selection.push(path.hex);
+            }
         }
 
         item = iterable.next(isHexPassable(path.node));
     }
-
+    buildSelection(selection);
     return paths;
 }
 
@@ -960,11 +979,16 @@ define([
     onEnteringState(stateName, state) {
         console.log(`Entering state: ${stateName}`);
         console.log(`Got args: ${JSON.stringify(state)}`);
+
         if (state.args && "selectedTerrain" in state.args) {
             this.selectedTerrain = parseInt(state.args.selectedTerrain);
         }
 
         if (this.isCurrentPlayerActive()) {
+            const selectionStates = ["draftWolves", "howlSelection", "moveSelection", "displaceWolf", "denSelection", "lairSelection", "dominateSelection", "clientSelectMoveTarget"];
+
+            document.getElementById("wolves-selection-svg").classList.toggle("hidden", selectionStates.indexOf(stateName) < 0);
+
             const playerId = this.getActivePlayerId();
             const howlRange = this.activeAttributes().howlRange;
             switch (stateName) {
