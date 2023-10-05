@@ -747,6 +747,11 @@ define([
     setup(gameData) {
         console.log( "Starting game setup" );
 
+        for (let i = 1; i <= 5; ++i) {
+            this.dontPreloadImage(`playerBoard2p${i}.jpg`);
+            this.dontPreloadImage(`playerBoard${i}.jpg`);
+        }
+
         const playerCount = Object.keys(gameData.players).length;
         if (playerCount === 2) {
             const padding = document.getElementById("wolves-game");
@@ -755,6 +760,9 @@ define([
 
         if (playerCount > 3) {
             document.getElementById("wolves-calendar").classList.add("wolves-reverse")
+            this.dontPreloadImage("calendar2_3p.jpg");
+        } else {
+            this.dontPreloadImage("calendar4_5p.jpg");
         }
 
         for (const region of gameData.regions) {
@@ -784,10 +792,16 @@ define([
             document.getElementById(`wolves-player-container-${playerId}`).style.order = playerIndex.toString()
         );
 
+        const playerBoardImages = [];
+
         for (const status of gameData.status) {
             const playerId = status.player_id;
             const attributes = new Attributes(status)
             this.attributes[playerId] = attributes;
+
+            playerBoardImages.push(playerCount === 2 ?
+                `playerBoard2p${attributes.homeTerrain + 1}.jpg` :
+                `playerBoard${attributes.homeTerrain + 1}.jpg`)
 
             this.updateTiles(playerId);
 
@@ -816,6 +830,8 @@ define([
                 }
             }
         }
+
+        this.ensureSpecificGameImageLoading(playerBoardImages);
 
         gameData.pieces.forEach(this.addPiece, this);
 
