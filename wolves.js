@@ -748,6 +748,11 @@ define([
         console.log( "Starting game setup" );
 
         const playerCount = Object.keys(gameData.players).length;
+        if (playerCount === 2) {
+            const padding = document.getElementById("wolves-game");
+            padding.appendChild(document.getElementById("wolves-boards-padding"));
+        }
+
         if (playerCount > 3) {
             document.getElementById("wolves-calendar").classList.add("wolves-reverse")
         }

@@ -563,6 +563,11 @@
     gap: 4px
 }
 
+#wolves-boards-padding {
+    max-width: 242px;
+    flex: 1 1 0;
+}
+
 #wolves-boards {
     display: flex;
     flex-direction: column;
@@ -662,7 +667,8 @@
         var(--shadow-size) calc(var(--shadow-size) * -1) var(--shadow-blur) var(--shadow-color),
         calc(var(--shadow-size) * -1) var(--shadow-size) var(--shadow-blur) var(--shadow-color);
     font-size: 22px;
-    font-family: sans-serif;
+    font-family: Impact, sans-serif;
+    font-weight: lighter;
 }
 
 .wolves-tile-container {

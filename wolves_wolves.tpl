@@ -38,6 +38,8 @@
         </div>
     </div>
 
+    <div id="wolves-boards-padding"></div>
+
     <div id="wolves-boards">
         <div id="wolves-calendar">
             <!-- BEGIN calendarSpace -->
