@@ -33,7 +33,6 @@ CREATE TABLE IF NOT EXISTS `pieces`(
     `x` TINYINT NOT NULL,
     `y` TINYINT NOT NULL,
     `prey_metadata` TINYINT,
-    `ai` BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`x`, `y`) REFERENCES `land`(`x`, `y`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1;

@@ -171,10 +171,8 @@ class Wolves extends Table
     {
         $regions = self::getObjectListFromDB("SELECT region_id, moon_phase, center_x, center_y FROM regions");
         $values = [];
-        foreach ($regions as ["region_id" => $regionId, "moon_phase" => $moonPhase, "center_x" => $x, "center_y" => $y]) {
-            $regionId = (int)$regionId;
+        foreach ($regions as ['moon_phase' => $moonPhase, 'center_x' => $x, 'center_y' => $y]) {
             $moonPhase = (int)$moonPhase;
-            $water = T_WATER;
 
             $x = (int)$x;
             $y = (int)$y;
@@ -183,29 +181,28 @@ class Wolves extends Table
             $piecesToAdd = [];
             switch ($moonPhase) {
                 case M_CRESCENT:
-                    $piecesToAdd[] = ["kind" => P_PACK, "loc" => $topRight, "num" => 2];
+                    $piecesToAdd[] = ['kind' => P_PACK, 'loc' => $topRight, 'num' => 2];
                     break;
                 case M_CRES_HALF:
-                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
+                    $piecesToAdd[] = ['kind' => P_LAIR, 'loc' => $topRight, 'num' => 1];
                     break;
                 case M_FULL:
-                    $piecesToAdd[] = ["kind" => P_ALPHA, "loc" => $topRight, "num" => 1];
-                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
+                    $piecesToAdd[] = ['kind' => P_ALPHA, 'loc' => $topRight, 'num' => 1];
+                    $piecesToAdd[] = ['kind' => P_LAIR, 'loc' => $topRight, 'num' => 1];
                     break;
                 case M_QUARTER_FULL:
-                    $piecesToAdd[] = ["kind" => P_LAIR, "loc" => $topRight, "num" => 1];
-                    $piecesToAdd[] = ["kind" => P_ALPHA, "loc" => $bottomRight, "num" => 2];
-                default:
+                    $piecesToAdd[] = ['kind' => P_LAIR, 'loc' => $topRight, 'num' => 1];
+                    $piecesToAdd[] = ['kind' => P_ALPHA, 'loc' => $bottomRight, 'num' => 2];
                     break;
             }
-            foreach ($piecesToAdd as ["kind" => $kind, "loc" => [$pieceX, $pieceY], "num" => $num]) {
+            foreach ($piecesToAdd as ['kind' => $kind, 'loc' => [$pieceX, $pieceY], 'num' => $num]) {
                 for ($i = 0; $i < $num; $i++) {
-                    $values[] = "($kind, $pieceX, $pieceY, TRUE)";
+                    $values[] = "($kind, $pieceX, $pieceY)";
                 }
             }
         }
-        $args = implode(",", $values);
-        self::DbQuery("INSERT INTO pieces (kind, x, y, ai) VALUES $args");
+        $args = implode(',', $values);
+        self::DbQuery("INSERT INTO pieces (kind, x, y) VALUES $args");
     }
 
     protected function generatePieces(array $players): void
@@ -466,7 +463,7 @@ class Wolves extends Table
             ORDER BY score, alphas DESC
             EOF);
         foreach ($pieces as &$piece) {
-            $piece['owner'] ??= "ai";
+            $piece['owner'] ??= 'ai';
         }
         return $pieces;
     }
