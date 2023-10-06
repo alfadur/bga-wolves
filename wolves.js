@@ -483,6 +483,53 @@ function makeHexSelectable(hex, terrain) {
     return false;
 }
 
+function prepareDraftSelection(playerId, pieces) {
+    clearTag("wolves-selectable");
+
+    const hexes = document.querySelectorAll(".wolves-hex[data-region-id='1']");
+    const yCoords = Array.from(hexes)
+        .filter(hexNode => !isHexPassable(hexNode))
+        .map(hex => parseInt(hex.dataset.y));
+    const centerY = Math.max(...yCoords);
+    const selection = [];
+
+    const piecesAbove = Array.from(pieces.getByOwner(playerId, p => p.y < centerY));
+    const piecesBelow = Array.from(pieces.getByOwner(playerId, p => p.y >= centerY));
+
+    for (const hexNode of hexes) {
+        const hex = {x: hexNode.dataset.x, y: hexNode.dataset.y};
+        const sideAvailable =
+            hex.y < centerY && piecesAbove.length === 0
+            || hex.y >= centerY && piecesBelow.length === 0;
+
+        if (sideAvailable && isHexPassable(hexNode) && pieces.getByHex(hex).next().done) {
+            makeHexSelectable(hex);
+            selection.push(hex);
+        }
+    }
+
+    buildSelection(selection);
+}
+
+function prepareDraftSelection2p(pieces) {
+    clearTag("wolves-selectable");
+
+    const forbiddenRegions = Array.from(document.querySelectorAll(".wolves-moon[data-phase='0']")).map(moonNode => moonNode.dataset.region);
+    const queryAttributes = forbiddenRegions.map(id => `:not([data-region-id="${id}"])`).join("");
+    const hexes = document.querySelectorAll(`.wolves-hex${queryAttributes}`);
+    const selection = [];
+
+    for (const hexNode of hexes) {
+        const hex = {x: hexNode.dataset.x, y: hexNode.dataset.y};
+
+        if (isHexPassable(hexNode) && pieces.getByHex(hex).next().done) {
+            makeHexSelectable(hex);
+            selection.push(hex);
+        }
+    }
+    buildSelection(selection);
+}
+
 function prepareHowlSelection(playerId, pieces, terrain, range) {
     const alphaWolves = Array.from(pieces.getByOwner(playerId, p => p.kind === PieceKind.Alpha));
     const loneWolves = pieces.getByKind(PieceKind.Lone);
@@ -753,6 +800,8 @@ define([
         }
 
         const playerCount = Object.keys(gameData.players).length;
+        this.playerCount = playerCount;
+
         if (playerCount === 2) {
             const padding = document.getElementById("wolves-game");
             padding.appendChild(document.getElementById("wolves-boards-padding"));
@@ -1018,9 +1067,17 @@ define([
 
             document.getElementById("wolves-selection-svg").classList.toggle("hidden", selectionStates.indexOf(stateName) < 0);
 
-            const playerId = this.getActivePlayerId();
+            const playerId = this.getActivePlayerId().toString();
             const howlRange = this.activeAttributes().howlRange;
+
             switch (stateName) {
+                case "draftWolves":
+                    if (this.playerCount === 2) {
+                        prepareDraftSelection2p(this.pieces);
+                    } else {
+                        prepareDraftSelection(playerId, this.pieces);
+                    }
+                    break;
                 case "actionSelection":
                     this.selectedAction = {};
                     clearTag("wolves-selected");
@@ -1304,18 +1361,17 @@ define([
         const hex = getHexNode({x, y});
 
         if (!hex.classList.contains("wolves-selectable")) {
-            if (this.checkAction("draftPlace")) {
-                this.ajaxcall("/wolves/wolves/draftPlace.html",
-                    {lock: true, x, y},
-                    this,
-                    () => { console.log("draftPlace completed") });
-            }
             return;
         }
 
         const playerId = this.getActivePlayerId();
 
-        if (this.checkAction("clientMove", true)) {
+        if (this.checkAction("draftPlace", true)) {
+            this.ajaxcall("/wolves/wolves/draftPlace.html",
+                {lock: true, x, y},
+                this,
+                () => { console.log("draftPlace completed") });
+        } else if (this.checkAction("clientMove", true)) {
             this.ajaxcall("/wolves/wolves/move.html", {
                 lock: true,
                 wolfId: this.selectedPiece,
@@ -1695,7 +1751,6 @@ define([
                     owner: terrain,
                     kind: kind || "N/A"
                 };
-                console.log("Format: ", formatArgs);
 
                 args[icon] = this.format_block("jstpl_log_icon", formatArgs);
             }
