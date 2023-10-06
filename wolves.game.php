@@ -744,16 +744,24 @@ class Wolves extends Table
     {
         self::checkAction('draftPlace');
         $playerId = self::getActivePlayerId();
-        $query = "SELECT COUNT(*) FROM pieces WHERE x = $x AND y = $y";
-        if ((int)self::getUniqueValueFromDB($query) > 0) {
-            throw new BgaUserException(_("This place is already occupied"));
-        }
 
         $numPlayers = self::getPlayersNumber();
 
-        $selectedRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land where x=$x AND y=$y");
+        $waterType = T_WATER;
+        $chasmType = T_CHASM;
+
+        $selectedRegion = self::getUniqueValueFromDB(<<<EOF
+            SELECT region_id 
+            FROM land NATURAL LEFT JOIN pieces 
+            WHERE x=$x AND y=$y 
+              AND terrain NOT IN ($waterType, $chasmType)
+              AND kind IS NULL
+            EOF);
+        if ($selectedRegion === null) {
+            throw new BgaUserException("Invalid draft location");
+        }
+        $selectedRegion = (int)$selectedRegion;
         if ($numPlayers > 2) {
-            $chasmType = T_CHASM;
             $chasmRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
 
             if ($selectedRegion !== $chasmRegion) {
