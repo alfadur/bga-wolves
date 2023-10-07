@@ -641,7 +641,7 @@ class Wolves extends Table
             'awards' => array_map(
                 fn($region) => [
                     'regionId' => $region['region_id'],
-                    'winner' => $region['winner']
+                    'winner' => $region['winner'] ?? null
                 ],
                 $scoringRegions)
         ];
