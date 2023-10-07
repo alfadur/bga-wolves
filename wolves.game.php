@@ -352,7 +352,7 @@ class Wolves extends Table
             $validSteps = self::getUniqueValueFromDB(
                 "SELECT COUNT(*) FROM land WHERE ($stepChecks)$terrainCheck");
             if ((int)$validSteps !== count($steps) - 1) {
-                throw new BgaUserException(_("Invalid action"));
+                throw new BgaUserException("Invalid action");
             }
         }
 
@@ -373,7 +373,7 @@ class Wolves extends Table
             EOF;
 
         if ((int)self::getUniqueValueFromDB($query) === 0) {
-            throw new BgaUserException(_('Invalid action'));
+            throw new BgaUserException('Invalid action');
         }
     }
 
@@ -405,7 +405,7 @@ class Wolves extends Table
             SELECT tile_0, tile_1, tile_2, tile_3, tile_4, home_terrain
             FROM player_status WHERE player_id=$playerId
             EOF);
-        self::dump("player_$playerId\_tiles", $tiles);
+
         $terrain = -1;
         $sets = [];
 
@@ -419,9 +419,8 @@ class Wolves extends Table
                 $nextTerrain = (int)$tiles['home_terrain'];
             }
 
-            self::debug("Flipping tile at index ($tileIndex) of type ($nextTerrain)");
             if ($terrain >= 0 && $nextTerrain !== $terrain) {
-                throw new BgaUserException(_('All tiles must have identical terrain'));
+                throw new BgaUserException('All tiles must have identical terrain');
             }
             $terrain = $nextTerrain;
         }
@@ -542,11 +541,9 @@ class Wolves extends Table
         $phaseDate = PHASES[$currentPhase][$numPlayers];
 
         if ($currentDate < $phaseDate) {
-            self::debug("$currentDate/$phaseDate");
             return $currentPhase;
         }
 
-        self::debug('Region scoring');
         $this->incGameStateValue(G_MOON_PHASE, 1);
 
         // init player score states
@@ -588,8 +585,6 @@ class Wolves extends Table
                 $firstWinner = $presence[0];
                 $winners = array_filter($presence, fn ($thisPlayer) => $firstWinner['score'] === $thisPlayer['score'] && $firstWinner['alphas'] === $thisPlayer['alphas']);
 
-                self::dump('presence', $presence);
-                self::dump('winners', $winners);
                 //multiple winners, no second place, and everyone gets half score
                 if (count($winners) > 1) {
                     foreach ($winners as ['owner' => $winner]) {
@@ -654,8 +649,6 @@ class Wolves extends Table
 
             self::incStat($firstPlace, STAT_PLAYER_FIRST_PLACE, $playerId);
             self::incStat($secondPlace, STAT_PLAYER_SECOND_PLACE, $playerId);
-
-            self::debug("Player ($playerId) has scored first place $firstPlace times, and second place $secondPlace times");
         }
 
         $notificationArgs['scores'] = $scoreIncrements;
@@ -778,14 +771,14 @@ class Wolves extends Table
               AND kind IS NULL
             EOF);
         if ($selectedRegion === null) {
-            throw new BgaUserException("Invalid draft location");
+            throw new BgaUserException('Invalid draft location');
         }
         $selectedRegion = (int)$selectedRegion;
         if ($numPlayers > 2) {
             $chasmRegion = (int)self::getUniqueValueFromDB("SELECT region_id FROM land WHERE terrain=$chasmType GROUP BY region_id");
 
             if ($selectedRegion !== $chasmRegion) {
-                throw new BgaUserException(_("You may only draft into the chasm region!"));
+                throw new BgaUserException('You may only draft into the chasm region!');
             }
 
             $drafted = self::getObjectFromDB("SELECT x, y FROM pieces WHERE owner=$playerId GROUP BY x, y");
@@ -795,13 +788,13 @@ class Wolves extends Table
                 $hasDraftedTop = $draftedY - $centerY < 0;
                 $isChoosingTop = $y - $centerY < 0;
                 if ($hasDraftedTop === $isChoosingTop) {
-                    throw new BgaUserException(_('Second draft location must be on the opposite side of the chasm!'));
+                    throw new BgaUserException('Second draft location must be on the opposite side of the chasm!');
                 }
             }
         } else {
             $regionPhase = (int)self::getUniqueValueFromDB("SELECT moon_phase FROM regions WHERE region_id=$selectedRegion");
             if ($regionPhase & M_CRESCENT > 0) {
-                throw new BgaUserException(_("You cannot draft to a region with a crescent moon!"));
+                throw new BgaUserException('You cannot draft to a region with a crescent moon!');
             }
         }
 
@@ -832,23 +825,23 @@ class Wolves extends Table
     {
         self::checkAction('selectAction');
         if (!array_key_exists($action, ACTION_COSTS)) {
-            throw new BgaUserException(_('Invalid action selected'));
+            throw new BgaUserException('Invalid action selected');
         }
 
         $playerId = self::getActivePlayerId();
 
         $playerBonusTerrainTokens = (int)self::getUniqueValueFromDb("SELECT terrain_tokens FROM player_status WHERE player_id = $playerId");
         if ($bonusTerrain > $playerBonusTerrainTokens) {
-            throw new BgaUserException(_('Not enough bonus terrain tokens'));
+            throw new BgaUserException('Not enough bonus terrain tokens');
         }
 
         $cost = ACTION_COSTS[$action];
         if (count($tiles) + $bonusTerrain != $cost) {
-            throw new BgaUserException(_('${count} tile(s) need to be flipped for this action'));
+            throw new BgaUserException('Invalid tile count');
         }
 
         if ($forceTerrain && count($tiles) > 0) {
-            throw new BgaUserException(_('Cannot force terrain when flipping tiles'));
+            throw new BgaUserException('Cannot force terrain when flipping tiles');
         }
 
         $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
@@ -868,13 +861,13 @@ class Wolves extends Table
             case 'howl':
                 $deployedWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
                 if ($deployedWolves > count(WOLF_DEPLOYMENT)) {
-                    throw new BgaUserException(_('You have no wolves to deploy!'));
+                    throw new BgaUserException('You have no wolves to deploy!');
                 }
                 break;
             case 'den':
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT (deployed_howl_dens + deployed_pack_dens + deployed_speed_dens) as deployed_dens FROM player_status WHERE player_id=$playerId");
                 if ($deployedDens >= count(HOWL_RANGE) + count(PACK_SPREAD) + count(WOLF_SPEED)) {
-                    throw new BgaUserException(_('You have no dens to deploy!'));
+                    throw new BgaUserException('You have no dens to deploy!');
                 }
                 break;
             default:
@@ -923,7 +916,7 @@ class Wolves extends Table
         $movedWolves = $this->getMovedWolves();
 
         if (in_array($wolfId, $movedWolves)) {
-            throw new BgaUserException(_('This wolf has already been moved this turn!'));
+            throw new BgaUserException('This wolf has already been moved this turn!');
         }
 
         $playerId = self::getActivePlayerId();
@@ -932,7 +925,7 @@ class Wolves extends Table
             "SELECT * FROM pieces WHERE id=$wolfId"
         );
         if ($wolf === null || $wolf['owner'] !== $playerId || $wolf['kind'] > P_PACK) {
-            throw new BgaUserException(_('The wolf you selected is not valid!'));
+            throw new BgaUserException('The wolf you selected is not valid!');
         }
         $isAlpha = (int)$wolf['kind'] === P_ALPHA;
 
@@ -941,7 +934,7 @@ class Wolves extends Table
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_speed_dens FROM player_status WHERE player_id=$playerId");
         $maxDistance = WOLF_SPEED[$deployedDens];
         if (count($steps) > $maxDistance) {
-            throw new BgaUserException(_('The selected tile is out of range'));
+            throw new BgaUserException('The selected tile is out of range');
         }
 
         [$targetX, $targetY] =
@@ -1050,7 +1043,7 @@ class Wolves extends Table
             EOF);
 
         if ($wolf === null || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
-            throw new BgaUserException(_('Invalid wolf!'));
+            throw new BgaUserException('Invalid wolf!');
         }
 
         $lone = P_LONE;
@@ -1064,7 +1057,7 @@ class Wolves extends Table
             EOF);
 
         if ($targetId === null) {
-            throw new BgaUserException(_('Selected tile is invalid'));
+            throw new BgaUserException('Selected tile is invalid');
         }
 
         $this->logDBUpdate("pieces", "kind=$newKind, owner=$playerId", "id = $targetId", "kind=$lone, owner=NULL");
@@ -1115,12 +1108,12 @@ class Wolves extends Table
         $denCol = 'deployed_' . DEN_COLS[$denType] . '_dens';
         $numDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
         if ($numDens >= DEN_COUNT) {
-            throw new BgaUserException(_('No more dens of this type!'));
+            throw new BgaUserException('No more dens of this type!');
         }
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
         if ($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
-            throw new BgaUserException(_('Invalid wolf selected!'));
+            throw new BgaUserException('Invalid wolf selected!');
         }
 
         $denKind = P_DEN;
@@ -1141,7 +1134,7 @@ class Wolves extends Table
                 AND (p.owner IS NULL OR p.kind < $denKind)
             EOF;
         if ((int)self::getUniqueValueFromDB($query) === 0) {
-            throw new BgaUserException(_('Invalid hex selected!'));
+            throw new BgaUserException('Invalid hex selected!');
         }
 
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT $denCol FROM player_status WHERE player_id=$playerId");
@@ -1180,12 +1173,12 @@ class Wolves extends Table
         $playerId = self::getActivePlayerId();
         $numLairs = (int)self::getUniqueValueFromDB("SELECT deployed_lairs FROM player_status WHERE player_id=$playerId");
         if ($numLairs >= LAIR_COUNT) {
-            throw new BgaUserException(_('No more lairs!'));
+            throw new BgaUserException('No more lairs!');
         }
         $terrain = $this->getGameStateValue(G_SELECTED_TERRAIN);
         $wolf = self::getObjectFromDB("SELECT * FROM pieces WHERE id=$wolfId");
         if ($wolf === NULL || (int)$wolf['kind'] !== P_ALPHA || $wolf['owner'] !== $playerId) {
-            throw new BgaUserException(_('Invalid wolf selected!'));
+            throw new BgaUserException('Invalid wolf selected!');
         }
 
         $lairKind = P_LAIR;
@@ -1215,7 +1208,7 @@ class Wolves extends Table
             EOF;
         ["id" => $updateId, "region_id" => $regionId] = self::getObjectFromDB($query);
         if (is_null($updateId)) {
-            throw new BgaUserException(_('No valid den at given hex!'));
+            throw new BgaUserException('No valid den at given hex!');
         }
 
         $query = <<<EOF
@@ -1225,7 +1218,7 @@ class Wolves extends Table
             EOF;
         $lairsInRegion = (int)self::getUniqueValueFromDB($query);
         if ($lairsInRegion > 0) {
-            throw new BgaUserException(_('You already have a lair in this region!'));
+            throw new BgaUserException('You already have a lair in this region!');
         }
 
         $alpha = P_ALPHA;
@@ -1292,7 +1285,7 @@ class Wolves extends Table
         if ($wolf === NULL || $wolf['owner'] !== $playerId
             || (int)$wolf['kind'] !== P_ALPHA || count($steps) > $maxRange)
         {
-            throw new BgaUserException(_('Invalid wolf!'));
+            throw new BgaUserException('Invalid wolf!');
         }
 
         [$targetX, $targetY] =
@@ -1307,7 +1300,7 @@ class Wolves extends Table
                 AND (SELECT COUNT(*) FROM pieces WHERE x = target.x AND y = target.y AND owner = target.owner) = 1
             EOF);
         if ($target === null) {
-            throw new BgaUserException(_('Selected target is invalid!'));
+            throw new BgaUserException('Selected target is invalid!');
         }
 
         $oldKind = $target['kind'];
@@ -1315,12 +1308,12 @@ class Wolves extends Table
 
         if ((int)$oldKind === P_DEN) {
             if (!array_key_exists($denType, DEN_COLS)) {
-                throw new BgaUserException(_('Must specify a den type if replacing a den!'));
+                throw new BgaUserException('Must specify a den type if replacing a den!');
             }
             $denName = 'deployed_' . DEN_COLS[$denType] . '_dens';
             $numDens = (int)self::getUniqueValueFromDB("SELECT $denName FROM player_status WHERE player_id=$playerId");
             if ($numDens >= 4) {
-                throw new BgaUserException(_('You have no more dens of this type to deploy!'));
+                throw new BgaUserException('You have no more dens of this type to deploy!');
             }
 
             $updateArgs = $this->giveDenAward($denType, $numDens, $playerId);
@@ -1328,7 +1321,7 @@ class Wolves extends Table
         } else {
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
             if ($numWolves >= count(WOLF_DEPLOYMENT)) {
-                throw new BgaUserException(_('You have no more wolves you can deploy!'));
+                throw new BgaUserException('You have no more wolves you can deploy!');
             }
             $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
             // Update tie breaker
@@ -1393,7 +1386,7 @@ class Wolves extends Table
         $playerId = self::getActivePlayerId();
         $turnTokens = (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
         if ($turnTokens == 0) {
-            throw new BgaUserException(_('You have no extra turn tokens to play!'));
+            throw new BgaUserException('You have no extra turn tokens to play!');
         }
         $this->logDBUpdate("player_status", "turn_tokens=turn_tokens - 1", "player_id=$playerId", "turn_tokens=turn_tokens + 1");
         $this->logIncGameStateValue(G_ACTIONS_REMAINING, 1);
@@ -1497,10 +1490,7 @@ class Wolves extends Table
         $numPlayers = self::getPlayersNumber();
         $draftCompleted = $wolvesDrafted >= (2 * $numPlayers);
 
-
         $type = gettype($wolvesDrafted);
-        self::debug("TESTING: $type");
-        self::debug("Wolves drafted: $wolvesDrafted, numPlayers: $numPlayers");
         if ($wolvesDrafted % $numPlayers !== 0 && !$draftCompleted) {
             if ($wolvesDrafted > $numPlayers) {
                 $this->activePrevPlayer();
@@ -1708,8 +1698,6 @@ class Wolves extends Table
 
         $query = "INSERT INTO moonlight_board (kind) VALUES $args";
 
-        self::debug("QUERY IS $query");
-
         self::DbQuery($query);
 
         $this->regionScoring();
@@ -1802,7 +1790,6 @@ class Wolves extends Table
 
     function logSetGamestateValue(string $label, int $value): int
     {
-        self::debug("Logging Game state value ($label) -> $value");
         $prevVal = $this->getGameStateValue($label);
         $this->setGameStateValue($label, $value);
         $this->updateNewestLog([
@@ -1867,12 +1854,11 @@ class Wolves extends Table
 
             if (is_null($newestLog)) {
                 $this->gamestate->jumpToState(ST_ACTION_SELECTION);
-                throw new BgaUserException(_('There are no more actions to undo!'));
+                throw new BgaUserException('There are no more actions to undo!');
             }
 
             $JSONData = json_decode($newestLog['data'], true);
             $newState = $newestLog['state'];
-            self::dump("Action Log", $JSONData);
             $this->deleteNewestLog();
         }
 
@@ -1896,8 +1882,6 @@ class Wolves extends Table
                 }
             }
         }
-
-        self::debug("Undo action completed");
 
         $this->gamestate->jumpToState($newState);
     }

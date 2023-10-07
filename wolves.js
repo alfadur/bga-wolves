@@ -180,8 +180,6 @@ class Pieces {
             this.idMap.set(value.id, value);
             this.__push(this.ownerMap, value.owner, value);
             this.__push(this.hexMap, this.__hexIndex(value.x, value.y), value);
-        } else {
-            console.warn(`Duplicate piece ID: ${value.id}`);
         }
         return value;
     }
@@ -221,8 +219,6 @@ class Pieces {
                 this.__push(this.ownerMap, item.owner, value);
                 value.owner = item.owner;
             }
-        } else {
-            console.warn(`Unknown piece ID: ${item.id}`);
         }
     }
 
@@ -773,8 +769,6 @@ define([
     "ebg/counter"
 ], (dojo, declare)  => declare("bgagame.wolves", ebg.core.gamegui, {
     constructor() {
-        console.log('wolves constructor');
-
         this.boardScale = 1.0;
         this.pieces = new Pieces;
         this.attributes = {};
@@ -799,8 +793,6 @@ define([
     */
 
     setup(gameData) {
-        console.log( "Starting game setup" );
-
         for (let i = 1; i <= 5; ++i) {
             this.dontPreloadImage(`playerBoard2p${i}.jpg`);
             this.dontPreloadImage(`playerBoard${i}.jpg`);
@@ -939,8 +931,6 @@ define([
 
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
-
-        console.log( "Ending game setup" );
     },
 
     addPiece(data) {
@@ -1062,9 +1052,6 @@ define([
     //// Game & client states
 
     onEnteringState(stateName, state) {
-        console.log(`Entering state: ${stateName}`);
-        console.log(`Got args: ${JSON.stringify(state)}`);
-
         if (state.args && "selectedTerrain" in state.args) {
             this.selectedTerrain = parseInt(state.args.selectedTerrain);
         }
@@ -1133,8 +1120,6 @@ define([
     },
 
     onLeavingState(stateName) {
-        console.log(`Leaving state: ${stateName}`);
-
         switch (stateName) {
             case "clientSelectMoveTarget":
             case "howlSelection":
@@ -1150,7 +1135,6 @@ define([
     },
 
     onUpdateActionButtons(stateName, args) {
-        console.log(`onUpdateActionButtons: ${stateName}`);
         const attributes = this.activeAttributes();
 
         if (this.isCurrentPlayerActive()) {
@@ -1266,9 +1250,7 @@ define([
         }
         Object.assign(args, extraArgs);
 
-        this.ajaxcall(`/wolves/wolves/${kind}.html`, args, this, () => {
-            console.log(`${kind} placement completed`)
-        });
+        this.ajaxcall(`/wolves/wolves/${kind}.html`, args, this, () => {});
     },
 
     dominatePiece(playerId, target, attribute) {
@@ -1345,7 +1327,6 @@ define([
     },
 
     onPieceClick(id) {
-        console.log(`Click piece(${id})`);
         const pieceNode = getPieceNode(id);
         if (pieceNode.classList.contains("wolves-selectable")) {
             let playerId = this.getActivePlayerId();
@@ -1380,7 +1361,6 @@ define([
     },
 
     onHexClick(x, y) {
-        console.log(`Click hex(${x}, ${y})`);
         const hex = getHexNode({x, y});
 
         if (!hex.classList.contains("wolves-selectable")) {
@@ -1393,7 +1373,7 @@ define([
             this.ajaxcall("/wolves/wolves/draftPlace.html",
                 {lock: true, x, y},
                 this,
-                () => { console.log("draftPlace completed") });
+                () => {});
         } else if (this.checkAction("clientMove", true)) {
             this.ajaxcall("/wolves/wolves/move.html", {
                 lock: true,
@@ -1411,7 +1391,7 @@ define([
 
             this.ajaxcall("/wolves/wolves/howl.html", {
                 lock: true, wolfId, x, y
-            }, this, () => { console.log("howl completed") });
+            }, this, () => {});
         } else if (this.checkAction("den", true)) {
             this.selectedHex = {x, y};
             this.setClientState("clientSelectDenType", {
@@ -1436,7 +1416,6 @@ define([
         if (!this.checkAction("selectAction")) {
             return;
         }
-        console.log(`Submitting action (${action})`);
         this.selectedAction = { name: action, cost: actionCosts[action], tiles: new Set() };
         this.setClientState("clientSelectTiles", {
             descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`),
@@ -1445,11 +1424,9 @@ define([
     },
 
     onTileClick(index, tile) {
-        console.log(`Clicked tile (${index})`);
         if (!this.checkAction("clientSelectTile")) {
             return;
         }
-        console.log(this.selectedAction);
 
         const terrain = this.activeAttributes().tiles[(index + 1) % 6].front;
 
@@ -1514,7 +1491,6 @@ define([
 
     onCancel(event) {
         dojo.stopEvent(event);
-        console.log("cancelled");
         clearTag("wolves-selectable");
         clearTag("wolves-selected");
         this.restoreServerGameState();
@@ -1539,7 +1515,6 @@ define([
     //// Reaction to cometD notifications
 
     setupNotifications() {
-        console.log( 'notifications subscriptions setup' );
         dojo.subscribe("draft", this, "onDraftNotification");
         this.notifqueue.setSynchronous("draft", 100);
 
@@ -1550,8 +1525,6 @@ define([
     },
 
     onDraftNotification(data) {
-        console.log("Draft notification:");
-        console.log(data);
         const {playerId, x, y, ids, kinds} = data.args;
 
         ids.forEach((id, index) => {
@@ -1560,9 +1533,6 @@ define([
     },
 
     onUpdateNotification(data) {
-        console.log("Update notification:");
-        console.log(data);
-
         const move = data.args.moveUpdate;
         if (move) {
             this.movePiece(move.id, move.steps);
@@ -1625,9 +1595,6 @@ define([
     },
 
     onUndoNotification(data) {
-        console.log("Undo notification:");
-        console.log(data);
-
         function undoCalendar() {
             --this.gameProgress;
             if (this.calendarOverflow > 0) {
@@ -1713,9 +1680,6 @@ define([
     },
 
     onScoringNotification(data) {
-        console.log("Scoring notification:");
-        console.log(data);
-
         const scoring = data.args;
 
         for (const {regionId, winner} of scoring.awards) {
