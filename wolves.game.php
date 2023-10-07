@@ -892,12 +892,11 @@ class Wolves extends Table
 
         if ($bonusTerrain) {
             $this->logDBUpdate("player_status", "terrain_tokens = terrain_tokens - $bonusTerrain", "player_id = $playerId", "terrain_tokens = terrain_tokens + $bonusTerrain");
+            $this->logIncStat(STAT_PLAYER_TERRAIN_TOKENS_SPENT, $bonusTerrain, $playerId);
+            $this->logIncStat(STAT_TERRAIN_TOKENS_SPENT, $bonusTerrain);
         }
 
         $this->logSetGameStateValue(G_SELECTED_TERRAIN, $terrain);
-
-        $this->logIncStat(STAT_PLAYER_TERRAIN_TOKENS_SPENT, $bonusTerrain, $playerId);
-        $this->logIncStat(STAT_TERRAIN_TOKENS_SPENT, $bonusTerrain);
 
         $args = [
             'player_name' => self::getActivePlayerName(),
