@@ -638,7 +638,6 @@ class Wolves extends Table
             if ($firstPlace > 0) {
                 $args = implode(',', array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
-                self::DbQuery("UPDATE player SET player_score_aux=player_score_aux + 100 WHERE player_id=$playerId");
             }
 
             self::incStat($firstPlace, STAT_PLAYER_FIRST_PLACE, $playerId);
@@ -1052,7 +1051,7 @@ class Wolves extends Table
         $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
         // Update tie breaker
         $wolfScore = DEPLOYED_WOLF_SCORE[$wolfIndex];
-        $this->logDBUpdate("player", "player_score=player_score+$wolfScore, player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score=player_score-$wolfScore, player_score_aux=player_score_aux-1");
+        $this->logDBUpdate("player", "player_score = player_score + $wolfScore", "player_id = $playerId", "player_score = player_score - $wolfScore");
 
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
@@ -1301,8 +1300,7 @@ class Wolves extends Table
             $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
             // Update tie breaker
             $wolfScore = DEPLOYED_WOLF_SCORE[$numWolves];
-            $this->logDBUpdate("player", "player_score=player_score+$wolfScore, player_score_aux=player_score_aux+1", "player_id=$playerId", "player_score=player_score-$wolfScore, player_score_aux=player_score_aux-1");
-            $this->logDBUpdate("player", "player_score_aux=player_score_aux-1", "player_id=$oldOwner", "player_score_aux=player_score_aux+1");
+            $this->logDBUpdate("player", "player_score = player_score + $wolfScore", "player_id = $playerId", "player_score = player_score - $wolfScore");
             $wolfType = WOLF_DEPLOYMENT[$numWolves];
             $newKind = $wolfType;
         }
@@ -1480,6 +1478,14 @@ class Wolves extends Table
         $currentPhase = $this->regionScoring();
         //Determine if the game should end
         if ($currentPhase >= count(PHASES)) {
+            $alpha = P_ALPHA;
+            $pack = P_PACK;
+            self::dbQuery(<<<EOF
+                UPDATE player
+                NATURAL JOIN (SELECT owner AS player_id, COUNT(*) AS wolves FROM pieces WHERE kind IN ($alpha, $pack) GROUP BY player_id) as w
+                NATURAL LEFT JOIN (SELECT player_id, COUNT(*) AS tokens FROM score_token GROUP BY player_id) as t
+                SET player_score_aux = 100 * COALESCE(tokens, 0) + wolves
+                EOF);
             $this->gamestate->nextState(TR_END_GAME);
         } else {
             $this->activeNextPlayer();
