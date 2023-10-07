@@ -129,7 +129,7 @@ $stats_type = array(
         ],
         STAT_PLAYER_PREY_HUNTED => [
             "id" => 21,
-            "name" => totranslate("Bonus actions taken"),
+            "name" => totranslate("Prey hunted"),
             "type" => "int"
         ],
         STAT_PLAYER_BONUS_ACTIONS_TAKEN => [
