@@ -669,19 +669,19 @@ class Wolves extends Table
 
             $firstPlace[] = [
                 'str' => '${points}',
-                'args' => ['points' => $playerStates[$playerId]['first_place']],
+                'args' => ['points' => $playerStates[$playerId]['first_place'] * $score],
                 'type' => 'footer'
             ];
 
             $secondPlace[] = [
                 'str' => '${points}',
-                'args' => ['points' => $playerStates[$playerId]['second_place']],
+                'args' => ['points' => $playerStates[$playerId]['second_place'] * $score / 2],
                 'type' => 'footer'
             ];
 
             $total[] = [
                 'str' => '${points}',
-                'args' => ['points' => array_sum($playerStates[$playerId])]
+                'args' => ['points' => $scoreIncrements[$playerId]]
             ];
         }
 
