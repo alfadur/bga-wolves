@@ -1415,6 +1415,7 @@ class Wolves extends Table
         $playerId = self::getActivePlayerId();
         self::incStat(1, STAT_PLAYER_TURNS_PLAYED, $playerId);
         self::incStat(1, STAT_TURNS_TAKEN);
+        self::dbQuery("DELETE FROM turn_log");
         $this->gamestate->nextState(TR_CONFIRM_END);
     }
 
