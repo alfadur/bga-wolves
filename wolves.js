@@ -1121,6 +1121,9 @@ define([
 
     onLeavingState(stateName) {
         switch (stateName) {
+            case "draftWolves":
+                document.getElementById("wolves-selection-svg").classList.add("hidden");
+            //fallthrough
             case "clientSelectMoveTarget":
             case "howlSelection":
             case "denSelection":
