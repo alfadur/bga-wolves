@@ -742,6 +742,7 @@ function buildPath(steps, fillet) {
 function buildSelection(hexes) {
     const outliner = new HexOutliner(hexes);
     const paths = [];
+    const yOffset = parseInt(document.getElementById("wolves-land").dataset.yOffset);
 
     let outline = outliner.popOutline();
     while (outline.length > 0) {
@@ -749,7 +750,9 @@ function buildSelection(hexes) {
         for (const side of outline) {
             for (let i = 0; i < side.length; ++i) {
                 const direction = (side.start + i) % hexDirections.length;
-                points.push(hexAdd(hexCoords(side), hexCorners[direction]));
+                const point = hexAdd(hexCoords(side), hexCorners[direction]);
+                point.y += yOffset;
+                points.push(point);
             }
         }
         const path = points.map(p => `${p.x} ${p.y}`).join("L");

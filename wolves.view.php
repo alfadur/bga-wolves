@@ -68,6 +68,7 @@ class view_wolves_wolves extends game_view {
 
         $this->tpl['LAND_WIDTH'] = $maxCx + $hex_width;
         $this->tpl['LAND_HEIGHT'] = $maxCy + $hex_height;
+        $this->tpl['Y_OFFSET'] = $yOffset + $hex_height / 2;
 
         $this->page->begin_block('wolves_wolves', 'calendarSpace');
         for ($i = 0; $i < 30; ++$i) {

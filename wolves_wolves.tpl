@@ -7,7 +7,7 @@
 
 <div id="wolves-game">
     <div id="wolves-land-container" style="max-width: {LAND_WIDTH}px">
-        <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px">
+        <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px" data-y-offset="{Y_OFFSET}">
             <div id="wolves-regions">
                 <!-- BEGIN region -->
                 <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
