@@ -487,8 +487,13 @@
     --piece-width:  90px;
     --piece-height: 74px;
     --piece-sprite-y: 440px;
+    --prey-offset: 0;
     background-position-x: 0;
-    transform: scale(var(--piece-scale))
+    transform: translateY(var(--prey-offset)) scale(var(--piece-scale));
+}
+
+.wolves-piece[data-kind="5"]:nth-child(3) > .wolves-piece-sprite {
+    --prey-offset: -5px;
 }
 
 .wolves-piece[data-kind="5"][data-owner="1"] > .wolves-piece-sprite {
