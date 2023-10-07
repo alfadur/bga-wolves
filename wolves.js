@@ -86,6 +86,9 @@ class Attributes {
     }
 
     attributeValue(min, upgrades) { return min + Math.floor((upgrades + 1)  / 2); }
+    get totalDeployedDens() {
+        return this.deployedHowlDens + this.deployedPackDens + this.deployedSpeedDens;
+    }
     get moveRange() { return this.attributeValue(3, this.deployedSpeedDens); }
     get packSpread() { return this.attributeValue(2, this.deployedPackDens); }
     get howlRange() { return this.attributeValue(2, this.deployedHowlDens); }
@@ -601,7 +604,7 @@ function prepareLairSelection(playerId, pieces, terrain) {
     buildSelection(selection);
 }
 
-function prepareDominateSelection(playerId, range, terrain, pieces) {
+function prepareDominateSelection(playerId, range, terrain, pieces, remainingKinds) {
     const terrainClass = `wolves-hex-${terrainNames[terrain]}`;
     const paths = [];
     const selection = [];
@@ -614,6 +617,7 @@ function prepareDominateSelection(playerId, range, terrain, pieces) {
             && getPieceHexNode(piece.id).classList.contains(terrainClass)
             && Array.from(pieces.getByHex(piece, p =>
                 p.owner === piece.owner)).length === 1
+            && remainingKinds.indexOf(piece.kind) >= 0
     }
 
     const validPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], canDominate);
@@ -1070,8 +1074,10 @@ define([
 
             document.getElementById("wolves-selection-svg").classList.toggle("hidden", selectionStates.indexOf(stateName) < 0);
 
+            const attributes = this.activeAttributes();
+
             const playerId = this.getActivePlayerId().toString();
-            const howlRange = this.activeAttributes().howlRange;
+            const howlRange = attributes.howlRange;
 
             switch (stateName) {
                 case "draftWolves":
@@ -1105,7 +1111,14 @@ define([
                     this.paths = selectWolfToDisplace(this.pieces.getById(this.selectedPiece), this.pieces);
                     break;
                 case "dominateSelection":
-                    this.paths = prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces);
+                    const remainingKinds = [];
+                    if (attributes.deployedWolves < 8) {
+                        remainingKinds.push(PieceKind.Pack);
+                    }
+                    if (attributes.totalDeployedDens < 12) {
+                        remainingKinds.push(PieceKind.Den);
+                    }
+                    this.paths = prepareDominateSelection(playerId, howlRange, this.selectedTerrain, this.pieces, remainingKinds);
                     break;
                 case "clientSelectTiles":
                     this.updateTiles(this.getActivePlayerId());
@@ -1138,16 +1151,21 @@ define([
 
     onUpdateActionButtons(stateName, args) {
         console.log(`onUpdateActionButtons: ${stateName}`);
+        const attributes = this.activeAttributes();
 
         if (this.isCurrentPlayerActive()) {
             switch (stateName) {
                 case "actionSelection":
+                    const howlStyle = attributes.deployedWolves >= 8 ? "disabled" : undefined;
+                    const denStyle = attributes.totalDeployedDens >= 12 ? "disabled" : undefined;
+                    const lairStyle = attributes.deployedLairs >= 4 ? "disabled" : undefined;
+                    const dominateStyle = attributes.totalDeployedDens >= 12 && attributes.deployedWolves >= 8 ? "disabled" : undefined;
                     this.ensureButtonSet({
                         move: _("🐾 Move"),
-                        howl: _("🌕 Howl"),
-                        den: _("🕳 Den"),
-                        lair: _("🪨 Lair"),
-                        dominate: _("🐺 Dominate")
+                        howl: [_("🌕 Howl"), howlStyle],
+                        den: [_("🕳 Den"), denStyle],
+                        lair: [_("🪨 Lair"), lairStyle],
+                        dominate: [_("🐺 Dominate"), dominateStyle]
                     }, this.onSelectAction);
                     break;
                 case "moveSelection":
@@ -1177,7 +1195,6 @@ define([
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "clientSelectDenType":
-                    const attributes = this.activeAttributes();
                     const entries = [
                         [_("Pack Spread"), "Pack"],
                         [_("Howl Range"), "Howl"],
@@ -1186,9 +1203,8 @@ define([
                     const buttons = {};
 
                     for (const [caption, name] of entries) {
-                        if (attributes[`deployed${name}Dens`] < 4) {
-                            buttons[name.toLowerCase()] = caption;
-                        }
+                        buttons[name.toLowerCase()] =
+                            attributes[`deployed${name}Dens`] < 4 ? caption : [caption, "disabled"];
                     }
 
                     this.ensureButtonSet(buttons, this.onSelectDen);
@@ -1225,12 +1241,16 @@ define([
 
     ensureButtonSet(buttons, method) {
         Object.keys(buttons).forEach(name => {
-            const caption = buttons[name];
+            const [caption, style] = Array.isArray(buttons[name]) ? buttons[name] : [buttons[name]];
             if (caption) {
+                const id = `button_${name}`;
                 this.ensureButton(`button_${name}`, caption, event => {
                     dojo.stopEvent(event);
                     method.call(this, name);
-                });
+                }, null, null, style !== "disabled" ? style : undefined);
+                if (style === "disabled") {
+                    document.getElementById(id).classList.add(style);
+                }
             }
         });
     },
