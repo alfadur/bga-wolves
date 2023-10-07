@@ -1085,6 +1085,10 @@ class Wolves extends Table
 
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
 
+        $attributesUpdate = [
+            'playerId' => $playerId,
+            'deployedWolves' => 1
+        ];
         $scoreUpdate = [
             'playerId' => $playerId,
             'increment' => $wolfScore
@@ -1097,6 +1101,7 @@ class Wolves extends Table
                 'newOwner' => null,
                 'newKind' => P_LONE
             ],
+            'attributesUpdate' => $attributesUpdate,
             'scoreUpdate' => $scoreUpdate
         ]);
 
@@ -1109,6 +1114,7 @@ class Wolves extends Table
                 'newOwner' => $playerId,
                 'newKind' => $newKind
             ],
+            'attributesUpdate' => $attributesUpdate,
             'scoreUpdate' => $scoreUpdate
         ]);
 
@@ -1347,6 +1353,10 @@ class Wolves extends Table
             $newKind = $wolfType;
 
             $updateArgs = [
+                'attributesUpdate' => [
+                    'playerId' => $playerId,
+                    'deployedWolves' => 1
+                ],
                 'scoreUpdate' => [
                     'playerId' => $playerId,
                     'increment' => $wolfScore
