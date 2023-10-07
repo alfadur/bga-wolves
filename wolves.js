@@ -1748,6 +1748,10 @@ define([
                 moons.forEach(moon => moon.classList.remove("wolves-fade-in"));
             }, 0);
         }
+
+        for (const playerId in scoring.scores) {
+            this.scoreCtrl[playerId].incValue(parseInt(scoring.scores[playerId]));
+        }
     },
 
     onScreenWidthChange() {

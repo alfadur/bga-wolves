@@ -631,10 +631,11 @@ class Wolves extends Table
                 PHASES[$nextPhase][$this->getPlayersNumber()];
         }
 
-        $this->notifyAllPlayers('scoring', clienttranslate('Regions are scored'), $notificationArgs);
+        $scoreIncrements = [];
 
         foreach ($playerStates as $playerId => ["first_place" => $firstPlace, "second_place" => $secondPlace]) {
-            self::DbQuery("UPDATE player SET player_score = player_score + $score * $firstPlace + $score / 2 * $secondPlace WHERE player_id=$playerId");
+            $scoreIncrements[$playerId] = $score * $firstPlace + $score / 2 * $secondPlace;
+            self::DbQuery("UPDATE player SET player_score = player_score + $scoreIncrements[$playerId] WHERE player_id = $playerId");
             if ($firstPlace > 0) {
                 $args = implode(',', array_fill(0, $firstPlace, "($playerId, $currentPhase)"));
                 self::DbQuery("INSERT INTO score_token (player_id, type) VALUES $args");
@@ -645,6 +646,9 @@ class Wolves extends Table
 
             self::debug("Player ($playerId) has scored first place $firstPlace times, and second place $secondPlace times");
         }
+
+        $notificationArgs['scores'] = $scoreIncrements;
+        $this->notifyAllPlayers('scoring', clienttranslate('Regions are scored'), $notificationArgs);
 
         $firstRow = [clienttranslate('Player')];
         $firstPlace = [clienttranslate('First Place Score')];
@@ -725,9 +729,15 @@ class Wolves extends Table
             $reverseString = ", turn_tokens=turn_tokens - 1";
         }
 
-        $this->logDBUpdate("player_status", "$denCol=$denCol + 1$rewardString", "player_id=$playerId", "$denCol=$denCol - 1$reverseString");
-        $this->logDBUpdate('player', "player_score=player_score+$numPoints", "player_id=$playerId", "player_score=player_score-$numPoints");
-        return $changes;
+        $this->logDBUpdate("player_status", "$denCol = $denCol + 1$rewardString", "player_id = $playerId", "$denCol = $denCol - 1$reverseString");
+        $this->logDBUpdate('player', "player_score = player_score + $numPoints", "player_id = $playerId", "player_score = player_score - $numPoints");
+        return [
+            'attributesUpdate' => $changes,
+            'scoreUpdate' => [
+                'playerId' => $playerId,
+                'increment' => $numPoints
+            ]
+        ];
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -1049,11 +1059,16 @@ class Wolves extends Table
         $this->logDBUpdate("pieces", "kind=$newKind, owner=$playerId", "id = $targetId", "kind=$lone, owner=NULL");
         $this->logDBInsert("moonlight_board", "(kind)", "($lone)");
         $this->logDBUpdate("player_status", "deployed_wolves=deployed_wolves + 1", "player_id=$playerId", "deployed_wolves=deployed_wolves - 1");
-        // Update tie breaker
+
         $wolfScore = DEPLOYED_WOLF_SCORE[$wolfIndex];
         $this->logDBUpdate("player", "player_score = player_score + $wolfScore", "player_id = $playerId", "player_score = player_score - $wolfScore");
 
         $this->logIncStat(STAT_PLAYER_LONE_WOLVES_CONVERTED, 1, $playerId);
+
+        $scoreUpdate = [
+            'playerId' => $playerId,
+            'increment' => $wolfScore
+        ];
 
         $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), [
             'player_name' => self::getActivePlayerName(),
@@ -1061,7 +1076,8 @@ class Wolves extends Table
                 'targetId' => $targetId,
                 'newOwner' => null,
                 'newKind' => P_LONE
-            ]
+            ],
+            'scoreUpdate' => $scoreUpdate
         ]);
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf to ${pieceIcon}'), [
@@ -1072,7 +1088,8 @@ class Wolves extends Table
                 'targetId' => $targetId,
                 'newOwner' => $playerId,
                 'newKind' => $newKind
-            ]
+            ],
+            'scoreUpdate' => $scoreUpdate
         ]);
 
         $this->giveExtraTime($playerId);
@@ -1134,8 +1151,8 @@ class Wolves extends Table
                 'kind' => P_DEN,
                 'attribute' => $denType
             ],
-            'attributesUpdate' => $this->giveDenAward($denType, $deployedDens, $playerId)
         ];
+        $args = array_merge($args, $this->giveDenAward($denType, $deployedDens, $playerId));
 
         $this->logNotification(clienttranslate('${player_name} takes the ${pieceIcon} back'), $args);
 
@@ -1204,9 +1221,9 @@ class Wolves extends Table
         $pack = P_PACK;
         $lairScore = LAIR_SCORE;
         $this->logDBInsert("moonlight_board", "(kind, player_id)", "($den, $playerId)");
-        $this->logDBUpdate("pieces", "kind=$lairKind", "x=$x AND y=$y AND kind NOT IN ($alpha, $pack)", "kind=$den");
-        $this->logDBUpdate("player_status", "deployed_lairs=deployed_lairs + 1, terrain_tokens=terrain_tokens + 1", "player_id=$playerId", "deployed_lairs=deployed_lairs - 1, terrain_tokens=terrain_tokens - 1");
-        $this->logDBUpdate("player", "player_score=player_score+$lairScore", "player_id=$playerId", "player_score=player_score-$lairScore");
+        $this->logDBUpdate("pieces", "kind = $lairKind", "x = $x AND y = $y AND kind NOT IN ($alpha, $pack)", "kind = $den");
+        $this->logDBUpdate("player_status", "deployed_lairs = deployed_lairs + 1, terrain_tokens = terrain_tokens + 1", "player_id = $playerId", "deployed_lairs = deployed_lairs - 1, terrain_tokens = terrain_tokens - 1");
+        $this->logDBUpdate("player", "player_score = player_score + $lairScore", "player_id = $playerId", "player_score = player_score - $lairScore");
 
         $args = [
             'player_name' => self::getActivePlayerName(),
@@ -1223,6 +1240,10 @@ class Wolves extends Table
                 'playerId' => $playerId,
                 'terrainTokens' => 1,
                 'deployedLairs' => 1
+            ],
+            'scoreUpdate' => [
+                'playerId' => $playerId,
+                'increment' => $lairScore
             ]
         ];
 
@@ -1280,6 +1301,7 @@ class Wolves extends Table
 
         $oldKind = $target['kind'];
         $oldOwner = $target['owner'];
+
         if ((int)$oldKind === P_DEN) {
             if (!array_key_exists($denType, DEN_COLS)) {
                 throw new BgaUserException(_('Must specify a den type if replacing a den!'));
@@ -1290,7 +1312,7 @@ class Wolves extends Table
                 throw new BgaUserException(_('You have no more dens of this type to deploy!'));
             }
 
-            $this->giveDenAward($denType, $numDens, $playerId);
+            $updateArgs = $this->giveDenAward($denType, $numDens, $playerId);
             $newKind = P_DEN;
         } else {
             $numWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
@@ -1303,6 +1325,13 @@ class Wolves extends Table
             $this->logDBUpdate("player", "player_score = player_score + $wolfScore", "player_id = $playerId", "player_score = player_score - $wolfScore");
             $wolfType = WOLF_DEPLOYMENT[$numWolves];
             $newKind = $wolfType;
+
+            $updateArgs = [
+                'scoreUpdate' => [
+                    'playerId' => $playerId,
+                    'increment' => $wolfScore
+                ]
+            ];
         }
 
         $this->logDBUpdate("pieces", "owner=$playerId, kind=$newKind", "id=$targetId", "owner=$oldOwner, kind=$oldKind");
@@ -1312,7 +1341,7 @@ class Wolves extends Table
         $stat = (int)$target['kind'] === P_DEN ? STAT_PLAYER_DENS_DOMINATED : STAT_PLAYER_WOLVES_DOMINATED;
         $this->logIncStat($stat, 1, $playerId);
 
-        $this->logNotification('${player_name} returns the ${pieceIcon} back', [
+        $args = [
             'pieceIcon' => "$playerId,$target[kind]",
             'preserve' => ['pieceIcon'],
             'convertUpdate' => [
@@ -1320,10 +1349,13 @@ class Wolves extends Table
                 'newOwner' => $target['owner'],
                 'newKind' => (int)$target['kind'],
                 'attribute' => $denType
-            ]
-        ]);
+            ],
+        ];
+        $args = array_merge($args, $updateArgs);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places  ${pieceIcon1}'), [
+        $this->logNotification('${player_name} returns the ${pieceIcon} back', $args);
+
+        $args = [
             "player_name" => self::getActivePlayerName(),
             'pieceIcon0' => "$target[owner],$target[kind]",
             'pieceIcon1' => "$playerId,$newKind",
@@ -1334,7 +1366,10 @@ class Wolves extends Table
                 'newKind' => $newKind,
                 'attribute' => $denType
             ]
-        ]);
+        ];
+        $args = array_merge($args, $updateArgs);
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places  ${pieceIcon1}'), $args);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
