@@ -75,7 +75,7 @@ class Attributes {
             deployedLairs: parseInt(data.deployed_lairs),
             deployedWolves: parseInt(data.deployed_wolves),
             terrainTokens: parseInt(data.terrain_tokens),
-            actionTokens: parseInt(data.turn_tokens),
+            actionTokens: parseInt(data.action_tokens),
             preyData: parseInt(data.prey_data),
             tile0: parseInt(data.tile_0),
             tile1: parseInt(data.tile_1),

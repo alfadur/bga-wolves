@@ -163,7 +163,7 @@ class Wolves extends Table
         if ($player_count === 2) {
             $this->generateAIPieces();
             $currentPlayer = $this->getNextPlayerTable()[0];
-            self::DbQuery("UPDATE player_status SET turn_tokens=turn_tokens+1 WHERE player_id <> $currentPlayer");
+            self::DbQuery("UPDATE player_status SET action_tokens=action_tokens+1 WHERE player_id <> $currentPlayer");
         }
     }
 
@@ -494,9 +494,9 @@ class Wolves extends Table
 
             $this->logDBUpdate(
                 "player_status",
-                "turn_tokens=turn_tokens + 1, prey_data = prey_data | $preyData",
+                "action_tokens=action_tokens + 1, prey_data = prey_data | $preyData",
                 "player_id=$playerId",
-                "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
+                "action_tokens=action_tokens - 1, prey_data = prey_data ^ $preyData"
             );
 
             $scoreIndex = (int)$data['hunted'];
@@ -729,8 +729,8 @@ class Wolves extends Table
             $reverseString = ", terrain_tokens=terrain_tokens - 1";
         } else if ($award === AW_ACTION) {
             $changes['actionTokens'] = 1;
-            $rewardString = ", turn_tokens=turn_tokens + 1";
-            $reverseString = ", turn_tokens=turn_tokens - 1";
+            $rewardString = ", action_tokens=action_tokens + 1";
+            $reverseString = ", action_tokens=action_tokens - 1";
         }
 
         $this->logDBUpdate("player_status", "$denCol = $denCol + 1$rewardString", "player_id = $playerId", "$denCol = $denCol - 1$reverseString");
@@ -1384,11 +1384,11 @@ class Wolves extends Table
         self::checkAction('extraTurn');
 
         $playerId = self::getActivePlayerId();
-        $turnTokens = (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId");
+        $turnTokens = (int)self::getUniqueValueFromDB("SELECT action_tokens FROM player_status WHERE player_id=$playerId");
         if ($turnTokens == 0) {
             throw new BgaUserException('You have no extra turn tokens to play!');
         }
-        $this->logDBUpdate("player_status", "turn_tokens=turn_tokens - 1", "player_id=$playerId", "turn_tokens=turn_tokens + 1");
+        $this->logDBUpdate("player_status", "action_tokens=action_tokens - 1", "player_id=$playerId", "action_tokens=action_tokens + 1");
         $this->logIncGameStateValue(G_ACTIONS_REMAINING, 1);
 
         $this->logIncStat(STAT_PLAYER_BONUS_ACTIONS_TAKEN, 1, $playerId);
@@ -1470,7 +1470,7 @@ class Wolves extends Table
     {
         $playerId = self::getActivePlayerId();
         return [
-            "remainingTokens" => (int)self::getUniqueValueFromDB("SELECT turn_tokens FROM player_status WHERE player_id=$playerId")
+            "remainingTokens" => (int)self::getUniqueValueFromDB("SELECT action_tokens FROM player_status WHERE player_id=$playerId")
         ];
     }
 
