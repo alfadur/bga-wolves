@@ -517,9 +517,9 @@ class Wolves extends Table
             if ($playerCount > 2) {
                 $this->logDBUpdate(
                     "player_status",
-                    "action_tokens=action_tokens + 1, prey_data = prey_data | $preyData",
-                    "player_id=$playerId",
-                    "action_tokens=action_tokens - 1, prey_data = prey_data ^ $preyData"
+                    "action_tokens = action_tokens + 1, prey_data = prey_data | $preyData",
+                    "player_id = $playerId",
+                    "action_tokens = action_tokens - 1, prey_data = prey_data ^ $preyData"
                 );
                 $args = array_merge($args, [
                     'attributesUpdate' => [
@@ -527,6 +527,13 @@ class Wolves extends Table
                         'actionTokens' => 1
                     ],
                 ]);
+            } else {
+                $this->logDBUpdate(
+                    "player_status",
+                    "prey_data = prey_data | $preyData",
+                    "player_id = $playerId",
+                    "prey_data = prey_data ^ $preyData"
+                );
             }
 
             $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
