@@ -478,7 +478,7 @@ class Wolves extends Table
             $alphaKind = P_ALPHA;
             $packKind = P_PACK;
             $query = <<<EOF
-                SELECT COUNT(DISTINCT x, y)
+                SELECT COUNT(DISTINCT x, y) AS count, BIT_COUNT(prey_data) AS hunted
                 FROM pieces JOIN player_status ON owner = player_id
                 WHERE x BETWEEN $x - 1 AND $x + 1
                     AND y BETWEEN $y - 1 AND $y + 1 
@@ -488,7 +488,8 @@ class Wolves extends Table
                     AND kind IN ($packKind, $alphaKind)
                 EOF;
 
-            if (self::getUniqueValueFromDB($query) < 3) {
+            $data = self::getObjectFromDB($query);
+            if ((int)$data['count'] < 3) {
                 continue;
             }
 
@@ -499,6 +500,12 @@ class Wolves extends Table
                 "turn_tokens=turn_tokens - 1, prey_data = prey_data ^ $preyData"
             );
 
+            $scoreIndex = (int)$data['hunted'];
+            $score = self::getPlayersNumber() === 2 ?
+                HUNT_SCORE_2P[$scoreIndex] : HUNT_SCORE[$scoreIndex];
+
+            $this->logDBUpdate('player', "player_score = player_score + $score", "player_id = $playerId", "player_score = player_score - $score");
+
             $args = [
                 'player_name' => self::getActivePlayerName(),
                 'huntUpdate' => [
@@ -507,12 +514,16 @@ class Wolves extends Table
                     'x' => $x,
                     'y' => $y,
                     'preyData' => $preyData
+                ],
+                'scoreUpdate' => [
+                    'playerId' => $playerId,
+                    'increment' => $score
                 ]
             ];
 
             $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
+            $this->logDBDelete("pieces", "x = $x AND y = $y AND kind = $preyType ORDER BY id DESC LIMIT 1");
 
-            $this->logDBDelete("pieces", "x=$x AND y=$y AND kind=$preyType LIMIT 1");
             self::notifyAllPlayers(
                 'update',
                 clienttranslate('${player_name} hunts down a prey'),

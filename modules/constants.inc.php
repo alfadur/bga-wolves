@@ -389,6 +389,13 @@ const DEN_SCORE_2P = [
 
 const LAIR_SCORE = 5;
 
+const HUNT_SCORE = [
+    1, 3, 5, 7, 9
+];
+const HUNT_SCORE_2P = [
+    2, 3, 4, 5, 6
+];
+
 
 // Table Stats
 
