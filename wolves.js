@@ -1181,8 +1181,8 @@ define([
                 case "clientSelectDenType":
                     const entries = [
                         [_("Pack Spread"), "Pack"],
-                        [_("Howl Range"), "Howl"],
-                        [_("Wolf Speed"), "Speed"]
+                        [_("Wolf Speed"), "Speed"],
+                        [_("Howl Range"), "Howl"]
                     ]
                     const buttons = {};
 
