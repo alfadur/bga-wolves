@@ -492,15 +492,9 @@ class Wolves extends Table
                 continue;
             }
 
-            $this->logDBUpdate(
-                "player_status",
-                "action_tokens=action_tokens + 1, prey_data = prey_data | $preyData",
-                "player_id=$playerId",
-                "action_tokens=action_tokens - 1, prey_data = prey_data ^ $preyData"
-            );
-
             $scoreIndex = (int)$data['hunted'];
-            $score = self::getPlayersNumber() === 2 ?
+            $playerCount = self::getPlayersNumber();
+            $score = $playerCount === 2 ?
                 HUNT_SCORE_2P[$scoreIndex] : HUNT_SCORE[$scoreIndex];
 
             $this->logDBUpdate('player', "player_score = player_score + $score", "player_id = $playerId", "player_score = player_score - $score");
@@ -519,6 +513,21 @@ class Wolves extends Table
                     'increment' => $score
                 ]
             ];
+
+            if ($playerCount > 2) {
+                $this->logDBUpdate(
+                    "player_status",
+                    "action_tokens=action_tokens + 1, prey_data = prey_data | $preyData",
+                    "player_id=$playerId",
+                    "action_tokens=action_tokens - 1, prey_data = prey_data ^ $preyData"
+                );
+                $args = array_merge($args, [
+                    'attributesUpdate' => [
+                        'playerId' => $playerId,
+                        'actionTokens' => 1
+                    ],
+                ]);
+            }
 
             $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
             $this->logDBDelete("pieces", "x = $x AND y = $y AND kind = $preyType ORDER BY id DESC LIMIT 1");
