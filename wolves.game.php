@@ -601,7 +601,7 @@ class Wolves extends Table
                     if (count($presence) === 2) {
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
-                    } else if ($presence[1]['score'] !== $presence[2]['score'] && $presence[1]['alphas'] !== $presence[2]['alphas']) {
+                    } else if ($presence[1]['score'] !== $presence[2]['score'] || $presence[1]['alphas'] !== $presence[2]['alphas']) {
                         //Otherwise, there can only be one player who wins second place
                         $secondPlace = $presence[1]['owner'];
                         $playerStates[$secondPlace]["second_place"]++;
