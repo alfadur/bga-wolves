@@ -862,25 +862,19 @@ class Wolves extends Table
 
         $terrain = $forceTerrain ?? $this->flipTiles($playerId, $tiles);
 
-        $flipTilesState = 0;
-        foreach ($tiles as $tileIndex) {
-            $flipTilesState |= (1 << $tileIndex);
-        }
-
-        $actionName = $this->actionNames[$action];
-        switch ($actionName) {
-            case 'move':
+        switch ($action) {
+            case A_MOVE:
                 $this->logSetGameStateValue(G_MOVED_WOLVES, 0);
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_pack_dens FROM player_status WHERE player_id=$playerId");
                 $this->logsetGameStateValue(G_MOVES_REMAINING, PACK_SPREAD[$deployedDens]);
                 break;
-            case 'howl':
+            case A_HOWL:
                 $deployedWolves = (int)self::getUniqueValueFromDB("SELECT deployed_wolves FROM player_status WHERE player_id=$playerId");
                 if ($deployedWolves > count(WOLF_DEPLOYMENT)) {
                     throw new BgaUserException('You have no wolves to deploy!');
                 }
                 break;
-            case 'den':
+            case A_DEN:
                 $deployedDens = (int)self::getUniqueValueFromDB("SELECT (deployed_howl_dens + deployed_pack_dens + deployed_speed_dens) as deployed_dens FROM player_status WHERE player_id=$playerId");
                 if ($deployedDens >= count(HOWL_RANGE) + count(PACK_SPREAD) + count(WOLF_SPEED)) {
                     throw new BgaUserException('You have no dens to deploy!');
@@ -913,15 +907,25 @@ class Wolves extends Table
             ];
         }
 
-        $this->logNotification(clienttranslate('${player_name} flips tiles back'), $args);
+        $this->logNotification(clienttranslate('${player_name} flips the tiles back'), $args);
 
         $args = array_merge($args, [
+            'tilesCount' => count($tiles),
             'actionName' => $this->actionNames[$action],
-            'preserve' => ['actionName']
+            'i18n' => ['actionName'],
+            'preserve' => ['tilesCount', 'actionName']
         ]);
-        $this->notifyAllPlayers('update', clienttranslate('${player_name} flips tiles to perform ${actionName}'), $args);
 
-        $this->gamestate->nextState("${actionName}Select");
+        if ($bonusTerrain > 0) {
+            $args['tokensCount'] = $bonusTerrain;
+            $args['preserve'][] = 'tokensCount';
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) and spends ${tokensCount} bonus terrain token(s) to perform the "${actionName}" action'), $args);
+        } else {
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) to perform a "${actionName}" action'), $args);
+        }
+
+        $transition = ['move', 'howl', 'den', 'lair', 'dominate'][$action];
+        $this->gamestate->nextState("${transition}Select");
     }
 
     function move(int $wolfId, array $steps): void
@@ -1093,7 +1097,7 @@ class Wolves extends Table
             'increment' => $wolfScore
         ];
 
-        $this->logNotification(clienttranslate('${player_name} puts the Lone Wolf back'), [
+        $this->logNotification(clienttranslate('${player_name} returns the Lone Wolf back'), [
             'player_name' => self::getActivePlayerName(),
             'convertUpdate' => [
                 'targetId' => $targetId,
@@ -1104,7 +1108,7 @@ class Wolves extends Table
             'scoreUpdate' => $scoreUpdate
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf to ${pieceIcon}'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf to a ${pieceIcon}'), [
             'player_name' => self::getActivePlayerName(),
             'pieceIcon' => "$playerId,$newKind",
             'preserve' => ['pieceIcon'],
@@ -1382,7 +1386,7 @@ class Wolves extends Table
         ];
         $args = array_merge($args, $updateArgs);
 
-        $this->logNotification('${player_name} returns the ${pieceIcon} back', $args);
+        $this->logNotification('${player_name} takes the ${pieceIcon} back', $args);
 
         $args = [
             "player_name" => self::getActivePlayerName(),
@@ -1398,7 +1402,7 @@ class Wolves extends Table
         ];
         $args = array_merge($args, $updateArgs);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places  ${pieceIcon1}'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places a ${pieceIcon1}'), $args);
 
         $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
@@ -1429,7 +1433,7 @@ class Wolves extends Table
 
         $this->logNotification('${player_name} cancels the bonus action', $args);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} decides to take a bonus action'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} spends a bonus action token to take another action'), $args);
 
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }

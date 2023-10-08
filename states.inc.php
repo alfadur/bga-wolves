@@ -70,8 +70,8 @@ $machinestates = [
 
     ST_DRAFT_WOLVES => [
         'name' => 'draftWolves',
-        'description' => clienttranslate('${actplayer} must place 🐺'),
-        'descriptionmyturn' => clienttranslate('${you} must place 🐺'),
+        'description' => clienttranslate('${actplayer} must place wolves'),
+        'descriptionmyturn' => clienttranslate('${you} must place wolves'),
         'type' => 'activeplayer',
         'possibleactions' => ['draftPlace'],
         'transitions' => [TR_DRAFT_PLACE => ST_DRAFT_RESOLUTION]
@@ -79,7 +79,7 @@ $machinestates = [
 
     ST_NEXT_TURN => [
         'name' => 'nextTurn',
-        'description' => clienttranslate('Starting next turn'),
+        'description' => clienttranslate('Starting the next turn'),
         'type' => 'game',
         'action' => 'stNextTurn',
         'transitions' => [TR_START_TURN => ST_ACTION_SELECTION, TR_END_GAME => ST_GAME_END]
@@ -87,8 +87,8 @@ $machinestates = [
 
     ST_ACTION_SELECTION => [
         'name' => 'actionSelection',
-        'description' => clienttranslate('${actplayer} must select a 🐺 action'),
-        'descriptionmyturn' => clienttranslate('${you} must select a 🐺 action'),
+        'description' => clienttranslate('${actplayer} must select an action'),
+        'descriptionmyturn' => clienttranslate('${you} must select an action'),
         'type' => 'activeplayer',
         'args' => 'argActionSelection',
         'possibleactions' => ['selectAction', 'undo', 'reverseBonus'],
@@ -116,8 +116,8 @@ $machinestates = [
 
     ST_MOVE_SELECTION => [
         'name' => 'moveSelection',
-        'description' => clienttranslate('${actplayer} must move ${numMoves} 🐺'),
-        'descriptionmyturn' => clienttranslate('${you} must select a 🐺 to move'),
+        'description' => clienttranslate('${actplayer} must move a wolf'),
+        'descriptionmyturn' => clienttranslate('${you} must select a wolf to move'),
         'type' => 'activeplayer',
         'args' => 'argMove',
         'action' => 'stMove',
@@ -127,8 +127,8 @@ $machinestates = [
 
     ST_DISPLACE => [
         'name' => 'displaceWolf',
-        'description' => clienttranslate('${actplayer} must displace 🐺'),
-        'descriptionmyturn' => clienttranslate('${you} must displace 🐺'),
+        'description' => clienttranslate('${actplayer} must displace a wolf'),
+        'descriptionmyturn' => clienttranslate('${you} must displace a wolf'),
         'type' => 'activeplayer',
         'args' => 'argDisplaceSelection',
         'action' => 'stDisplace',
@@ -139,7 +139,7 @@ $machinestates = [
     ST_DEN_SELECTION => [
         'name' => 'denSelection',
         'description' => clienttranslate('${actplayer} must place a den'),
-        'descriptionmyturn' => clienttranslate('${you} must select a den to place'),
+        'descriptionmyturn' => clienttranslate('${you} must select a location for the den'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
         'action' => 'stDen',
@@ -149,7 +149,7 @@ $machinestates = [
 
     ST_LAIR_SELECTION => [
         'name' => 'lairSelection',
-        'description' => clienttranslate('${actplayer} must upgrade a den to a lair'),
+        'description' => clienttranslate('${actplayer} must upgrade a den into a lair'),
         'descriptionmyturn' => clienttranslate('${you} must select a den to upgrade into a lair'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
@@ -160,8 +160,8 @@ $machinestates = [
 
     ST_DOMINATE_SELECTION => [
         'name' => 'dominateSelection',
-        'description' => clienttranslate('${actplayer} must dominate one enemy piece'),
-        'descriptionmyturn' => clienttranslate('${you} must select one enemy piece to dominate'),
+        'description' => clienttranslate('${actplayer} must dominate an enemy piece'),
+        'descriptionmyturn' => clienttranslate('${you} must select an enemy piece to dominate'),
         'type' => 'activeplayer',
         'args' => 'argTerrain',
         'action' => 'stDominate',
@@ -180,8 +180,8 @@ $machinestates = [
 
     ST_CONFIRM_END => [
         'name' => 'confirmEnd',
-        'description' => clienttranslate('${actplayer} must end their turn'),
-        'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tiles, or end your turn'),
+        'description' => clienttranslate('${actplayer} must confirm the end of the turn'),
+        'descriptionmyturn' => clienttranslate('${you} must spend bonus turn tokens, or end your turn'),
         'type' => 'activeplayer',
         'args' => 'argConfirmEnd',
         'action' => 'stConfirmEnd',

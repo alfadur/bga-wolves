@@ -20,9 +20,9 @@ $this->terrainNames = [
 ];
 
 $this->actionNames = [
-    A_MOVE => 'move',
-    A_HOWL => 'howl',
-    A_DEN => 'den',
-    A_LAIR => 'lair',
-    A_DOMINATE => 'dominate'
+    A_MOVE => clienttranslate('Move'),
+    A_HOWL => clienttranslate('Howl'),
+    A_DEN => clienttranslate('Build Den'),
+    A_LAIR => clienttranslate('Build Lair'),
+    A_DOMINATE => clienttranslate('Dominate')
 ];
