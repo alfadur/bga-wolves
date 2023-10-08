@@ -1148,11 +1148,11 @@ define([
                     const lairStyle = attributes.deployedLairs >= 4 ? "disabled" : undefined;
                     const dominateStyle = attributes.totalDeployedDens >= 12 && attributes.deployedWolves >= 8 ? "disabled" : undefined;
                     this.ensureButtonSet({
-                        move: _("🐾 Move"),
-                        howl: [_("🌕 Howl"), howlStyle],
-                        den: [_("🕳 Den"), denStyle],
-                        lair: [_("🪨 Lair"), lairStyle],
-                        dominate: [_("🐺 Dominate"), dominateStyle]
+                        move: `🐾 ${_("Move")}`,
+                        howl: [`🌕 ${_("Howl")}`, howlStyle],
+                        den: [`🕳 ${_("Build Den")}`, denStyle],
+                        lair: [`🪨 ${_("Upgrade Den")}`, lairStyle],
+                        dominate: [`🐺 ${_("Dominate")}`, dominateStyle]
                     }, this.onSelectAction);
                     break;
                 case "moveSelection":
@@ -1163,7 +1163,7 @@ define([
                     const remainingCost = this.selectedAction.cost - flippedTiles;
                     let tokens = this.activeAttributes().terrainTokens;
                     const text = tokens && tokens >= remainingCost ?
-                        _(`Flip ${flippedTiles} tiles (${remainingCost} tokens)`) :
+                        _(`Flip ${flippedTiles} tiles and spend ${remainingCost} terrain token(s)`) :
                         _(`Flip ${flippedTiles} tiles`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
                     if (tokens < remainingCost) {
@@ -1174,11 +1174,14 @@ define([
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "clientSelectTerrain":
-                    for (const terrain of terrainNames) {
+                    terrainNames.forEach((terrain, index) => {
                         if (terrain !== "water") {
-                            this.ensureButton(`wolves-action-select-${terrain}`, terrain, "onSubmitTerrain");
+                            const id = `wolves-action-select-${terrain}`;
+                            const html = `
+                                <div class="wolves-terrain-tile wolves-button-terrain-tile" data-x="${index}"></div>`;
+                            this.ensureButton(id, html, "onSubmitTerrain");
                         }
-                    }
+                    });
                     this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
                     break;
                 case "clientSelectDenType":
@@ -1475,7 +1478,7 @@ define([
             }, this, () => this.selectedAction = {});
         } else {
             this.setClientState("clientSelectTerrain", {
-                descriptionmyturn: _(`\${you} must select the terrain for the action`)
+                descriptionmyturn: _(`\${you} must select the terrain type for the action`)
             });
         }
     },
@@ -1489,7 +1492,7 @@ define([
             lock: true,
             actionId: actionNames.indexOf(this.selectedAction.name),
             terrainTokens: this.selectedAction.cost,
-            forceTerrain: terrainNames.indexOf(event.target.innerText),
+            forceTerrain: event.target.querySelector(".wolves-terrain-tile").dataset.x,
             tiles: ""
         }, this, () => this.selectedAction = {});
     },

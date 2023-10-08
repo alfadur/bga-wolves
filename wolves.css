@@ -54,6 +54,15 @@
     background-position-y: calc(var(--tile-height) * -2);
 }
 
+.wolves-button-terrain-tile {
+    --tile-width: 24px;
+    --tile-height: 36px;
+    border-radius: 10px;
+    background-size: 120px 108px;
+    box-shadow: 0 1px 2px black;
+    pointer-events: none;
+}
+
 #wolves-selection-svg {
     position: absolute;
     left: 0;
