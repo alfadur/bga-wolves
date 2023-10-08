@@ -316,7 +316,7 @@
     transition: opacity 300ms ease-out;
 }
 
-#wolves-land.wolves-selectable .wolves-piece:not(.wolves-selectable):not(.wolves-selected) {
+#wolves-land.wolves-selectable .wolves-piece:not(.wolves-selectable):not(.wolves-selected):not([data-kind="4"]):not([data-kind="5"]) {
     opacity: 0.75;
 }
 
