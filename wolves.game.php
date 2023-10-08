@@ -921,7 +921,7 @@ class Wolves extends Table
             $args['preserve'][] = 'tokensCount';
             $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) and spends ${tokensCount} bonus terrain token(s) to perform the "${actionName}" action'), $args);
         } else {
-            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) to perform a "${actionName}" action'), $args);
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) to perform the "${actionName}" action'), $args);
         }
 
         $transition = ['move', 'howl', 'den', 'lair', 'dominate'][$action];
