@@ -68,6 +68,7 @@ const actionCosts = Object.freeze({
 class Attributes {
     constructor(data) {
         Object.assign(this, {
+            playerId: data.player_id,
             homeTerrain: parseInt(data.home_terrain),
             deployedHowlDens: parseInt(data.deployed_howl_dens),
             deployedPackDens: parseInt(data.deployed_pack_dens),
@@ -106,7 +107,7 @@ class Attributes {
     update(data) {
         for (const name of Object.getOwnPropertyNames(data)) {
             const camelName = name.replace(/_[a-z0-9]/g, (match) => match.substring(1).toUpperCase());
-            if (camelName in this) {
+            if (camelName in this && typeof this[camelName] === "number") {
                 this[camelName] += parseInt(data[name]);
             }
         }
@@ -851,13 +852,13 @@ define([
                 `playerBoard2p${attributes.homeTerrain + 1}.jpg` :
                 `playerBoard${attributes.homeTerrain + 1}.jpg`)
 
-            this.updateTiles(playerId);
-
             const node = document.getElementById(`player_board_${playerId}`);
             if (playerCount === 2) {
                 node.classList.add("wolves-2p");
             }
             dojo.place(this.format_block("jstpl_player_status", attributes), node);
+
+            this.updateTiles(playerId);
 
             function removeSpaces(groupName, count) {
                 Array.from(document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group > *`))
@@ -1079,7 +1080,6 @@ define([
                     clearTag("wolves-selected");
                     clearTag("wolves-selectable");
                     this.updateTiles(this.getActivePlayerId());
-                    document.getElementById("wolves-active-tiles").classList.remove("hidden");
                     break;
                 case "howlSelection":
                     prepareHowlSelection(playerId, this.pieces, this.selectedTerrain, howlRange);
@@ -1283,6 +1283,8 @@ define([
         }
 
         setTiles(document.querySelectorAll(`#wolves-player-container-${playerId} .wolves-player-tile`));
+
+        setTiles(document.querySelectorAll(`#wolves-player-status-tiles-${playerId} *`));
     },
 
     updateStatus(playerId) {

@@ -512,15 +512,25 @@
     background-position-x: calc(var(--piece-width) * -4);
 }
 
+.wolves-player-status-tiles {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: baseline;
+    gap: 3px;
+}
+
 .wolves-player-status-terrain {
-    width: 60px;
-    height: 89px;
-    border-radius: 17px;
-    background-position: -318px -31px;
+    width: 42px;
+    height: 63px;
+    border-radius: 11px;
+    background-size: 1084px 467px;
+    background-position: -223px -22px;
+    box-shadow: 0 2px 4px black;
 }
 
 .wolves-2p .wolves-player-status-terrain {
-    background-position: -1171px -31px;
+    background-position: -820px -22px;
 }
 
 .wolves-player-status-terrain[data-terrain="0"] {
@@ -561,6 +571,14 @@
 
 .wolves-2p .wolves-player-status-terrain[data-terrain="4"] {
     background-image: url("img/playerBoard2p5.jpg");
+}
+
+.wolves-player-status-tile {
+    --tile-width: 36px;
+    --tile-height: 54px;
+    border-radius: 10px;
+    background-size: 180px 162px;
+    box-shadow: 0 2px 4px black;
 }
 
 .wolves-player-status {
