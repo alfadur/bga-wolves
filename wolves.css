@@ -584,7 +584,7 @@
 
 .wolves-player-status {
     display: flex;
-    margin: 4px;
+    margin: 8px;
     gap: 4px;
     justify-content: center;
 }
@@ -634,6 +634,14 @@
     box-shadow: 0 0 4px gray, 0 1px 2px black;
     text-align: center;
     font-weight: bold;
+    transform-origin: bottom right;
+    transition: transform 500ms ease-out, color 2000ms ease-out;
+}
+
+.wolves-status-icon.wolves-status-animation:after {
+    color: red;
+    transform: scale(1.15);
+    transition: none;
 }
 
 #wolves-boards-padding {

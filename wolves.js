@@ -1291,9 +1291,20 @@ define([
         const statusNode = document.querySelector(
             `#player_board_${playerId} .wolves-player-status`);
         if (statusNode) {
-            dojo.destroy(statusNode);
-            const node = document.getElementById(`player_board_${playerId}`);
-            dojo.place(this.format_block("jstpl_player_status", this.attributes[playerId]), node);
+            function update(name, value) {
+                const attributeNode = statusNode.querySelector(`.wolves-status-icon[data-attribute="${name}"]`);
+                if (attributeNode && parseInt(attributeNode.dataset.value) !== value) {
+                    attributeNode.dataset.value = value.toString();
+                    attributeNode.classList.add("wolves-status-animation");
+                    setTimeout(() => attributeNode.classList.remove("wolves-status-animation"), 1);
+                }
+            }
+            const attributes = this.attributes[playerId];
+            update("speed", attributes.moveRange);
+            update("pack", attributes.packSpread);
+            update("howl", attributes.howlRange);
+            update("terrain", attributes.terrainTokens);
+            update("action", attributes.actionTokens);
         }
     },
 
@@ -1696,7 +1707,7 @@ define([
             }
 
             moonNode.classList.add("wolves-disappearing");
-            moonNode.addEventListener("animationend", () => {dojo.destroy(moonNode)}, {once: true})
+            moonNode.addEventListener("animationend", () => dojo.destroy(moonNode), {once: true});
         }
 
         if ("nextScoring" in scoring) {
