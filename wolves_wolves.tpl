@@ -89,11 +89,11 @@ const jstpl_player_status =
         <div class="wolves-terrain-tile wolves-player-status-tile"></div>
     </div>
     <div class="wolves-player-status">
-        <div>Move \${moveRange}</div>
-        <div>Spread \${packSpread}</div>
-        <div>Howl \${howlRange}</div>
-        <div>Terrain \${terrainTokens}</div>
-        <div>Actions \${actionTokens}</div>
+        <div class="wolves-status-icon" data-attribute="speed" data-value="\${moveRange}"></div>
+        <div class="wolves-status-icon" data-attribute="pack" data-value="\${packSpread}"></div>
+        <div class="wolves-status-icon" data-attribute="howl" data-value="\${howlRange}"></div>
+        <div class="wolves-status-icon" data-attribute="terrain" data-value="\${terrainTokens}"></div>
+        <div class="wolves-status-icon" data-attribute="action" data-value="\${actionTokens}"></div>
      </div>`;
 const jstpl_log_icon =
     `<span class="wolves-log-icon-\${iconType}"

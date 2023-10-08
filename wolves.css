@@ -516,7 +516,8 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    align-items: baseline;
+    justify-content: center;
+    align-items: flex-end;
     gap: 3px;
 }
 
@@ -583,7 +584,45 @@
 
 .wolves-player-status {
     display: flex;
-    gap: 4px
+    margin: 4px;
+    gap: 4px;
+    justify-content: center;
+}
+
+.wolves-status-icon {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.wolves-status-icon[data-attribute="terrain"] {
+    background-image: url("img/pieces.png");
+    background-size:  467% 503%;
+    background-position: -76% -94%;
+}
+
+.wolves-status-icon[data-attribute="action"] {
+    background-image: url("img/pieces.png");
+    background-size:  467% 503%;
+    background-position: -49% -91%;
+}
+
+.wolves-status-icon:after {
+    --counter-size: 20px;
+    display: block;
+    position: absolute;
+    color: black;
+    background: white;
+    width: var(--counter-size);
+    height: var(--counter-size);
+    border-radius: var(--counter-size);
+    content: attr(data-value);
+    right: -4px;
+    bottom: -4px;
+    line-height: var(--counter-size);
+    box-shadow: 0 0 4px gray, 0 1px 2px black;
+    text-align: center;
+    font-weight: bold;
 }
 
 #wolves-boards-padding {
