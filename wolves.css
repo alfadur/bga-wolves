@@ -595,6 +595,17 @@
     height: 40px;
 }
 
+.wolves-status-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.wolves-status-icon svg path {
+    fill: #fff6aa;
+    stroke: #3e1a3d;
+    stroke-width: 0.5px;
+}
+
 .wolves-status-icon[data-attribute="terrain"] {
     background-image: url("img/pieces.png");
     background-size:  467% 503%;
