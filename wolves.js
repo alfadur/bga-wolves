@@ -1182,7 +1182,7 @@ define([
                     const flippedTiles = this.selectedAction.tiles.size;
                     const remainingCost = this.selectedAction.cost - flippedTiles;
                     let tokens = this.activeAttributes().terrainTokens;
-                    const text = tokens && tokens >= remainingCost ?
+                    const text = tokens && tokens >= remainingCost && remainingCost > 0 ?
                         _("Flip ${flippedTiles} tile(s) and spend ${remainingCost} terrain token(s)") :
                         _("Flip ${flippedTiles} tile(s)");
 

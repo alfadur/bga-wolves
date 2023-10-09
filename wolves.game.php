@@ -1108,7 +1108,7 @@ class Wolves extends Table
             'scoreUpdate' => $scoreUpdate
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf to a ${pieceIcon}'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf into a ${pieceIcon}'), [
             'player_name' => self::getActivePlayerName(),
             'pieceIcon' => "$playerId,$newKind",
             'preserve' => ['pieceIcon'],
