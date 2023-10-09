@@ -2,7 +2,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * Wolves implementation : © <Your name here> <Your email address here>
+ * TheWolves implementation : © <Your name here> <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -11,16 +11,16 @@
   
 require_once(APP_BASE_PATH."view/common/game.view.php");
   
-class view_wolves_wolves extends game_view {
+class view_thewolves_thewolves extends game_view {
     protected function getGameName(): string {
         // Used for translations and stuff. Please do not modify.
-        return "wolves";
+        return "thewolves";
     }
 
   	function build_page($viewArgs): void {
         $players = $this->game->getPlayers();
 
-        $this->page->begin_block('wolves_wolves', 'activeTile');
+        $this->page->begin_block('thewolves_thewolves', 'activeTile');
         $this->page->insert_block('activeTile', ['INDEX' => TILE_TERRAIN_TYPES]);
         for ($i = 0; $i < TILE_TERRAIN_TYPES; ++$i) {
             $this->page->insert_block("activeTile", ['INDEX' => $i]);
@@ -31,7 +31,7 @@ class view_wolves_wolves extends game_view {
 
         $yOffset = count($players) > 2 ? 0 : -$hex_height / 2;
 
-        $this->page->begin_block('wolves_wolves', 'region');
+        $this->page->begin_block('thewolves_thewolves', 'region');
         foreach ($this->game->getRegions() as $region) {
             $offset = $region['rotated'] ? 1 : 3;
             $this->page->insert_block('region', [
@@ -46,7 +46,7 @@ class view_wolves_wolves extends game_view {
         $maxCx = 0;
         $maxCy = 0;
 
-        $this->page->begin_block('wolves_wolves', 'hex');
+        $this->page->begin_block('thewolves_thewolves', 'hex');
         foreach ($this->game->getLand() as ['x' => $x, 'y' => $y, 'terrain' => $terrain, 'region_id' => $regionId]) {
             $cx = intdiv($x * 3 * $hex_width, 4);
             $cy = $y * $hex_height - $x * intdiv($hex_height, 2) + $yOffset;
@@ -70,7 +70,7 @@ class view_wolves_wolves extends game_view {
         $this->tpl['LAND_HEIGHT'] = $maxCy + $hex_height;
         $this->tpl['Y_OFFSET'] = $yOffset + $hex_height / 2;
 
-        $this->page->begin_block('wolves_wolves', 'calendarSpace');
+        $this->page->begin_block('thewolves_thewolves', 'calendarSpace');
         for ($i = 0; $i < 30; ++$i) {
             $x = 84 * (($i + 2) % 8) + 24;
             $y = 84 * (intdiv($i + 2, 8)) + 92;
@@ -81,10 +81,10 @@ class view_wolves_wolves extends game_view {
             ]);
         }
 
-        $this->page->begin_block('wolves_wolves', 'playerTile');
-        $this->page->begin_block('wolves_wolves', 'playerBoardSpace');
-        $this->page->begin_block('wolves_wolves', 'playerBoardSpaceGroup');
-        $this->page->begin_block('wolves_wolves', 'playerBoard');
+        $this->page->begin_block('thewolves_thewolves', 'playerTile');
+        $this->page->begin_block('thewolves_thewolves', 'playerBoardSpace');
+        $this->page->begin_block('thewolves_thewolves', 'playerBoardSpaceGroup');
+        $this->page->begin_block('thewolves_thewolves', 'playerBoard');
 
         foreach ($players as $player) {
             $this->page->reset_subblocks("playerTile");

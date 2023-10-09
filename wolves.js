@@ -1,15 +1,15 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * Wolves implementation : © <Your name here> <Your email address here>
+ * TheWolves implementation : © <Your name here> <Your email address here>
  *
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
  * -----
  *
- * wolves.js
+ * thewolves.js
  *
- * Wolves user interface script
+ * TheWolves user interface script
  *
  * In this file, you are describing the logic of your user interface, in Javascript language.
  *
@@ -768,7 +768,7 @@ define([
     "dojo","dojo/_base/declare",
     "ebg/core/gamegui",
     "ebg/counter"
-], (dojo, declare)  => declare("bgagame.wolves", ebg.core.gamegui, {
+], (dojo, declare)  => declare("bgagame.thewolves", ebg.core.gamegui, {
     constructor() {
         this.boardScale = 1.0;
         this.pieces = new Pieces;
@@ -1277,14 +1277,14 @@ define([
         }
         Object.assign(args, extraArgs);
 
-        this.ajaxcall(`/wolves/wolves/${kind}.html`, args, this, () => {});
+        this.ajaxcall(`/thewolves/thewolves/${kind}.html`, args, this, () => {});
     },
 
     dominatePiece(playerId, target, attribute) {
         const path = this.paths.filter(p => p.targetId === target.id)[0];
         const steps = path.steps.map(d => (parseInt(d) + 3) % hexDirections.length).reverse();
 
-        this.ajaxcall("/wolves/wolves/dominate.html", {
+        this.ajaxcall("/thewolves/thewolves/dominate.html", {
             lock: true,
             wolfId: path.alphaId,
             targetId: target.id,
@@ -1410,12 +1410,12 @@ define([
         const playerId = this.getActivePlayerId();
 
         if (this.checkAction("draftPlace", true)) {
-            this.ajaxcall("/wolves/wolves/draftPlace.html",
+            this.ajaxcall("/thewolves/thewolves/draftPlace.html",
                 {lock: true, x, y},
                 this,
                 () => {});
         } else if (this.checkAction("clientMove", true)) {
-            this.ajaxcall("/wolves/wolves/move.html", {
+            this.ajaxcall("/thewolves/thewolves/move.html", {
                 lock: true,
                 wolfId: this.selectedPiece,
                 steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
@@ -1429,7 +1429,7 @@ define([
             const wolfId = this.pieces.getByOwner(playerId, p =>
                 p.kind === PieceKind.Alpha && hexDistance(p, {x, y}) <= howlRange).next().value.id;
 
-            this.ajaxcall("/wolves/wolves/howl.html", {
+            this.ajaxcall("/thewolves/thewolves/howl.html", {
                 lock: true, wolfId, x, y
             }, this, () => {});
         } else if (this.checkAction("den", true)) {
@@ -1441,7 +1441,7 @@ define([
         } else if (this.checkAction("lair", true)) {
             this.placeStructure(playerId, x, y, "lair");
         } else if (this.checkAction("displace")) {
-            this.ajaxcall("/wolves/wolves/displace.html", {
+            this.ajaxcall("/thewolves/thewolves/displace.html", {
                 lock: true,
                 steps: this.paths.filter(({hex}) => hex.x === x && hex.y === y)[0].steps.join(',')
             }, () => {
@@ -1493,7 +1493,7 @@ define([
 
     onFlipTiles() {
         if (this.selectedAction.tiles.size > 0) {
-            this.ajaxcall("/wolves/wolves/selectAction.html", {
+            this.ajaxcall("/thewolves/thewolves/selectAction.html", {
                 lock: true,
                 actionId: actionNames.indexOf(this.selectedAction.name),
                 terrainTokens: this.selectedAction.cost - this.selectedAction.tiles.size,
@@ -1507,11 +1507,11 @@ define([
     },
 
     onSkipAction() {
-        this.ajaxcall("/wolves/wolves/skip.html", {lock: true}, this, () => this.selectedAction = {})
+        this.ajaxcall("/thewolves/thewolves/skip.html", {lock: true}, this, () => this.selectedAction = {})
     },
 
     onSubmitTerrain(event) {
-        this.ajaxcall("/wolves/wolves/selectAction.html", {
+        this.ajaxcall("/thewolves/thewolves/selectAction.html", {
             lock: true,
             actionId: actionNames.indexOf(this.selectedAction.name),
             terrainTokens: this.selectedAction.cost,
@@ -1540,17 +1540,17 @@ define([
 
     onBonusAction(event) {
         dojo.stopEvent(event);
-        this.ajaxcall("/wolves/wolves/extraTurn.html", {lock: true}, () => {});
+        this.ajaxcall("/thewolves/thewolves/extraTurn.html", {lock: true}, () => {});
     },
 
     onEndTurn(event) {
         dojo.stopEvent(event);
-        this.ajaxcall("/wolves/wolves/endTurn.html", {lock: true}, () => {});
+        this.ajaxcall("/thewolves/thewolves/endTurn.html", {lock: true}, () => {});
     },
 
     onUndo(event) {
         this.onCancel(event);
-        this.ajaxcall("/wolves/wolves/undo.html", {lock: true}, () => {});
+        this.ajaxcall("/thewolves/thewolves/undo.html", {lock: true}, () => {});
     },
 
     ///////////////////////////////////////////////////

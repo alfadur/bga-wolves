@@ -3,7 +3,7 @@
 /**
  *------
  * BGA framework: © Gregory Isabelli <gisabelli@boardgamearena.com> & Emmanuel Colin <ecolin@boardgamearena.com>
- * Wolves implementation : © <Your name here> <Your email address here>
+ * TheWolves implementation : © <Your name here> <Your email address here>
  * 
  * This code has been produced on the BGA studio platform for use on http://boardgamearena.com.
  * See http://en.boardgamearena.com/#!doc/Studio for more information.
@@ -13,7 +13,7 @@
 require_once(APP_GAMEMODULE_PATH . 'module/table/table.game.php');
 require_once('modules/constants.inc.php');
 
-class Wolves extends Table
+class TheWolves extends Table
 {
     function __construct()
     {
@@ -38,7 +38,7 @@ class Wolves extends Table
     protected function getGameName(): string
     {
         // Used for translations and stuff. Please do not modify.
-        return 'wolves';
+        return 'thewolves';
     }
 
     /*
@@ -766,7 +766,7 @@ class Wolves extends Table
 
     /*
         Each time a player is doing some game action, one of the methods below is called.
-        (note: each method below must match an input method in wolves.action.php)
+        (note: each method below must match an input method in thewolves.action.php)
     */
 
     function draftPlace(int $x, int $y): void
