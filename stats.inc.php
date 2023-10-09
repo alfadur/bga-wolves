@@ -54,7 +54,7 @@ $stats_type = array(
     "table" => array(
 
         STAT_TURNS_TAKEN => array("id"=> 10,
-                    "name" => totranslate("Number of turns"),
+                    "name" => totranslate("Turns played"),
                     "type" => "int" ),
         STAT_BONUS_ACTIONS_TAKEN => [
             "id" => 11,
@@ -109,7 +109,7 @@ $stats_type = array(
         ],
         STAT_PLAYER_DENS_UPGRADED => [
             "id" => 17,
-            "name" => totranslate("Dens upgraded to lairs"),
+            "name" => totranslate("Dens upgraded into lairs"),
             "type" => "int"
         ],
         STAT_PLAYER_WOLVES_DOMINATED => [

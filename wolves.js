@@ -1183,8 +1183,8 @@ define([
                     const remainingCost = this.selectedAction.cost - flippedTiles;
                     let tokens = this.activeAttributes().terrainTokens;
                     const text = tokens && tokens >= remainingCost ?
-                        _(`Flip ${flippedTiles} tiles and spend ${remainingCost} terrain token(s)`) :
-                        _(`Flip ${flippedTiles} tiles`);
+                        _(`Flip ${flippedTiles} tile(s) and spend ${remainingCost} terrain token(s)`) :
+                        _(`Flip ${flippedTiles} tile(s)`);
                     this.ensureButton("wolves-action-flip", text, "onFlipTiles");
                     if (tokens < remainingCost) {
                         document.getElementById("wolves-action-flip").classList.add("disabled");

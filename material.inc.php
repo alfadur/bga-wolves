@@ -23,6 +23,6 @@ $this->actionNames = [
     A_MOVE => clienttranslate('Move'),
     A_HOWL => clienttranslate('Howl'),
     A_DEN => clienttranslate('Build Den'),
-    A_LAIR => clienttranslate('Build Lair'),
+    A_LAIR => clienttranslate('Upgrade Den'),
     A_DOMINATE => clienttranslate('Dominate')
 ];
