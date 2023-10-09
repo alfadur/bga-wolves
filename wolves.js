@@ -1186,7 +1186,7 @@ define([
                         _("Flip ${flippedTiles} tile(s) and spend ${remainingCost} terrain token(s)") :
                         _("Flip ${flippedTiles} tile(s)");
 
-                    this.ensureButton("wolves-action-flip", text.replace("${flippedTiles}", flippedTiles), "onFlipTiles");
+                    this.ensureButton("wolves-action-flip", text.replace("${flippedTiles}", flippedTiles).replace("${remainingCost}", remainingCost), "onFlipTiles");
                     if (tokens < remainingCost) {
                         document.getElementById("wolves-action-flip").classList.add("disabled");
                     }
