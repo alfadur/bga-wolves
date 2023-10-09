@@ -968,8 +968,8 @@ define([
             });
             updateHexSharing(node);
             if (piece.kind === PieceKind.Lone) {
-                const text = _("");
-                this.addTooltip(node.getAttribute("id"), text, "Lone Wolf - can be converted to a player's wolf using the Howl action");
+                const text = _("Lone Wolf - can be converted to a player's wolf using the Howl action");
+                this.addTooltip(node.getAttribute("id"), text, "");
             } else if (piece.kind === PieceKind.Prey) {
                 const text = _("Prey - automatically hunted after a player's action if the player has wolves in at least 3 surrounding hexes. Only one of each Prey type can be hunted by a single player");
                 this.addTooltip(node.getAttribute("id"), text, "");
@@ -1183,9 +1183,10 @@ define([
                     const remainingCost = this.selectedAction.cost - flippedTiles;
                     let tokens = this.activeAttributes().terrainTokens;
                     const text = tokens && tokens >= remainingCost ?
-                        _(`Flip ${flippedTiles} tile(s) and spend ${remainingCost} terrain token(s)`) :
-                        _(`Flip ${flippedTiles} tile(s)`);
-                    this.ensureButton("wolves-action-flip", text, "onFlipTiles");
+                        _("Flip ${flippedTiles} tile(s) and spend ${remainingCost} terrain token(s)") :
+                        _("Flip ${flippedTiles} tile(s)");
+
+                    this.ensureButton("wolves-action-flip", text.replace("${flippedTiles}", flippedTiles), "onFlipTiles");
                     if (tokens < remainingCost) {
                         document.getElementById("wolves-action-flip").classList.add("disabled");
                     }
@@ -1456,8 +1457,9 @@ define([
             return;
         }
         this.selectedAction = { name: action, cost: actionCosts[action], tiles: new Set() };
+        const text = _("${you} must select ${cost} matching tiles");
         this.setClientState("clientSelectTiles", {
-            descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`),
+            descriptionmyturn: text.replace("${cost}", this.selectedAction.cost),
             possibleactions: ["clientSelectTile"]
         });
     },
@@ -1483,8 +1485,9 @@ define([
             }
             tile.classList.remove("wolves-selected");
         }
+        const text = _("${you} must select ${cost} matching tiles");
         this.setClientState("clientSelectTiles", {
-            descriptionmyturn: _(`\${you} must select ${this.selectedAction.cost} matching tiles`)
+            descriptionmyturn: text.replace("${cost}", this.selectedAction.cost)
         });
     },
 
@@ -1498,7 +1501,7 @@ define([
             }, this, () => this.selectedAction = {});
         } else {
             this.setClientState("clientSelectTerrain", {
-                descriptionmyturn: _(`\${you} must select the terrain type for the action`)
+                descriptionmyturn: _("${you} must select the terrain type for the action")
             });
         }
     },
