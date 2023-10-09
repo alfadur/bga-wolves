@@ -282,7 +282,6 @@ class TheWolves extends Table
     */
     function getGameProgression(): int
     {
-
         $numEntries = (int)self::getUniqueValueFromDB("SELECT COUNT(*) FROM moonlight_board");
         return intval(($numEntries * 100) / FULL_DATES[self::getPlayersNumber()]);
     }

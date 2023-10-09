@@ -1771,7 +1771,8 @@ define([
     },
 
     format_string_recursive(log, args) {
-        if (args) {
+        if (args && !("substitutionComplete" in args)) {
+            args.substitutionComplete = true;
             const icons = Object.keys(args).filter(name => name.startsWith("pieceIcon"));
 
             for (const icon of icons) {
