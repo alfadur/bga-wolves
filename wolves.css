@@ -645,6 +645,7 @@
     font-weight: bold;
     transform-origin: bottom right;
     transition: transform 500ms ease-out, color 2000ms ease-out;
+    pointer-events: none;
 }
 
 .wolves-status-icon.wolves-status-animation:after {

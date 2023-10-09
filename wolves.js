@@ -878,6 +878,17 @@ define([
                     preySpaces.splice(0, 1)[0].dataset.preyType = i.toString();
                 }
             }
+
+            const statusTooltips = [
+                ["pack", _("Pack Spread - the number of wolves that could be moved in a single Move action")],
+                ["speed", _("Wolve Speed - the maximum hex distance a wolf can move in a single Move action (counted along non-Water and non-Chasm terrain hexes)")],
+                ["howl", _("Howl Range - the maximum hex distance of Howl and Dominate actions (counted along any terrain hexes)")],
+                ["terrain", _("Bonus Terrain Tokens - can be spent instead of flipping Terrain Tiles")],
+                ["action", _("Bonus Action Tokens - can be spent to take additional actions during a player's turn")],
+            ];
+            for (const [name, text] of statusTooltips) {
+                this.addTooltipToClass(`wolves-status-icon-${name}`, text, "");
+            }
         }
 
         this.ensureSpecificGameImageLoading(playerBoardImages);
@@ -956,6 +967,15 @@ define([
                 }
             });
             updateHexSharing(node);
+            if (piece.kind === PieceKind.Lone) {
+                const text = _("");
+                this.addTooltip(node.getAttribute("id"), text, "Lone Wolf - can be converted to a player's wolf using the Howl action");
+            } else if (piece.kind === PieceKind.Prey) {
+                const text = _("Prey - automatically hunted after a player's action if the player has wolves in at least 3 surrounding hexes. Only one of each Prey type can be hunted by a single player");
+                this.addTooltip(node.getAttribute("id"), text, "");
+            } else {
+                this.removeTooltip(node.getAttribute("id"));
+            }
             return newNode;
         }
     },
