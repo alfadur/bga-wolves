@@ -438,11 +438,16 @@ function updateHexSharing(...hexNodes) {
     }
 }
 
-function* collectPaths(from, range) {
+function* collectPaths(from, range, includeStart) {
     const queue = new Queue;
     const visited = new Set;
 
-    queue.enqueue({hex: from, steps: []});
+    const startPath = {node: getHexNode(from), hex: from, steps: []};
+    if (includeStart && (yield startPath) === false) {
+        return;
+    }
+
+    queue.enqueue(startPath);
     visited.add(JSON.stringify({x: from.x, y: from.y}));
 
     while (!queue.isEmpty()) {
@@ -620,7 +625,7 @@ function prepareDominateSelection(playerId, range, terrain, pieces, remainingKin
     const validPieces = pieces.getByKind([PieceKind.Den, PieceKind.Pack], canDominate);
 
     for (const piece of validPieces) {
-        const iterable = collectPaths(piece, range);
+        const iterable = collectPaths(piece, range, true);
         let item = iterable.next();
 
         while (!item.done) {

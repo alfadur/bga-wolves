@@ -66,14 +66,20 @@ class action_thewolves extends APP_GameAction {
     function move(): void {
         self::setAjaxMode();
         $wolfId = self::getArg('wolfId', AT_int, true);
-        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
+
+        $stepsString = self::getArg('steps', AT_numberlist, true);
+        $steps = strlen($stepsString) > 0 ? explode(',', $stepsString) : [];
+
         $this->game->move($wolfId, $steps);
         self::ajaxResponse();
     }
 
     function displace(): void {
         self::setAjaxMode();
-        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
+
+        $stepsString = self::getArg('steps', AT_numberlist, true);
+        $steps = strlen($stepsString) > 0 ? explode(',', $stepsString) : [];
+
         $this->game->displace($steps);
         self::ajaxResponse();
     }
@@ -100,7 +106,10 @@ class action_thewolves extends APP_GameAction {
         $wolfId = self::getArg('wolfId', AT_int, true);
         $targetId = self::getArg('targetId', AT_int, true);
         $denType = self::getArg('denType', AT_int, true);
-        $steps = explode(',', self::getArg('steps', AT_numberlist, true));
+
+        $stepsString = self::getArg('steps', AT_numberlist, true);
+        $steps = strlen($stepsString) > 0 ? explode(',', $stepsString) : [];
+
         $this->game->dominate($wolfId, $steps, $targetId, $denType);
         self::ajaxResponse();
     }
