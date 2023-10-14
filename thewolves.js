@@ -1034,18 +1034,26 @@ define([
         }
     },
 
-    animateTranslation(node, source, scale) {
-        scale ||= 1.0;
+    animateTranslation(node, source, pathScale, transformScale) {
+        pathScale ||= 1.0;
         const start = source instanceof HTMLElement ? source.getBoundingClientRect() : source;
         const end = node.getBoundingClientRect();
-        const [dX, dY] = [(end.left - start.left) / scale, (end.top - start.top) / scale];
+        const [dX, dY] = [(end.left - start.left) / pathScale, (end.top - start.top) / pathScale];
 
         if (this.useOffsetAnimation) {
             node.style.offsetPath = `path("M 0 0 Q ${-dX / 2 - dY / 4} ${-dY / 2 + dX / 4} ${-dX} ${-dY}")`;
-            node.classList.add("wolves-moving");
+            if (transformScale !== undefined) {
+                node.style.transform = `scale(${transformScale})`;
+                node.classList.add("wolves-moving-scaling");
+            } else {
+                node.classList.add("wolves-moving");
+            }
             node.addEventListener("animationend", () => {
-                node.classList.remove("wolves-moving");
+                node.classList.remove("wolves-moving", "wolves-moving-scaling");
                 node.style.offsetPath = "unset";
+                if (transformScale !== undefined) {
+                    node.style.transform = "unset";
+                }
             }, {once: true});
         } else {
             node.style.transform = `translate(${-dX}px, ${-dY}px)`;
@@ -1737,14 +1745,17 @@ define([
 
         for (const {regionId, winner} of scoring.awards) {
             const moonNode = document.querySelector(`.wolves-moon[data-region="${regionId}"]:last-child`);
-            const playerBoard = document.getElementById(`#player_board_${winner}`);
+            const playerContainer = document.getElementById(`wolves-scoring-tokens-${winner}`);
 
-            if (playerBoard) {
-                //TODO move the token to the player board for display
+            if (playerContainer) {
+                const args = {phase: moonNode.dataset.phase};
+                const tokenNode = dojo.place(this.format_block("jstpl_scoring_token", args), playerContainer);
+                this.animateTranslation(tokenNode, moonNode, 1, 3 * this.boardScale);
+                dojo.destroy(moonNode);
+            } else {
+                moonNode.classList.add("wolves-disappearing");
+                moonNode.addEventListener("animationend", () => dojo.destroy(moonNode), {once: true});
             }
-
-            moonNode.classList.add("wolves-disappearing");
-            moonNode.addEventListener("animationend", () => dojo.destroy(moonNode), {once: true});
         }
 
         if ("nextScoring" in scoring) {

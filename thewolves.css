@@ -665,6 +665,7 @@
     margin-right: -18px;
     background-image: url("img/pieces.png");
     background-size: 385% 520%;;
+    transform-origin: center;
 }
 
 .wolves-scoring-token[data-phase="0"] {
@@ -731,14 +732,21 @@
     transform: scale(var(--piece-scale));
 }
 
-.wolves-moving {
+.wolves-moving, .wolves-moving-scaling {
     offset-rotate: 0deg;
     offset-anchor: top left;
-    animation-name: follow-path;
     animation-duration: 1200ms;
     animation-timing-function: ease;
     animation-fill-mode: forwards;
     z-index: 2;
+}
+
+.wolves-moving {
+    animation-name: follow-path;
+}
+
+.wolves-moving-scaling {
+    animation-name: follow-path-scale;
 }
 
 @keyframes follow-path {
@@ -748,6 +756,17 @@
     85% { offset-rotate: 0; }
     to {
         offset-distance: 0;
+    }
+}
+
+@keyframes follow-path-scale {
+    from { offset-distance: 100%; }
+    30% { offset-rotate: -12deg; }
+    60% { offset-rotate: -8deg; }
+    85% { offset-rotate: 0; }
+    to {
+        offset-distance: 0;
+        transform: scale(1);
     }
 }
 
