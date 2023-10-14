@@ -261,6 +261,8 @@ class TheWolves extends Table
         $result['pieces'] = self::getObjectListFromDb("SELECT id, owner, kind, x, y, prey_metadata FROM pieces");
         $result['calendar'] = self::getObjectListFromDb("SELECT player_id AS owner, kind FROM moonlight_board");
 
+        $result['tokens'] = self::getObjectListFromDb("SELECT player_id AS playerId, type FROM score_token");
+
         $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
         if ($currentPhase < count(PHASES)) {
             $result['nextScoring'] =

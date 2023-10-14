@@ -654,6 +654,31 @@
     transition: none;
 }
 
+.wolves-scoring-tokens {
+    display: flex;
+    justify-content: center;
+}
+
+.wolves-scoring-token {
+    width: 40px;
+    height: 41px;
+    margin-right: -18px;
+    background-image: url("img/pieces.png");
+    background-size: 385% 520%;;
+}
+
+.wolves-scoring-token[data-phase="0"] {
+    background-position: 0 100%;
+}
+
+.wolves-scoring-token[data-phase="1"] {
+    background-position: 34.5% 100%;
+}
+
+.wolves-scoring-token[data-phase="2"] {
+    background-position: 69% 100%;
+}
+
 #wolves-boards-padding {
     max-width: 242px;
     flex: 1 1 0;

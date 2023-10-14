@@ -941,6 +941,17 @@ define([
             }
         });
 
+        for (const playerId of Object.keys(gameData.players)) {
+            const tokens = gameData.tokens.filter(token => token.playerId === playerId);
+            if (tokens.length > 0) {
+                const container = document.getElementById(`wolves-scoring-tokens-${playerId}`);
+                for (const token of tokens) {
+                    const args = {phase: token.type};
+                    dojo.place(this.format_block("jstpl_scoring_token", args), container);
+                }
+            }
+        }
+
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
     },
