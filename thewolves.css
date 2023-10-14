@@ -681,11 +681,12 @@
     height: 100%;
     border-radius: 30px;
     box-shadow: 0 4px 8px black;
+    background-size: 718px 450px;
     background-image: url("img/calendar2_3p.jpg");
     z-index: -1;
 }
 
-#wolves-calendar.wolves-reverse {
+#wolves-calendar.wolves-reverse:before {
     background-image: url("img/calendar4_5p.jpg");
 }
 

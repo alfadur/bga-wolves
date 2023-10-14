@@ -881,7 +881,7 @@ define([
 
             const statusTooltips = [
                 ["pack", _("Pack Spread - the number of wolves that could be moved in a single Move action")],
-                ["speed", _("Wolve Speed - the maximum hex distance a wolf can move in a single Move action (counted along non-Water and non-Chasm terrain hexes)")],
+                ["speed", _("Wolf Speed - the maximum hex distance a wolf can move in a single Move action (counted along non-Water and non-Chasm terrain hexes)")],
                 ["howl", _("Howl Range - the maximum hex distance of Howl and Dominate actions (counted along any terrain hexes)")],
                 ["terrain", _("Bonus Terrain Tokens - can be spent instead of flipping Terrain Tiles")],
                 ["action", _("Bonus Action Tokens - can be spent to take additional actions during a player's turn")],
