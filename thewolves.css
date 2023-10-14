@@ -617,14 +617,14 @@
 
 .wolves-status-icon[data-attribute="terrain"] {
     background-image: url("img/pieces.png");
-    background-size:  467% 503%;
-    background-position: -76% -94%;
+    background-size:  467% 638%;
+    background-position: -76% -94.5%;
 }
 
 .wolves-status-icon[data-attribute="action"] {
     background-image: url("img/pieces.png");
-    background-size:  467% 503%;
-    background-position: -49% -91%;
+    background-size:  467% 638%;
+    background-position: -49% -92.5%;
 }
 
 .wolves-status-icon:after {
@@ -1022,7 +1022,7 @@
 .wolves-log-icon-piece {
     display: inline-block;
     --log-spritesheet-width: 476px;
-    --log-spritesheet-height: 518px;
+    --log-spritesheet-height: 638px;
     --log-sprite-scale: 0.35;
     width: calc(var(--piece-width) * var(--log-sprite-scale));
     height: calc(var(--piece-height) * var(--log-sprite-scale));
