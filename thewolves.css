@@ -92,7 +92,7 @@
     flex-shrink: 0;
     background-image: url("img/tiles.jpg");
     border-radius: 25px;
-    background-size: 479px 426px;
+    background-size: 480px 426px;
     background-clip: content-box;
     background-repeat: no-repeat;
     box-shadow: 0 4px 8px black;
@@ -533,8 +533,8 @@
 .wolves-player-status-terrain {
     width: 42px;
     height: 63px;
-    border-radius: 11px;
-    background-size: 1084px 467px;
+    border-radius: 12px;
+    background-size: 1084px 470px;
     background-position: -223px -22px;
     box-shadow: 0 2px 4px black;
 }
@@ -817,7 +817,7 @@
     --tile-width: 96px;
     --tile-height: 142px;
     border-radius: 25px;
-    background-size: 479px 426px;
+    background-size: 480px 426px;
     box-shadow: 0 4px 8px black;
 }
 
