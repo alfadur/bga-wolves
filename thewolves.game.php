@@ -326,9 +326,12 @@ class TheWolves extends Table
         return self::getObjectListFromDB('SELECT * FROM land');
     }
 
-    static function checkPath(array $start, array $steps,
-        ?array $impassableTerrains = null, ?string $sharedPlayerId = null): array
-    {
+    static function checkPath(
+        array $start,
+        array $steps,
+        ?array $impassableTerrains = null,
+        ?string $sharedPlayerId = null
+    ): array {
         $terrainCheck = $impassableTerrains === null ? '' :
             ' AND terrain NOT IN (' . implode(',', $impassableTerrains) . ')';
         $stepChecks = [];
@@ -351,7 +354,8 @@ class TheWolves extends Table
         if (count($steps) > 1) {
             $stepChecks = implode(" OR ", $stepChecks);
             $validSteps = self::getUniqueValueFromDB(
-                "SELECT COUNT(*) FROM land WHERE ($stepChecks)$terrainCheck");
+                "SELECT COUNT(*) FROM land WHERE ($stepChecks)$terrainCheck"
+            );
             if ((int)$validSteps !== count($steps) - 1) {
                 throw new BgaUserException("Invalid action");
             }
@@ -360,9 +364,13 @@ class TheWolves extends Table
         return $start;
     }
 
-    static function checkDestination(int $targetX, int $targetY, $playerId, array $sharedKinds = [], ?int $terrain = null) {
+    static function checkDestination(int $targetX, int $targetY, $playerId, array $sharedKinds = [], ?int $terrain = null)
+    {
         $sharedKinds[] = 'NULL';
-        $terrainCheck = $terrain === null ? '' :
+        $chasm = T_CHASM;
+        $water = T_WATER;
+        $terrainCheck = " AND terrain NOT IN ($chasm, $water)";
+        $terrainCheck .= $terrain === null ? '' :
             " AND terrain = $terrain";
         $kinds = implode(',', $sharedKinds);
         $query = <<<EOF
@@ -482,7 +490,7 @@ class TheWolves extends Table
                 FROM pieces JOIN player_status ON owner = player_id
                 WHERE x BETWEEN $x - 1 AND $x + 1
                     AND y BETWEEN $y - 1 AND $y + 1 
-                    AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                    AND {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
                     AND player_id = $playerId
                     AND prey_data & $preyData = 0
                     AND kind IN ($packKind, $alphaKind)
@@ -640,11 +648,12 @@ class TheWolves extends Table
 
         $notificationArgs = [
             'awards' => array_map(
-                fn($region) => [
+                fn ($region) => [
                     'regionId' => $region['region_id'],
                     'winner' => $region['winner'] ?? null
                 ],
-                $scoringRegions)
+                $scoringRegions
+            )
         ];
 
         $nextPhase = $currentPhase + 1;
@@ -1073,7 +1082,7 @@ class TheWolves extends Table
         $targetId = self::getUniqueValueFromDb(<<<EOF
             SELECT id FROM pieces NATURAL JOIN land
             WHERE x = $x AND y = $y AND kind = $lone AND terrain = $terrain 
-                AND {$this->sql_hex_in_range('x', 'y', $wolf['x'], $wolf['y'], $maxRange)}
+                AND {$this->sql_hex_in_range('x', 'y',$wolf['x'],$wolf['y'],$maxRange)}
             EOF);
 
         if ($targetId === null) {
@@ -1229,7 +1238,7 @@ class TheWolves extends Table
                     FROM land 
                     WHERE x BETWEEN $x - 1 AND $x + 1
                         AND y BETWEEN $y - 1 AND $y + 1
-                        AND {$this->sql_hex_in_range('x', 'y', $x, $y, 1)}
+                        AND {$this->sql_hex_in_range('x', 'y',$x,$y, 1)}
                     AND terrain=$water) > 0
             EOF;
         ["id" => $updateId, "region_id" => $regionId] = self::getObjectFromDB($query);
@@ -1308,9 +1317,10 @@ class TheWolves extends Table
         $deployedDens = (int)self::getUniqueValueFromDB("SELECT deployed_howl_dens FROM player_status WHERE player_id = $playerId");
         $maxRange = HOWL_RANGE[$deployedDens];
 
-        if ($wolf === NULL || $wolf['owner'] !== $playerId
-            || (int)$wolf['kind'] !== P_ALPHA || count($steps) > $maxRange)
-        {
+        if (
+            $wolf === NULL || $wolf['owner'] !== $playerId
+            || (int)$wolf['kind'] !== P_ALPHA || count($steps) > $maxRange
+        ) {
             throw new BgaUserException('Invalid wolf!');
         }
 
