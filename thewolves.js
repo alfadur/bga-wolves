@@ -480,7 +480,8 @@ function* collectPaths(from, range, includeStart) {
 function makeHexSelectable(hex, terrain) {
     const node = getHexNode(hex);
     if (node && (terrain === undefined || node.classList.contains(`wolves-hex-${terrainNames[terrain]}`))
-        && !node.classList.contains("wolves-hex-water"))
+        && !node.classList.contains("wolves-hex-water")
+        && !node.classList.contains("wolves-hex-chasm"))
     {
         node.classList.add("wolves-selectable");
         return true;

@@ -303,11 +303,6 @@ class TheWolves extends Table
         return self::getObjectListFromDB('SELECT * FROM regions');
     }
 
-    static function sql_hex_range($x1, $y1, $x2, $y2): string
-    {
-        return "(ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1)) / 2";
-    }
-
     static function sql_hex_in_range($x1, $y1, $x2, $y2, $range): string
     {
         return "ABS($x2 - $x1) + ABS($y2 - $y1) + ABS($x2 - $y2 - $x1 + $y1) <= 2 * $range";
@@ -369,8 +364,8 @@ class TheWolves extends Table
         $sharedKinds[] = 'NULL';
         $chasm = T_CHASM;
         $water = T_WATER;
-        $terrainCheck = " AND terrain NOT IN ($chasm, $water)";
-        $terrainCheck .= $terrain === null ? '' :
+        $terrainCheck = $terrain === null ?
+            " AND terrain NOT IN ($chasm, $water)" :
             " AND terrain = $terrain";
         $kinds = implode(',', $sharedKinds);
         $query = <<<EOF
@@ -1531,7 +1526,6 @@ class TheWolves extends Table
         $numPlayers = self::getPlayersNumber();
         $draftCompleted = $wolvesDrafted >= (2 * $numPlayers);
 
-        $type = gettype($wolvesDrafted);
         if ($wolvesDrafted % $numPlayers !== 0 && !$draftCompleted) {
             if ($wolvesDrafted > $numPlayers) {
                 $this->activePrevPlayer();
