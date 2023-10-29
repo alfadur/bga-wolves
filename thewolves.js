@@ -50,7 +50,7 @@ const hexCorners = Object.freeze([
     {x: hexWidth * 3 / 4, y:hexHeight / 2},
     {x: hexWidth  / 4, y: hexHeight / 2},
     {x: 0, y: 0},
-])
+]);
 
 const terrainNames = Object.freeze(["forest", "rock", "grass", "tundra", "desert", "water"]);
 
@@ -694,9 +694,9 @@ function selectWolfToDisplace(wolf, pieces) {
 
     while (!item.done && item.value.steps.length <= maxDistance) {
         const path = item.value;
+        const isPassable = isHexPassable(path.node);
         const otherPieces = Array.from(pieces.getByHex(path.hex));
-
-        path.canStop = otherPieces.length < 2 && otherPieces.every(p => p.owner === wolf.owner);
+        path.canStop = isPassable && otherPieces.length < 2 && otherPieces.every(p => p.owner === wolf.owner);
 
         if (path.canStop) {
             maxDistance = path.steps.length;
@@ -706,7 +706,7 @@ function selectWolfToDisplace(wolf, pieces) {
             }
         }
 
-        item = iterable.next(isHexPassable(path.node));
+        item = iterable.next(isPassable);
     }
     buildSelection(selection);
     return paths;
