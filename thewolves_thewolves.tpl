@@ -113,10 +113,19 @@ const jstpl_player_status =
     <div class="wolves-player-overview">`;
  const jstpl_scoring_token =
      `<div class="wolves-scoring-token" data-phase="\${phase}"></div>`
-const jstpl_log_icon =
-    `<span class="wolves-log-icon-\${iconType}"
+const jstpl_log_icon_piece =
+    `<span class="wolves-log-icon wolves-log-icon-piece"
         data-owner="\${owner}" data-kind="\${kind}">
     </span>`
-</script>  
+const jstpl_log_icon_tile =
+    `<span class="wolves-log-icon wolves-log-icon-tile wolves-terrain-tile"
+        data-x="\${x}" data-y="\${y}">
+    </span>`
+const jstpl_log_icon_token =
+    `<span class="wolves-log-icon wolves-log-icon-token" data-token="\${token}">
+        \${content}
+    </span>`
+</script>
+
 
 {OVERALL_GAME_FOOTER}

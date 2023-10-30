@@ -28,6 +28,9 @@
     background-image: url("img/tiles.jpg");
     background-clip: content-box;
     background-repeat: no-repeat;
+    background-size:
+        calc(var(--tile-width ) * 5)
+        calc(var(--tile-height) * 3);
 }
 
 .wolves-terrain-tile[data-x="1"] {
@@ -58,7 +61,6 @@
     --tile-width: 24px;
     --tile-height: 36px;
     border-radius: 10px;
-    background-size: 120px 108px;
     box-shadow: 0 1px 2px black;
     pointer-events: none;
 }
@@ -92,9 +94,6 @@
     flex-shrink: 0;
     background-image: url("img/tiles.jpg");
     border-radius: 25px;
-    background-size: 480px 426px;
-    background-clip: content-box;
-    background-repeat: no-repeat;
     box-shadow: 0 4px 8px black;
 }
 
@@ -587,7 +586,6 @@
     --tile-width: 36px;
     --tile-height: 54px;
     border-radius: 10px;
-    background-size: 180px 162px;
     box-shadow: 0 2px 4px black;
 }
 
@@ -1063,14 +1061,17 @@
 .wolves-wolf-space:nth-child(4n + 3) { left: 8.2% }
 .wolves-wolf-space:nth-child(4n + 4) { left: 12.3% }
 
-.wolves-log-icon-piece {
+.wolves-log-icon {
     display: inline-block;
+    vertical-align: middle;
+}
+
+.wolves-log-icon-piece {
     --log-spritesheet-width: 476px;
     --log-spritesheet-height: 638px;
     --log-sprite-scale: 0.35;
     width: calc(var(--piece-width) * var(--log-sprite-scale));
     height: calc(var(--piece-height) * var(--log-sprite-scale));
-    vertical-align: middle;
     background-image: url("img/pieces.png");
     background-size:
         calc(var(--log-spritesheet-width) * var(--log-sprite-scale))
@@ -1087,4 +1088,39 @@
         calc(var(--log-spritesheet-height) * var(--log-sprite-scale));
     -webkit-mask-position:
         0 calc(var(--piece-sprite-y) * var(--log-sprite-scale) * -1);
+}
+
+.wolves-log-icon-tile {
+    --tile-width: 32px;
+    --tile-height: 47px;
+    background-image: url("img/tiles.jpg");
+    border-radius: 8px;
+    box-shadow: 0 1px 2px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+}
+
+.wolves-log-icon-token {
+    display: inline-flex;
+    flex-flow: row nowrap;
+}
+
+.wolves-log-icon-token * {
+    width: 30px;
+    height: 30px;
+    background-image: url("img/pieces.png");
+    background-size:  467% 638%;
+    margin-right: -16px;
+}
+
+.wolves-log-icon-token *:last-child {
+    margin-right: 0;
+}
+
+.wolves-log-icon-token[data-token="terrain"] *{
+    background-position: -76% -94.5%;
+}
+
+.wolves-log-icon-token[data-token="action"] *{
+    background-position: -49% -92.5%;
 }

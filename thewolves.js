@@ -290,7 +290,7 @@ class HexOutliner {
     __isOpen(hex, directionIndex) {
         const neighbor = hexAdd(hex, hexDirections[directionIndex]);
         return !this.lookup.has(this.__key(neighbor));
-    }_
+    }
 
     constructor(hexes) {
         for (const hex of hexes) {
@@ -1217,7 +1217,7 @@ define([
                     }
                 //fallthrough
                 case "clientSelectMoveTarget":
-                    this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "red");
+                    this.ensureButton("button_cancel", _("Cancel"), "onCancel", null, null, "gray");
                     break;
                 case "clientSelectTerrain":
                     terrainNames.forEach((terrain, index) => {
@@ -1798,23 +1798,65 @@ define([
         this.boardScale = scale;
     },
 
+    formatPieceIcon(owner, kind) {
+        const attributes = this.attributes[owner];
+        const terrain = attributes ? attributes.homeTerrain : "N/A";
+
+        const formatArgs = {
+            iconType: "piece",
+            owner: terrain,
+            kind: kind || "N/A"
+        };
+
+        return this.format_block("jstpl_log_icon_piece", formatArgs);
+    },
+
+    formatTileIcon(owner, ...tiles) {
+        const tileData = this.attributes[owner].tiles;
+        const nodes = [];
+
+        for (const index of tiles) {
+            const wrappedIndex = (parseInt(index) + 1) % tileData.length;
+            const tile = tileData[wrappedIndex];
+            const formatArgs = {
+                x: tile.front,
+                y: "flipped" in tile ? tile.flipped + 1 : 0
+            };
+            nodes.push(this.format_block("jstpl_log_icon_tile", formatArgs))
+        }
+
+        return nodes.join("");
+    },
+
+    formatTerrainIcon(terrain) {
+        const formatArgs = { x: terrain, y: 0 };
+        return this.format_block("jstpl_log_icon_tile", formatArgs);
+    },
+
+    formatTokenIcon(tokenType, count) {
+        const formatArgs = {
+            token: tokenType,
+            content: "<span></span>".repeat(parseInt(count))
+        };
+        return this.format_block("jstpl_log_icon_token", formatArgs);
+    },
+
     format_string_recursive(log, args) {
         if (args && !("substitutionComplete" in args)) {
             args.substitutionComplete = true;
-            const icons = Object.keys(args).filter(name => name.startsWith("pieceIcon"));
+            const formatters = {
+                piece: this.formatPieceIcon,
+                tile: this.formatTileIcon,
+                terrain: this.formatTerrainIcon,
+                token: this.formatTokenIcon
+            };
+            for (const iconType of Object.keys(formatters)) {
+                const icons = Object.keys(args).filter(name => name.startsWith(`${iconType}Icon`));
 
-            for (const icon of icons) {
-                const [owner, kind] = args[icon].toString().split(",");
-                const attributes = this.attributes[owner];
-                const terrain = attributes ? attributes.homeTerrain : "N/A";
-
-                const formatArgs = {
-                    iconType: "piece",
-                    owner: terrain,
-                    kind: kind || "N/A"
-                };
-
-                args[icon] = this.format_block("jstpl_log_icon", formatArgs);
+                for (const icon of icons) {
+                    const values = args[icon].toString().split(",");
+                    args[icon] = formatters[iconType].call(this, ...values);
+                }
             }
         }
         return this.inherited({callee: this.format_string_recursive}, arguments);

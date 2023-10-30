@@ -827,7 +827,7 @@ class TheWolves extends Table
         self::DbQuery($query);
 
         $insertId = self::DbGetLastId();
-        $this->notifyAllPlayers('draft', clienttranslate('${player_name} places initial ${pieceIcon0}${pieceIcon1}'), [
+        $this->notifyAllPlayers('draft', clienttranslate('${player_name} places ${pieceIcon0}${pieceIcon1}'), [
             'player_name' => self::getActivePlayerName(),
             'playerId' => $playerId,
             'x' => $x,
@@ -918,15 +918,28 @@ class TheWolves extends Table
             'tilesCount' => count($tiles),
             'actionName' => $this->actionNames[$action],
             'i18n' => ['actionName'],
-            'preserve' => ['tilesCount', 'actionName']
+            'preserve' => ['actionName']
         ]);
 
-        if ($bonusTerrain > 0) {
-            $args['tokensCount'] = $bonusTerrain;
-            $args['preserve'][] = 'tokensCount';
-            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) and spends ${tokensCount} bonus terrain token(s) to perform the "${actionName}" action'), $args);
+        $tileIcons = implode(',', [$playerId, ...$tiles]);
+        $bonusIcons = "terrain,$bonusTerrain";
+
+        if ($bonusTerrain > 0 && count($tiles) > 0) {
+            $args['tokenIcons'] = $bonusIcons;
+            $args['tileIcons'] = $tileIcons;
+            $args['preserve'][] = 'tokensIcons';
+            $args['preserve'][] = 'tileIcons';
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tileIcons} and spends ${tokenIcons} to perform the "${actionName}" action'), $args);
+        } else if ($bonusTerrain > 0) {
+            $args['tokenIcons'] = $bonusIcons;
+            $args['terrainIcon'] = $forceTerrain;
+            $args['preserve'][] = 'tokensIcons';
+            $args['preserve'][] = 'terrainIcon';
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} spends ${tokenIcons} to perform the "${actionName}" action at ${terrainIcon}'), $args);
         } else {
-            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tilesCount} tile(s) to perform the "${actionName}" action'), $args);
+            $args['tileIcons'] = $tileIcons;
+            $args['preserve'][] = 'tileIcons';
+            $this->notifyAllPlayers('update', clienttranslate('${player_name} flips ${tileIcons} to perform the "${actionName}" action'), $args);
         }
 
         $transition = ['move', 'howl', 'den', 'lair', 'dominate'][$action];
@@ -1043,7 +1056,7 @@ class TheWolves extends Table
             'moveUpdate' => ['id' => $wolfId, 'steps' => $steps]
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a ${pieceIcon}.'), $args);
+        self::notifyAllPlayers('update', clienttranslate('${player_name} displaces a ${pieceIcon}'), $args);
 
         $remainingMoves = $this->getGameStateValue(G_MOVES_REMAINING);
         if ($remainingMoves > 0) {
@@ -1439,7 +1452,10 @@ class TheWolves extends Table
 
         $this->logNotification('${player_name} cancels the bonus action', $args);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} spends a bonus action token to take another action'), $args);
+        $args['tokenIcon'] = 'action,1';
+        $args['preserve'] = ['tokenIcon'];
+
+        self::notifyAllPlayers('update', clienttranslate('${player_name} spends ${tokenIcon} to take another action'), $args);
 
         $this->gamestate->nextState(TR_SELECT_ACTION);
     }
