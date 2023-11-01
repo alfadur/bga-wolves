@@ -1811,16 +1811,15 @@ define([
         return this.format_block("jstpl_log_icon_piece", formatArgs);
     },
 
-    formatTileIcon(owner, ...tiles) {
-        const tileData = this.attributes[owner].tiles;
+    formatTileIcon(terrain, ...tiles) {
+        terrain = parseInt(terrain);
         const nodes = [];
 
-        for (const index of tiles) {
-            const wrappedIndex = (parseInt(index) + 1) % tileData.length;
-            const tile = tileData[wrappedIndex];
+        for (const tile of tiles) {
+            const index = parseInt(tile);
             const formatArgs = {
-                x: tile.front,
-                y: "flipped" in tile ? tile.flipped + 1 : 0
+                x: terrain,
+                y: index === 5 ? 0 : index === terrain ? 1 : 2
             };
             nodes.push(this.format_block("jstpl_log_icon_tile", formatArgs))
         }

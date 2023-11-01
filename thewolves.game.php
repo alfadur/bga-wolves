@@ -921,7 +921,7 @@ class TheWolves extends Table
             'preserve' => ['actionName']
         ]);
 
-        $tileIcons = implode(',', [$playerId, ...$tiles]);
+        $tileIcons = implode(',', [$terrain, ...$tiles]);
         $bonusIcons = "terrain,$bonusTerrain";
 
         if ($bonusTerrain > 0 && count($tiles) > 0) {
