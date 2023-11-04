@@ -541,7 +541,7 @@ class TheWolves extends Table
             }
 
             $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
-            $this->logDBDelete("pieces", "x = $x AND y = $y AND kind = $preyType ORDER BY id DESC LIMIT 1");
+            $this->logDBDelete("pieces", "id = $id");
 
             self::notifyAllPlayers(
                 'update',
