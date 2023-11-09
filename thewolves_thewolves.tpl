@@ -74,8 +74,8 @@ const jstpl_marker =
     `<div id="wolves-marker-\${id}"></div>`;
 const jstpl_piece =
     `<div id="wolves-piece-\${id}" class="wolves-piece" data-kind="\${kind}" data-owner="\${owner}">
-        <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-shadow"></div>
+        <div class="wolves-piece-selector"></div>
         <div class="wolves-piece-sprite"></div>
     </div>`;
 const jstpl_moon =
