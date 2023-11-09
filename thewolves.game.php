@@ -1116,7 +1116,7 @@ class TheWolves extends Table
             'increment' => $wolfScore
         ];
 
-        $this->logNotification(clienttranslate('${player_name} returns the Lone Wolf back'), [
+        $this->logNotification(clienttranslate('${player_name} returns the ${tokenIcon} back'), [
             'player_name' => self::getActivePlayerName(),
             'convertUpdate' => [
                 'targetId' => $targetId,
@@ -1124,13 +1124,16 @@ class TheWolves extends Table
                 'newKind' => P_LONE
             ],
             'attributesUpdate' => $attributesUpdate,
-            'scoreUpdate' => $scoreUpdate
+            'scoreUpdate' => $scoreUpdate,
+            'tokenIcon' => 'wolf,1',
+            'preserve' => ['tokenIcon']
         ]);
 
-        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a Lone Wolf into a ${pieceIcon}'), [
+        self::notifyAllPlayers('update', clienttranslate('${player_name} converts a ${tokenIcon} into a ${pieceIcon}'), [
             'player_name' => self::getActivePlayerName(),
+            'tokenIcon' => 'wolf,1',
             'pieceIcon' => "$playerId,$newKind",
-            'preserve' => ['pieceIcon'],
+            'preserve' => ['tokenIcon', 'pieceIcon'],
             'convertUpdate' => [
                 'targetId' => $targetId,
                 'newOwner' => $playerId,

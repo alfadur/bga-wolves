@@ -1125,6 +1125,14 @@
     background-position: -49% -92.5%;
 }
 
+.wolves-log-icon-token[data-token="wolf"] *{
+    width: 38px;
+    height: 38px;
+    background-image: url(img/pieces.png);
+    background-size: 480% 618%;
+    background-position: 24% 23.5%;
+}
+
 .wolves-log-icon-prey {
     width: 37px;
     height: 31px;
