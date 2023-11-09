@@ -125,6 +125,9 @@ const jstpl_log_icon_token =
     `<span class="wolves-log-icon wolves-log-icon-token" data-token="\${token}">
         \${content}
     </span>`
+const jstpl_log_icon_prey =
+    `<span class="wolves-log-icon wolves-log-icon-prey" data-prey="\${prey}">
+    </span>`
 </script>
 
 

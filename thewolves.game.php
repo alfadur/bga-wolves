@@ -543,9 +543,10 @@ class TheWolves extends Table
             $this->logNotification(clienttranslate('${player_name} returns the prey back'), $args);
             $this->logDBDelete("pieces", "id = $id");
 
+            $args['preyIcon'] = $preyData;
             self::notifyAllPlayers(
                 'update',
-                clienttranslate('${player_name} hunts down a prey'),
+                clienttranslate('${player_name} hunts down a ${preyIcon}'),
                 $args
             );
             $this->logIncStat(STAT_PLAYER_PREY_HUNTED, 1, $playerId);

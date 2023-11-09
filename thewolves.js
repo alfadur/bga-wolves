@@ -1840,6 +1840,16 @@ define([
         return this.format_block("jstpl_log_icon_token", formatArgs);
     },
 
+    formatPreyIcon(prey) {
+        let i = 0;
+        for (; i < 5; ++i) {
+            if ((prey & (0x1 << i)) !== 0) {
+                break;
+            }
+        }
+        return this.format_block("jstpl_log_icon_prey", {prey: i});
+    },
+
     format_string_recursive(log, args) {
         if (args && !("substitutionComplete" in args)) {
             args.substitutionComplete = true;
@@ -1847,7 +1857,8 @@ define([
                 piece: this.formatPieceIcon,
                 tile: this.formatTileIcon,
                 terrain: this.formatTerrainIcon,
-                token: this.formatTokenIcon
+                token: this.formatTokenIcon,
+                prey: this.formatPreyIcon
             };
             for (const iconType of Object.keys(formatters)) {
                 const icons = Object.keys(args).filter(name => name.startsWith(`${iconType}Icon`));

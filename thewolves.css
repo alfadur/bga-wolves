@@ -1124,3 +1124,31 @@
 .wolves-log-icon-token[data-token="action"] *{
     background-position: -49% -92.5%;
 }
+
+.wolves-log-icon-prey {
+    width: 37px;
+    height: 31px;
+    background-image: url(img/pieces.png);
+    background-size: 550% 850%;
+    background-position-y: 78%;
+}
+
+.wolves-log-icon-prey[data-prey="0"] {
+    background-position-x: 0;
+}
+
+.wolves-log-icon-prey[data-prey="1"] {
+    background-position-x: 22%;
+}
+
+.wolves-log-icon-prey[data-prey="2"] {
+    background-position-x: 45%;
+}
+
+.wolves-log-icon-prey[data-prey="3"] {
+    background-position-x: 68%;
+}
+
+.wolves-log-icon-prey[data-prey="4"] {
+    background-position-x: 91%;
+}
