@@ -336,6 +336,62 @@
     clip-path: polygon(0 50%, 25% 100%, 75% 100%, 100% 50%);
 }
 
+#wolves-land .wolves-piece-shadow {
+    position: absolute;
+    background-color: black;
+    border-radius: 10px;
+    pointer-events: none;
+    transform-origin: center;
+    opacity: 0.8;
+    box-shadow:
+        1px 0 10px black,
+        1px 0 8px black,
+        1px 0 5px black;
+    --shadow-angle: 0;
+    --shadow-offset: 0;
+    --shadow-skew: 0;
+    transform:
+        translateY(var(--shadow-offset))
+        rotate(var(--shadow-angle))
+        skewX(var(--shadow-skew));
+}
+
+.wolves-piece[data-kind="0"] .wolves-piece-shadow {
+    width: 64px;
+    height: 20px;
+    left: 24px;
+    top: 40px;
+    --shadow-angle: 3deg !important;
+    --shadow-skew: -12deg !important;
+}
+
+.wolves-piece[data-kind="1"] .wolves-piece-shadow {
+    width: 56px;
+    height: 20px;
+    left: 31px;
+    top: 37px;
+    --shadow-angle: -2deg !important;
+    --shadow-skew: 10deg !important;
+}
+
+.wolves-piece[data-kind="2"] .wolves-piece-shadow {
+    width: 51px;
+    height: 21px;
+    left: 35px;
+    top: 36px;
+    --shadow-angle: 10deg !important;
+    --shadow-skew: -35deg !important;
+}
+
+.wolves-piece[data-kind="3"] .wolves-piece-shadow {
+    width: 75px;
+    height: 25px;
+    left: 26px;
+    top: 37px;
+    --shadow-angle: -13deg !important;
+    --shadow-skew: 30deg !important;
+}
+
 .wolves-piece-sprite {
     position: absolute;
     width: var(--piece-width);
@@ -363,6 +419,26 @@
 
 .wolves-piece-bottom > .wolves-piece-sprite {
     transform: scale(var(--piece-scale)) translateY(10%);
+}
+
+.wolves-piece-top > .wolves-piece-shadow {
+    --shadow-offset: -60%;
+}
+
+.wolves-piece-top[data-kind="0"] > .wolves-piece-shadow {
+    --shadow-offset: -80% !important;
+}
+
+.wolves-piece-top[data-kind="3"] > .wolves-piece-shadow {
+    --shadow-offset: -80% !important;
+}
+
+.wolves-piece-bottom > .wolves-piece-shadow {
+    --shadow-offset: 100% !important;
+}
+
+.wolves-piece-bottom[data-kind="0"] > .wolves-piece-shadow {
+    --shadow-offset: 180% !important;
 }
 
 .wolves-piece.wolves-selected > .wolves-piece-sprite,
@@ -945,6 +1021,28 @@
     pointer-events: all;
 }
 
+.wolves-player-board-space:before {
+    position: absolute;
+    display: block;
+    content: "";
+    pointer-events: none;
+    background-color: black;
+    opacity: 0.3;
+    border-radius: 5px;
+    box-shadow:
+        0 0 10px black,
+        0 0 8px black,
+        0 0 5px black;
+    transform-origin: center;
+    transform: scale(0.9);
+    transition: opacity 450ms ease-in;
+}
+
+.wolves-player-board-space:hover:before {
+    opacity: 0;
+    transition: opacity 300ms ease-out;
+}
+
 .wolves-player-board-space:after {
     position: absolute;
     display: block;
@@ -972,6 +1070,13 @@
     height: 6.7%;
 }
 
+.wolves-den-space:before {
+    width: 44px;
+    height: 30px;
+    left: 1px;
+    top: -1px;
+}
+
 .wolves-den-space:after {
     width: 69px;
     height: 52px;
@@ -987,6 +1092,12 @@
 .wolves-lair-space {
     width: 4.2%;
     height: 14%;
+}
+
+.wolves-lair-space:before {
+    width: 43px;
+    height: 68px;
+    left: 3px;
 }
 
 .wolves-lair-space:after {
@@ -1039,6 +1150,12 @@
 .wolves-wolf-space {
     width: 3.8%;
     height: 16%;
+}
+
+.wolves-wolf-space:before {
+    width: 33px;
+    height: 66px;
+    left: 4px;
 }
 
 .wolves-wolf-space:after {
