@@ -10,7 +10,7 @@
         <div id="wolves-land" style="width: {LAND_WIDTH}px; height: {LAND_HEIGHT}px" data-y-offset="{Y_OFFSET}">
             <div id="wolves-regions">
                 <!-- BEGIN region -->
-                <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" style="left: {CX}px; top: {CY}px"></div>
+                <div id="wolves-region-{ID}" data-tile="{N}" class="wolves-region {ROTATE}" data-region-id="{ID}" style="left: {CX}px; top: {CY}px"></div>
                 <!-- END region -->
             </div>
 

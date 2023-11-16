@@ -893,7 +893,7 @@ define([
                 ["action", _("Bonus Action Tokens - can be spent to take additional actions during a player's turn")],
             ];
             for (const [name, text] of statusTooltips) {
-                this.addTooltipToClass(`wolves-status-icon-${name}`, text, "");
+                this.addTooltipToClass(`wolves-status-icon-${name}`, text);
             }
         }
 
@@ -957,6 +957,16 @@ define([
                 }
             }
         }
+
+        const tooltipControl = document.getElementById("preference_control_200");
+        this.tooltipsEnabled = tooltipControl.value === "0";
+
+        this.updateRegionTooltips();
+
+        tooltipControl.addEventListener("change", () => {
+            this.tooltipsEnabled = tooltipControl.value === "0";
+            this.updateRegionTooltips();
+        });
 
         // Setup game notifications to handle (see "setupNotifications" method below)
         this.setupNotifications();
@@ -1091,6 +1101,84 @@ define([
         const hiddenNodes = document.querySelectorAll(`#wolves-player-board-${playerId} .wolves-${groupName}-group .hidden`);
         if (hiddenNodes.length > 0) {
             hiddenNodes[hiddenNodes.length - 1].classList.remove("hidden");
+        }
+    },
+
+    updateRegionTooltips() {
+        const regions = document.querySelectorAll(".wolves-region");
+
+        for (const region of regions) {
+            const scores = {};
+            const pieces = document.querySelectorAll(
+                `.wolves-hex[data-region-id="${region.dataset.regionId}"] .wolves-piece`);
+
+            for (const piece of pieces) {
+                if (parseInt(piece.dataset.kind) < 4) {
+                    const owner = piece.dataset.owner;
+                    const list = scores[owner] || [];
+                    list.push(piece);
+                    scores[owner] = list;
+                }
+            }
+
+            const rows = Object.keys(scores).map(owner => {
+                const playerId = Object.keys(this.attributes).filter(id =>
+                    this.attributes[id].homeTerrain === parseInt(owner))[0];
+                const playerName = typeof playerId === "string" ?
+                    `<div style="color: #${this.gamedatas.players[playerId].color}">
+                        ${this.gamedatas.players[playerId].name}
+                    </div>` : "";
+
+                const pieces = scores[owner];
+                pieces.sort((p1, p2) =>
+                    parseInt(p1.dataset.kind) - parseInt(p2.dataset.kind));
+                const piecesString = pieces
+                    .map(piece => this.format_block("jstpl_log_icon_piece", {
+                        iconType: "piece",
+                        owner: piece.dataset.owner,
+                        kind: piece.dataset.kind
+                    }))
+                    .join("");
+
+                const control = pieces
+                    .map(piece => piece.dataset.kind === "3" ? 3 : 1)
+                    .reduce((v1, v2) => v1 + v2, 0);
+                const alphas = pieces
+                    .map(piece => piece.dataset.kind === "0" ? 1 : 0)
+                    .reduce((v1, v2) => v1 + v2, 0);
+                const total = control * 1024 + alphas;
+
+                const html = `<div class="wolves-region-tooltip-row">
+                    ${piecesString}
+                    <div class="wolves-padding"></div>
+                    <div class="wolves-region-control-eq">=</div> 
+                    <div class="wolves-region-control">${control}</div>
+                    <div class="wolves-region-alphas">(${alphas})</div>
+                </div>`;
+
+                return {control, alphas, total, html};
+            });
+
+            const moon = document.querySelector(
+                `.wolves-moon[data-region="${region.dataset.regionId}"]`);
+            if (this.tooltipsEnabled && moon && rows.length > 0) {
+                rows.sort((r1, r2) =>
+                    r2.total - r1.total);
+                const content = rows.map(r => r.html).join("");
+                const title = _("Region Control (Alpha Wolves)");
+                const tooltip =
+                    `<div class="wolves-region-tooltip">
+                        <div>${title}</div>
+                        <div class="wolves-region-tooltip-divider"></div>
+                        ${content}
+                    </div>`;
+
+                this.addTooltipHtml(region.getAttribute("id"), tooltip, 1000);
+                region.classList.add("wolves-region-has-tooltip");
+            } else {
+                this.removeTooltip(region.getAttribute("id"));
+                region.classList.remove("wolves-region-has-tooltip");
+            }
         }
     },
 
@@ -1659,6 +1747,8 @@ define([
         if (score) {
             this.scoreCtrl[score.playerId].incValue(parseInt(score.increment));
         }
+
+        this.updateRegionTooltips();
     },
 
     onUndoNotification(data) {
@@ -1744,6 +1834,8 @@ define([
         if (score) {
             this.scoreCtrl[score.playerId].incValue(-parseInt(score.increment));
         }
+
+        this.updateRegionTooltips();
     },
 
     onScoringNotification(data) {

@@ -1,0 +1,1240 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" type="text/css" href="../thewolves.css" />
+</head>
+<body>
+    <span class="wolves-log-icon wolves-log-icon-prey" data-prey="0"></span>
+    <span class="wolves-log-icon wolves-log-icon-prey" data-prey="1"></span>
+    <span class="wolves-log-icon wolves-log-icon-prey" data-prey="2"></span>
+    <span class="wolves-log-icon wolves-log-icon-prey" data-prey="3"></span>
+    <span class="wolves-log-icon wolves-log-icon-prey" data-prey="4"></span>
+
+    <div id="wolves-game">
+        <div id="wolves-land-container" style="max-width: 1740px; height: 1012.16px;">
+            <div id="wolves-land" style="width: 1740px; height: 1734px; transform: scale(0.583717);" data-y-offset="51">
+                <div id="wolves-regions">
+
+                    <div id="wolves-region-1" data-tile="0" class="wolves-region " style="left: 630px; top: 663px"></div>
+                    <div id="wolves-region-2" data-tile="5" class="wolves-region " style="left: 900px; top: 306px"></div>
+                    <div id="wolves-region-3" data-tile="1" class="wolves-region wolves-region-rotated" style="left: 720px; top: 0px"></div>
+                    <div id="wolves-region-4" data-tile="2" class="wolves-region wolves-region-rotated" style="left: 450px; top: 357px"></div>
+                    <div id="wolves-region-5" data-tile="4" class="wolves-region " style="left: 0px; top: 408px"></div>
+                    <div id="wolves-region-6" data-tile="6" class="wolves-region wolves-region-rotated" style="left: 180px; top: 714px"></div>
+                    <div id="wolves-region-7" data-tile="8" class="wolves-region " style="left: 360px; top: 1020px"></div>
+                    <div id="wolves-region-8" data-tile="10" class="wolves-region " style="left: 540px; top: 1326px"></div>
+                    <div id="wolves-region-9" data-tile="3" class="wolves-region wolves-region-rotated" style="left: 810px; top: 969px"></div>
+                    <div id="wolves-region-10" data-tile="7" class="wolves-region " style="left: 1260px; top: 918px"></div>
+                    <div id="wolves-region-11" data-tile="9" class="wolves-region " style="left: 1080px; top: 612px"></div>
+                </div>
+
+                <svg id="wolves-selection-svg" viewBox="0 0 1740 1734" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <pattern id="wolves-selection-fill-pattern" width="16" height="16" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                            <line stroke="red" stroke-width="10px" x2="5"></line>
+                        </pattern>
+                    </defs>
+                    <path id="wolves-selection-svg-path" stroke-width="8" stroke-linecap="round" d=""></path>
+                </svg>
+
+                <svg id="wolves-svg" viewBox="-500 -500 1000 1000" xmlns="http://www.w3.org/2000/svg">
+                    <path id="wolves-svg-path" fill="none" stroke="red" stroke-width="10" stroke-linecap="round" stroke-dasharray="20 15" d=""></path>
+                </svg>
+
+
+                <div id="wolves-hex-0-5" data-x="0" data-y="5" data-region-id="5" class="wolves-hex wolves-hex-grass" style="left: 0px; top: 510px">
+                    <div id="wolves-hex-selector-0-5" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-0-6" data-x="0" data-y="6" data-region-id="5" class="wolves-hex wolves-hex-desert" style="left: 0px; top: 612px">
+                    <div id="wolves-hex-selector-0-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-0-7" data-x="0" data-y="7" data-region-id="5" class="wolves-hex wolves-hex-desert" style="left: 0px; top: 714px">
+                    <div id="wolves-hex-selector-0-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-1-5" data-x="1" data-y="5" data-region-id="5" class="wolves-hex wolves-hex-grass" style="left: 90px; top: 459px">
+                    <div id="wolves-hex-selector-1-5" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-1-6" data-x="1" data-y="6" data-region-id="5" class="wolves-hex wolves-hex-tundra" style="left: 90px; top: 561px">
+                    <div id="wolves-hex-selector-1-6" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-15" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-16" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="0">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-1-7" data-x="1" data-y="7" data-region-id="5" class="wolves-hex wolves-hex-desert" style="left: 90px; top: 663px">
+                    <div id="wolves-hex-selector-1-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-2-5" data-x="2" data-y="5" data-region-id="5" class="wolves-hex wolves-hex-grass" style="left: 180px; top: 408px">
+                    <div id="wolves-hex-selector-2-5" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-13" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-2-6" data-x="2" data-y="6" data-region-id="5" class="wolves-hex wolves-hex-tundra" style="left: 180px; top: 510px">
+                    <div id="wolves-hex-selector-2-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-2-7" data-x="2" data-y="7" data-region-id="5" class="wolves-hex wolves-hex-tundra" style="left: 180px; top: 612px">
+                    <div id="wolves-hex-selector-2-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-2-8" data-x="2" data-y="8" data-region-id="5" class="wolves-hex wolves-hex-rock" style="left: 180px; top: 714px">
+                    <div id="wolves-hex-selector-2-8" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-14" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-2-9" data-x="2" data-y="9" data-region-id="6" class="wolves-hex wolves-hex-forest" style="left: 180px; top: 816px">
+                    <div id="wolves-hex-selector-2-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-2-10" data-x="2" data-y="10" data-region-id="6" class="wolves-hex wolves-hex-tundra" style="left: 180px; top: 918px">
+                    <div id="wolves-hex-selector-2-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-2-11" data-x="2" data-y="11" data-region-id="6" class="wolves-hex wolves-hex-tundra" style="left: 180px; top: 1020px">
+                    <div id="wolves-hex-selector-2-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-3-6" data-x="3" data-y="6" data-region-id="5" class="wolves-hex wolves-hex-forest" style="left: 270px; top: 459px">
+                    <div id="wolves-hex-selector-3-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-3-7" data-x="3" data-y="7" data-region-id="5" class="wolves-hex wolves-hex-water" style="left: 270px; top: 561px">
+                    <div id="wolves-hex-selector-3-7" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="5" data-phase="1"></div></div>
+                <div id="wolves-hex-3-8" data-x="3" data-y="8" data-region-id="5" class="wolves-hex wolves-hex-rock" style="left: 270px; top: 663px">
+                    <div id="wolves-hex-selector-3-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-3-9" data-x="3" data-y="9" data-region-id="6" class="wolves-hex wolves-hex-forest" style="left: 270px; top: 765px">
+                    <div id="wolves-hex-selector-3-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-3-10" data-x="3" data-y="10" data-region-id="6" class="wolves-hex wolves-hex-water" style="left: 270px; top: 867px">
+                    <div id="wolves-hex-selector-3-10" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="6" data-phase="2"></div></div>
+                <div id="wolves-hex-3-11" data-x="3" data-y="11" data-region-id="6" class="wolves-hex wolves-hex-tundra" style="left: 270px; top: 969px">
+                    <div id="wolves-hex-selector-3-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-6" data-x="4" data-y="6" data-region-id="5" class="wolves-hex wolves-hex-forest" style="left: 360px; top: 408px">
+                    <div id="wolves-hex-selector-4-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-7" data-x="4" data-y="7" data-region-id="5" class="wolves-hex wolves-hex-forest" style="left: 360px; top: 510px">
+                    <div id="wolves-hex-selector-4-7" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-66" class="wolves-piece" data-kind="2" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-4-8" data-x="4" data-y="8" data-region-id="5" class="wolves-hex wolves-hex-rock" style="left: 360px; top: 612px">
+                    <div id="wolves-hex-selector-4-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-9" data-x="4" data-y="9" data-region-id="6" class="wolves-hex wolves-hex-forest" style="left: 360px; top: 714px">
+                    <div id="wolves-hex-selector-4-9" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-18" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-4-10" data-x="4" data-y="10" data-region-id="6" class="wolves-hex wolves-hex-grass" style="left: 360px; top: 816px">
+                    <div id="wolves-hex-selector-4-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-64" class="wolves-piece" data-kind="3" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-4-11" data-x="4" data-y="11" data-region-id="6" class="wolves-hex wolves-hex-grass" style="left: 360px; top: 918px">
+                    <div id="wolves-hex-selector-4-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-12" data-x="4" data-y="12" data-region-id="6" class="wolves-hex wolves-hex-desert" style="left: 360px; top: 1020px">
+                    <div id="wolves-hex-selector-4-12" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-17" class="wolves-piece" data-kind="0" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-4-13" data-x="4" data-y="13" data-region-id="7" class="wolves-hex wolves-hex-forest" style="left: 360px; top: 1122px">
+                    <div id="wolves-hex-selector-4-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-14" data-x="4" data-y="14" data-region-id="7" class="wolves-hex wolves-hex-tundra" style="left: 360px; top: 1224px">
+                    <div id="wolves-hex-selector-4-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-4-15" data-x="4" data-y="15" data-region-id="7" class="wolves-hex wolves-hex-tundra" style="left: 360px; top: 1326px">
+                    <div id="wolves-hex-selector-4-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-5-7" data-x="5" data-y="7" data-region-id="4" class="wolves-hex wolves-hex-desert" style="left: 450px; top: 459px">
+                    <div id="wolves-hex-selector-5-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-5-8" data-x="5" data-y="8" data-region-id="4" class="wolves-hex wolves-hex-tundra" style="left: 450px; top: 561px">
+                    <div id="wolves-hex-selector-5-8" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-43" class="wolves-piece" data-kind="0" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-5-9" data-x="5" data-y="9" data-region-id="4" class="wolves-hex wolves-hex-tundra" style="left: 450px; top: 663px">
+                    <div id="wolves-hex-selector-5-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-5-10" data-x="5" data-y="10" data-region-id="6" class="wolves-hex wolves-hex-rock" style="left: 450px; top: 765px">
+                    <div id="wolves-hex-selector-5-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-55" class="wolves-piece wolves-piece-top" data-kind="3" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-56" class="wolves-piece wolves-piece-bottom" data-kind="0" data-owner="3">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-5-11" data-x="5" data-y="11" data-region-id="6" class="wolves-hex wolves-hex-grass" style="left: 450px; top: 867px">
+                    <div id="wolves-hex-selector-5-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-19" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-20" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="3">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-5-12" data-x="5" data-y="12" data-region-id="6" class="wolves-hex wolves-hex-desert" style="left: 450px; top: 969px">
+                    <div id="wolves-hex-selector-5-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-5-13" data-x="5" data-y="13" data-region-id="7" class="wolves-hex wolves-hex-forest" style="left: 450px; top: 1071px">
+                    <div id="wolves-hex-selector-5-13" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-57" class="wolves-piece wolves-piece-top" data-kind="0" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-58" class="wolves-piece wolves-piece-bottom" data-kind="1" data-owner="0">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-5-14" data-x="5" data-y="14" data-region-id="7" class="wolves-hex wolves-hex-desert" style="left: 450px; top: 1173px">
+                    <div id="wolves-hex-selector-5-14" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-23" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-24" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="4">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-5-15" data-x="5" data-y="15" data-region-id="7" class="wolves-hex wolves-hex-tundra" style="left: 450px; top: 1275px">
+                    <div id="wolves-hex-selector-5-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-7" data-x="6" data-y="7" data-region-id="4" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 408px">
+                    <div id="wolves-hex-selector-6-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-8" data-x="6" data-y="8" data-region-id="4" class="wolves-hex wolves-hex-water" style="left: 540px; top: 510px">
+                    <div id="wolves-hex-selector-6-8" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon wolves-upcoming" data-region="4" data-phase="0"></div></div>
+                <div id="wolves-hex-6-9" data-x="6" data-y="9" data-region-id="4" class="wolves-hex wolves-hex-tundra" style="left: 540px; top: 612px">
+                    <div id="wolves-hex-selector-6-9" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-65" class="wolves-piece" data-kind="2" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-6-10" data-x="6" data-y="10" data-region-id="6" class="wolves-hex wolves-hex-rock" style="left: 540px; top: 714px">
+                    <div id="wolves-hex-selector-6-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-59" class="wolves-piece wolves-piece-top" data-kind="0" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-10" class="wolves-piece wolves-piece-bottom" data-kind="1" data-owner="2">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-6-11" data-x="6" data-y="11" data-region-id="6" class="wolves-hex wolves-hex-rock" style="left: 540px; top: 816px">
+                    <div id="wolves-hex-selector-6-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-60" class="wolves-piece" data-kind="1" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-6-12" data-x="6" data-y="12" data-region-id="6" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 918px">
+                    <div id="wolves-hex-selector-6-12" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-61" class="wolves-piece" data-kind="2" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-6-13" data-x="6" data-y="13" data-region-id="7" class="wolves-hex wolves-hex-forest" style="left: 540px; top: 1020px">
+                    <div id="wolves-hex-selector-6-13" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-21" class="wolves-piece" data-kind="1" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-6-14" data-x="6" data-y="14" data-region-id="7" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 1122px">
+                    <div id="wolves-hex-selector-6-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-15" data-x="6" data-y="15" data-region-id="7" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 1224px">
+                    <div id="wolves-hex-selector-6-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-16" data-x="6" data-y="16" data-region-id="7" class="wolves-hex wolves-hex-rock" style="left: 540px; top: 1326px">
+                    <div id="wolves-hex-selector-6-16" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-22" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-6-17" data-x="6" data-y="17" data-region-id="8" class="wolves-hex wolves-hex-tundra" style="left: 540px; top: 1428px">
+                    <div id="wolves-hex-selector-6-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-18" data-x="6" data-y="18" data-region-id="8" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 1530px">
+                    <div id="wolves-hex-selector-6-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-6-19" data-x="6" data-y="19" data-region-id="8" class="wolves-hex wolves-hex-desert" style="left: 540px; top: 1632px">
+                    <div id="wolves-hex-selector-6-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-7" data-x="7" data-y="7" data-region-id="4" class="wolves-hex wolves-hex-desert" style="left: 630px; top: 357px">
+                    <div id="wolves-hex-selector-7-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-8" data-x="7" data-y="8" data-region-id="4" class="wolves-hex wolves-hex-grass" style="left: 630px; top: 459px">
+                    <div id="wolves-hex-selector-7-8" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-63" class="wolves-piece" data-kind="2" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-7-9" data-x="7" data-y="9" data-region-id="4" class="wolves-hex wolves-hex-grass" style="left: 630px; top: 561px">
+                    <div id="wolves-hex-selector-7-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-10" data-x="7" data-y="10" data-region-id="4" class="wolves-hex wolves-hex-rock" style="left: 630px; top: 663px">
+                    <div id="wolves-hex-selector-7-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-11" data-x="7" data-y="11" data-region-id="1" class="wolves-hex wolves-hex-tundra" style="left: 630px; top: 765px">
+                    <div id="wolves-hex-selector-7-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-44" class="wolves-piece" data-kind="1" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-7-12" data-x="7" data-y="12" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 630px; top: 867px">
+                    <div id="wolves-hex-selector-7-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-13" data-x="7" data-y="13" data-region-id="1" class="wolves-hex wolves-hex-desert" style="left: 630px; top: 969px">
+                    <div id="wolves-hex-selector-7-13" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-53" class="wolves-piece wolves-piece-top" data-kind="0" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-54" class="wolves-piece wolves-piece-bottom" data-kind="1" data-owner="4">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-7-14" data-x="7" data-y="14" data-region-id="7" class="wolves-hex wolves-hex-grass" style="left: 630px; top: 1071px">
+                    <div id="wolves-hex-selector-7-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-15" data-x="7" data-y="15" data-region-id="7" class="wolves-hex wolves-hex-water" style="left: 630px; top: 1173px">
+                    <div id="wolves-hex-selector-7-15" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="7" data-phase="1"></div></div>
+                <div id="wolves-hex-7-16" data-x="7" data-y="16" data-region-id="7" class="wolves-hex wolves-hex-rock" style="left: 630px; top: 1275px">
+                    <div id="wolves-hex-selector-7-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-17" data-x="7" data-y="17" data-region-id="8" class="wolves-hex wolves-hex-tundra" style="left: 630px; top: 1377px">
+                    <div id="wolves-hex-selector-7-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-7-18" data-x="7" data-y="18" data-region-id="8" class="wolves-hex wolves-hex-rock" style="left: 630px; top: 1479px">
+                    <div id="wolves-hex-selector-7-18" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-27" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-28" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="4">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-7-19" data-x="7" data-y="19" data-region-id="8" class="wolves-hex wolves-hex-desert" style="left: 630px; top: 1581px">
+                    <div id="wolves-hex-selector-7-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-5" data-x="8" data-y="5" data-region-id="3" class="wolves-hex wolves-hex-desert" style="left: 720px; top: 102px">
+                    <div id="wolves-hex-selector-8-5" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-6" data-x="8" data-y="6" data-region-id="3" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 204px">
+                    <div id="wolves-hex-selector-8-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-7" data-x="8" data-y="7" data-region-id="3" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 306px">
+                    <div id="wolves-hex-selector-8-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-8" data-x="8" data-y="8" data-region-id="4" class="wolves-hex wolves-hex-forest" style="left: 720px; top: 408px">
+                    <div id="wolves-hex-selector-8-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-9" data-x="8" data-y="9" data-region-id="4" class="wolves-hex wolves-hex-grass" style="left: 720px; top: 510px">
+                    <div id="wolves-hex-selector-8-9" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-12" class="wolves-piece" data-kind="5" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-8-10" data-x="8" data-y="10" data-region-id="4" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 612px">
+                    <div id="wolves-hex-selector-8-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-11" data-x="8" data-y="11" data-region-id="1" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 714px">
+                    <div id="wolves-hex-selector-8-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-12" data-x="8" data-y="12" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 720px; top: 816px">
+                    <div id="wolves-hex-selector-8-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-13" data-x="8" data-y="13" data-region-id="1" class="wolves-hex wolves-hex-grass" style="left: 720px; top: 918px">
+                    <div id="wolves-hex-selector-8-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-14" data-x="8" data-y="14" data-region-id="7" class="wolves-hex wolves-hex-grass" style="left: 720px; top: 1020px">
+                    <div id="wolves-hex-selector-8-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-15" data-x="8" data-y="15" data-region-id="7" class="wolves-hex wolves-hex-grass" style="left: 720px; top: 1122px">
+                    <div id="wolves-hex-selector-8-15" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-52" class="wolves-piece" data-kind="0" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-8-16" data-x="8" data-y="16" data-region-id="7" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 1224px">
+                    <div id="wolves-hex-selector-8-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-17" data-x="8" data-y="17" data-region-id="8" class="wolves-hex wolves-hex-tundra" style="left: 720px; top: 1326px">
+                    <div id="wolves-hex-selector-8-17" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-25" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-8-18" data-x="8" data-y="18" data-region-id="8" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 1428px">
+                    <div id="wolves-hex-selector-8-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-19" data-x="8" data-y="19" data-region-id="8" class="wolves-hex wolves-hex-rock" style="left: 720px; top: 1530px">
+                    <div id="wolves-hex-selector-8-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-8-20" data-x="8" data-y="20" data-region-id="8" class="wolves-hex wolves-hex-grass" style="left: 720px; top: 1632px">
+                    <div id="wolves-hex-selector-8-20" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-5" data-x="9" data-y="5" data-region-id="3" class="wolves-hex wolves-hex-desert" style="left: 810px; top: 51px">
+                    <div id="wolves-hex-selector-9-5" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-6" data-x="9" data-y="6" data-region-id="3" class="wolves-hex wolves-hex-water" style="left: 810px; top: 153px">
+                    <div id="wolves-hex-selector-9-6" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="3" data-phase="1"></div></div>
+                <div id="wolves-hex-9-7" data-x="9" data-y="7" data-region-id="3" class="wolves-hex wolves-hex-rock" style="left: 810px; top: 255px">
+                    <div id="wolves-hex-selector-9-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-8" data-x="9" data-y="8" data-region-id="4" class="wolves-hex wolves-hex-forest" style="left: 810px; top: 357px">
+                    <div id="wolves-hex-selector-9-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-9" data-x="9" data-y="9" data-region-id="4" class="wolves-hex wolves-hex-forest" style="left: 810px; top: 459px">
+                    <div id="wolves-hex-selector-9-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-10" data-x="9" data-y="10" data-region-id="4" class="wolves-hex wolves-hex-rock" style="left: 810px; top: 561px">
+                    <div id="wolves-hex-selector-9-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-11" data-x="9" data-y="11" data-region-id="1" class="wolves-hex wolves-hex-desert" style="left: 810px; top: 663px">
+                    <div id="wolves-hex-selector-9-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-50" class="wolves-piece" data-kind="1" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-9-12" data-x="9" data-y="12" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 810px; top: 765px">
+                    <div id="wolves-hex-selector-9-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-13" data-x="9" data-y="13" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 810px; top: 867px">
+                    <div id="wolves-hex-selector-9-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-14" data-x="9" data-y="14" data-region-id="1" class="wolves-hex wolves-hex-forest" style="left: 810px; top: 969px">
+                    <div id="wolves-hex-selector-9-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-15" data-x="9" data-y="15" data-region-id="9" class="wolves-hex wolves-hex-tundra" style="left: 810px; top: 1071px">
+                    <div id="wolves-hex-selector-9-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-16" data-x="9" data-y="16" data-region-id="9" class="wolves-hex wolves-hex-rock" style="left: 810px; top: 1173px">
+                    <div id="wolves-hex-selector-9-16" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-41" class="wolves-piece" data-kind="0" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-9-17" data-x="9" data-y="17" data-region-id="9" class="wolves-hex wolves-hex-rock" style="left: 810px; top: 1275px">
+                    <div id="wolves-hex-selector-9-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-9-18" data-x="9" data-y="18" data-region-id="8" class="wolves-hex wolves-hex-forest" style="left: 810px; top: 1377px">
+                    <div id="wolves-hex-selector-9-18" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-26" class="wolves-piece" data-kind="1" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-9-19" data-x="9" data-y="19" data-region-id="8" class="wolves-hex wolves-hex-water" style="left: 810px; top: 1479px">
+                    <div id="wolves-hex-selector-9-19" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon wolves-upcoming" data-region="8" data-phase="0"></div></div>
+                <div id="wolves-hex-9-20" data-x="9" data-y="20" data-region-id="8" class="wolves-hex wolves-hex-grass" style="left: 810px; top: 1581px">
+                    <div id="wolves-hex-selector-9-20" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-5" data-x="10" data-y="5" data-region-id="3" class="wolves-hex wolves-hex-desert" style="left: 900px; top: 0px">
+                    <div id="wolves-hex-selector-10-5" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-6" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-10-6" data-x="10" data-y="6" data-region-id="3" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 102px">
+                    <div id="wolves-hex-selector-10-6" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-48" class="wolves-piece" data-kind="1" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-10-7" data-x="10" data-y="7" data-region-id="3" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 204px">
+                    <div id="wolves-hex-selector-10-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-8" data-x="10" data-y="8" data-region-id="3" class="wolves-hex wolves-hex-grass" style="left: 900px; top: 306px">
+                    <div id="wolves-hex-selector-10-8" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-5" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-10-9" data-x="10" data-y="9" data-region-id="2" class="wolves-hex wolves-hex-desert" style="left: 900px; top: 408px">
+                    <div id="wolves-hex-selector-10-9" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-10" data-x="10" data-y="10" data-region-id="2" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 510px">
+                    <div id="wolves-hex-selector-10-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-9" class="wolves-piece" data-kind="1" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-10-11" data-x="10" data-y="11" data-region-id="2" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 612px">
+                    <div id="wolves-hex-selector-10-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-12" data-x="10" data-y="12" data-region-id="1" class="wolves-hex wolves-hex-grass" style="left: 900px; top: 714px">
+                    <div id="wolves-hex-selector-10-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-13" data-x="10" data-y="13" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 900px; top: 816px">
+                    <div id="wolves-hex-selector-10-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-14" data-x="10" data-y="14" data-region-id="1" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 918px">
+                    <div id="wolves-hex-selector-10-14" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-42" class="wolves-piece" data-kind="1" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-10-15" data-x="10" data-y="15" data-region-id="9" class="wolves-hex wolves-hex-tundra" style="left: 900px; top: 1020px">
+                    <div id="wolves-hex-selector-10-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-16" data-x="10" data-y="16" data-region-id="9" class="wolves-hex wolves-hex-water" style="left: 900px; top: 1122px">
+                    <div id="wolves-hex-selector-10-16" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="9" data-phase="2"></div></div>
+                <div id="wolves-hex-10-17" data-x="10" data-y="17" data-region-id="9" class="wolves-hex wolves-hex-rock" style="left: 900px; top: 1224px">
+                    <div id="wolves-hex-selector-10-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-18" data-x="10" data-y="18" data-region-id="8" class="wolves-hex wolves-hex-forest" style="left: 900px; top: 1326px">
+                    <div id="wolves-hex-selector-10-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-19" data-x="10" data-y="19" data-region-id="8" class="wolves-hex wolves-hex-forest" style="left: 900px; top: 1428px">
+                    <div id="wolves-hex-selector-10-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-10-20" data-x="10" data-y="20" data-region-id="8" class="wolves-hex wolves-hex-grass" style="left: 900px; top: 1530px">
+                    <div id="wolves-hex-selector-10-20" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-51" class="wolves-piece" data-kind="0" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-11-6" data-x="11" data-y="6" data-region-id="3" class="wolves-hex wolves-hex-forest" style="left: 990px; top: 51px">
+                    <div id="wolves-hex-selector-11-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-7" data-x="11" data-y="7" data-region-id="3" class="wolves-hex wolves-hex-tundra" style="left: 990px; top: 153px">
+                    <div id="wolves-hex-selector-11-7" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-7" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-8" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="2">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-11-8" data-x="11" data-y="8" data-region-id="3" class="wolves-hex wolves-hex-grass" style="left: 990px; top: 255px">
+                    <div id="wolves-hex-selector-11-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-9" data-x="11" data-y="9" data-region-id="2" class="wolves-hex wolves-hex-desert" style="left: 990px; top: 357px">
+                    <div id="wolves-hex-selector-11-9" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-47" class="wolves-piece" data-kind="0" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-11-10" data-x="11" data-y="10" data-region-id="2" class="wolves-hex wolves-hex-rock" style="left: 990px; top: 459px">
+                    <div id="wolves-hex-selector-11-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-3" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-4" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="1">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-11-11" data-x="11" data-y="11" data-region-id="2" class="wolves-hex wolves-hex-tundra" style="left: 990px; top: 561px">
+                    <div id="wolves-hex-selector-11-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-2" class="wolves-piece" data-kind="1" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-11-12" data-x="11" data-y="12" data-region-id="1" class="wolves-hex wolves-hex-forest" style="left: 990px; top: 663px">
+                    <div id="wolves-hex-selector-11-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-13" data-x="11" data-y="13" data-region-id="1" class="wolves-hex wolves-hex-chasm" style="left: 990px; top: 765px">
+                    <div id="wolves-hex-selector-11-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-14" data-x="11" data-y="14" data-region-id="1" class="wolves-hex wolves-hex-rock" style="left: 990px; top: 867px">
+                    <div id="wolves-hex-selector-11-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-15" data-x="11" data-y="15" data-region-id="9" class="wolves-hex wolves-hex-tundra" style="left: 990px; top: 969px">
+                    <div id="wolves-hex-selector-11-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-16" data-x="11" data-y="16" data-region-id="9" class="wolves-hex wolves-hex-desert" style="left: 990px; top: 1071px">
+                    <div id="wolves-hex-selector-11-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-11-17" data-x="11" data-y="17" data-region-id="9" class="wolves-hex wolves-hex-desert" style="left: 990px; top: 1173px">
+                    <div id="wolves-hex-selector-11-17" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-45" class="wolves-piece" data-kind="0" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-11-18" data-x="11" data-y="18" data-region-id="9" class="wolves-hex wolves-hex-forest" style="left: 990px; top: 1275px">
+                    <div id="wolves-hex-selector-11-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-6" data-x="12" data-y="6" data-region-id="3" class="wolves-hex wolves-hex-forest" style="left: 1080px; top: 0px">
+                    <div id="wolves-hex-selector-12-6" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-7" data-x="12" data-y="7" data-region-id="3" class="wolves-hex wolves-hex-forest" style="left: 1080px; top: 102px">
+                    <div id="wolves-hex-selector-12-7" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-8" data-x="12" data-y="8" data-region-id="3" class="wolves-hex wolves-hex-grass" style="left: 1080px; top: 204px">
+                    <div id="wolves-hex-selector-12-8" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-9" data-x="12" data-y="9" data-region-id="2" class="wolves-hex wolves-hex-desert" style="left: 1080px; top: 306px">
+                    <div id="wolves-hex-selector-12-9" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-68" class="wolves-piece wolves-piece-top" data-kind="2" data-owner="4">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-1" class="wolves-piece wolves-piece-bottom" data-kind="1" data-owner="4">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-12-10" data-x="12" data-y="10" data-region-id="2" class="wolves-hex wolves-hex-rock" style="left: 1080px; top: 408px">
+                    <div id="wolves-hex-selector-12-10" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-62" class="wolves-piece" data-kind="2" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-12-11" data-x="12" data-y="11" data-region-id="2" class="wolves-hex wolves-hex-rock" style="left: 1080px; top: 510px">
+                    <div id="wolves-hex-selector-12-11" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-49" class="wolves-piece" data-kind="0" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-12-12" data-x="12" data-y="12" data-region-id="2" class="wolves-hex wolves-hex-forest" style="left: 1080px; top: 612px">
+                    <div id="wolves-hex-selector-12-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-13" data-x="12" data-y="13" data-region-id="11" class="wolves-hex wolves-hex-rock" style="left: 1080px; top: 714px">
+                    <div id="wolves-hex-selector-12-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-14" data-x="12" data-y="14" data-region-id="11" class="wolves-hex wolves-hex-grass" style="left: 1080px; top: 816px">
+                    <div id="wolves-hex-selector-12-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-15" data-x="12" data-y="15" data-region-id="11" class="wolves-hex wolves-hex-grass" style="left: 1080px; top: 918px">
+                    <div id="wolves-hex-selector-12-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-12-16" data-x="12" data-y="16" data-region-id="9" class="wolves-hex wolves-hex-grass" style="left: 1080px; top: 1020px">
+                    <div id="wolves-hex-selector-12-16" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-29" class="wolves-piece wolves-piece-top" data-kind="2" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-46" class="wolves-piece wolves-piece-bottom" data-kind="1" data-owner="3">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-12-17" data-x="12" data-y="17" data-region-id="9" class="wolves-hex wolves-hex-desert" style="left: 1080px; top: 1122px">
+                    <div id="wolves-hex-selector-12-17" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-32" class="wolves-piece" data-kind="5" data-owner="2">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-12-18" data-x="12" data-y="18" data-region-id="9" class="wolves-hex wolves-hex-forest" style="left: 1080px; top: 1224px">
+                    <div id="wolves-hex-selector-12-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-10" data-x="13" data-y="10" data-region-id="2" class="wolves-hex wolves-hex-grass" style="left: 1170px; top: 357px">
+                    <div id="wolves-hex-selector-13-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-11" data-x="13" data-y="11" data-region-id="2" class="wolves-hex wolves-hex-water" style="left: 1170px; top: 459px">
+                    <div id="wolves-hex-selector-13-11" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon wolves-upcoming" data-region="2" data-phase="0"></div></div>
+                <div id="wolves-hex-13-12" data-x="13" data-y="12" data-region-id="2" class="wolves-hex wolves-hex-forest" style="left: 1170px; top: 561px">
+                    <div id="wolves-hex-selector-13-12" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-13" data-x="13" data-y="13" data-region-id="11" class="wolves-hex wolves-hex-rock" style="left: 1170px; top: 663px">
+                    <div id="wolves-hex-selector-13-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-14" data-x="13" data-y="14" data-region-id="11" class="wolves-hex wolves-hex-forest" style="left: 1170px; top: 765px">
+                    <div id="wolves-hex-selector-13-14" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-39" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-40" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="1">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-13-15" data-x="13" data-y="15" data-region-id="11" class="wolves-hex wolves-hex-grass" style="left: 1170px; top: 867px">
+                    <div id="wolves-hex-selector-13-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-16" data-x="13" data-y="16" data-region-id="9" class="wolves-hex wolves-hex-grass" style="left: 1170px; top: 969px">
+                    <div id="wolves-hex-selector-13-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-13-17" data-x="13" data-y="17" data-region-id="9" class="wolves-hex wolves-hex-grass" style="left: 1170px; top: 1071px">
+                    <div id="wolves-hex-selector-13-17" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-30" class="wolves-piece" data-kind="1" data-owner="3">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-13-18" data-x="13" data-y="18" data-region-id="9" class="wolves-hex wolves-hex-forest" style="left: 1170px; top: 1173px">
+                    <div id="wolves-hex-selector-13-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-10" data-x="14" data-y="10" data-region-id="2" class="wolves-hex wolves-hex-grass" style="left: 1260px; top: 306px">
+                    <div id="wolves-hex-selector-14-10" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-11" data-x="14" data-y="11" data-region-id="2" class="wolves-hex wolves-hex-grass" style="left: 1260px; top: 408px">
+                    <div id="wolves-hex-selector-14-11" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-12" data-x="14" data-y="12" data-region-id="2" class="wolves-hex wolves-hex-forest" style="left: 1260px; top: 510px">
+                    <div id="wolves-hex-selector-14-12" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-37" class="wolves-piece" data-kind="1" data-owner="1">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-14-13" data-x="14" data-y="13" data-region-id="11" class="wolves-hex wolves-hex-rock" style="left: 1260px; top: 612px">
+                    <div id="wolves-hex-selector-14-13" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-14" data-x="14" data-y="14" data-region-id="11" class="wolves-hex wolves-hex-forest" style="left: 1260px; top: 714px">
+                    <div id="wolves-hex-selector-14-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-15" data-x="14" data-y="15" data-region-id="11" class="wolves-hex wolves-hex-forest" style="left: 1260px; top: 816px">
+                    <div id="wolves-hex-selector-14-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-16" data-x="14" data-y="16" data-region-id="11" class="wolves-hex wolves-hex-tundra" style="left: 1260px; top: 918px">
+                    <div id="wolves-hex-selector-14-16" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-38" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-14-17" data-x="14" data-y="17" data-region-id="10" class="wolves-hex wolves-hex-tundra" style="left: 1260px; top: 1020px">
+                    <div id="wolves-hex-selector-14-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-18" data-x="14" data-y="18" data-region-id="10" class="wolves-hex wolves-hex-rock" style="left: 1260px; top: 1122px">
+                    <div id="wolves-hex-selector-14-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-14-19" data-x="14" data-y="19" data-region-id="10" class="wolves-hex wolves-hex-rock" style="left: 1260px; top: 1224px">
+                    <div id="wolves-hex-selector-14-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-15-14" data-x="15" data-y="14" data-region-id="11" class="wolves-hex wolves-hex-desert" style="left: 1350px; top: 663px">
+                    <div id="wolves-hex-selector-15-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-15-15" data-x="15" data-y="15" data-region-id="11" class="wolves-hex wolves-hex-water" style="left: 1350px; top: 765px">
+                    <div id="wolves-hex-selector-15-15" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="11" data-phase="2"></div></div>
+                <div id="wolves-hex-15-16" data-x="15" data-y="16" data-region-id="11" class="wolves-hex wolves-hex-tundra" style="left: 1350px; top: 867px">
+                    <div id="wolves-hex-selector-15-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-15-17" data-x="15" data-y="17" data-region-id="10" class="wolves-hex wolves-hex-tundra" style="left: 1350px; top: 969px">
+                    <div id="wolves-hex-selector-15-17" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-15-18" data-x="15" data-y="18" data-region-id="10" class="wolves-hex wolves-hex-forest" style="left: 1350px; top: 1071px">
+                    <div id="wolves-hex-selector-15-18" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-35" class="wolves-piece wolves-piece-top" data-kind="5" data-owner="0">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div><div id="wolves-piece-36" class="wolves-piece wolves-piece-bottom" data-kind="5" data-owner="0">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-hex-15-19" data-x="15" data-y="19" data-region-id="10" class="wolves-hex wolves-hex-rock" style="left: 1350px; top: 1173px">
+                    <div id="wolves-hex-selector-15-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-14" data-x="16" data-y="14" data-region-id="11" class="wolves-hex wolves-hex-desert" style="left: 1440px; top: 612px">
+                    <div id="wolves-hex-selector-16-14" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-15" data-x="16" data-y="15" data-region-id="11" class="wolves-hex wolves-hex-desert" style="left: 1440px; top: 714px">
+                    <div id="wolves-hex-selector-16-15" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-16" data-x="16" data-y="16" data-region-id="11" class="wolves-hex wolves-hex-tundra" style="left: 1440px; top: 816px">
+                    <div id="wolves-hex-selector-16-16" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-17" data-x="16" data-y="17" data-region-id="10" class="wolves-hex wolves-hex-tundra" style="left: 1440px; top: 918px">
+                    <div id="wolves-hex-selector-16-17" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-33" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-16-18" data-x="16" data-y="18" data-region-id="10" class="wolves-hex wolves-hex-forest" style="left: 1440px; top: 1020px">
+                    <div id="wolves-hex-selector-16-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-19" data-x="16" data-y="19" data-region-id="10" class="wolves-hex wolves-hex-forest" style="left: 1440px; top: 1122px">
+                    <div id="wolves-hex-selector-16-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-16-20" data-x="16" data-y="20" data-region-id="10" class="wolves-hex wolves-hex-grass" style="left: 1440px; top: 1224px">
+                    <div id="wolves-hex-selector-16-20" class="wolves-hex-selector"></div>
+                    <div id="wolves-piece-34" class="wolves-piece" data-kind="4" data-owner="N/A">
+                        <div class="wolves-piece-selector"></div>
+                        <div class="wolves-piece-shadow"></div>
+                        <div class="wolves-piece-sprite"></div>
+                    </div></div>
+                <div id="wolves-hex-17-18" data-x="17" data-y="18" data-region-id="10" class="wolves-hex wolves-hex-desert" style="left: 1530px; top: 969px">
+                    <div id="wolves-hex-selector-17-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-17-19" data-x="17" data-y="19" data-region-id="10" class="wolves-hex wolves-hex-water" style="left: 1530px; top: 1071px">
+                    <div id="wolves-hex-selector-17-19" class="wolves-hex-selector"></div>
+                    <div class="wolves-moon" data-region="10" data-phase="1"></div></div>
+                <div id="wolves-hex-17-20" data-x="17" data-y="20" data-region-id="10" class="wolves-hex wolves-hex-grass" style="left: 1530px; top: 1173px">
+                    <div id="wolves-hex-selector-17-20" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-18-18" data-x="18" data-y="18" data-region-id="10" class="wolves-hex wolves-hex-desert" style="left: 1620px; top: 918px">
+                    <div id="wolves-hex-selector-18-18" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-18-19" data-x="18" data-y="19" data-region-id="10" class="wolves-hex wolves-hex-desert" style="left: 1620px; top: 1020px">
+                    <div id="wolves-hex-selector-18-19" class="wolves-hex-selector"></div>
+                </div>
+                <div id="wolves-hex-18-20" data-x="18" data-y="20" data-region-id="10" class="wolves-hex wolves-hex-grass" style="left: 1620px; top: 1122px">
+                    <div id="wolves-hex-selector-18-20" class="wolves-hex-selector"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="wolves-boards-padding"></div>
+
+        <div id="wolves-boards">
+            <div id="wolves-calendar" class="wolves-reverse">
+
+                <div id="wolves-calendar-space-0" class="wolves-calendar-space" style="left: 192px; top: 92px"><div id="wolves-piece-calendar-0" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-1" class="wolves-calendar-space" style="left: 276px; top: 92px"><div id="wolves-piece-calendar-1" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-2" class="wolves-calendar-space" style="left: 360px; top: 92px"><div id="wolves-piece-calendar-2" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-3" class="wolves-calendar-space" style="left: 444px; top: 92px"><div id="wolves-piece-calendar-3" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-4" class="wolves-calendar-space" style="left: 528px; top: 92px"><div id="wolves-piece-calendar-4" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-5" class="wolves-calendar-space" style="left: 612px; top: 92px"><div id="wolves-piece-calendar-5" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-6" class="wolves-calendar-space" style="left: 24px; top: 176px"><div id="wolves-piece-calendar-6" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-7" class="wolves-calendar-space" style="left: 108px; top: 176px"><div id="wolves-piece-calendar-7" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-8" class="wolves-calendar-space" style="left: 192px; top: 176px"><div id="wolves-piece-calendar-8" class="wolves-piece" data-kind="1" data-owner="1">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-9" class="wolves-calendar-space" style="left: 276px; top: 176px"><div id="wolves-piece-calendar-9" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-10" class="wolves-calendar-space" style="left: 360px; top: 176px"><div id="wolves-piece-calendar-10" class="wolves-piece" data-kind="1" data-owner="2">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-11" class="wolves-calendar-space" style="left: 444px; top: 176px"><div id="wolves-piece-calendar-11" class="wolves-piece" data-kind="4" data-owner="N/A">
+                    <div class="wolves-piece-selector"></div>
+                    <div class="wolves-piece-shadow"></div>
+                    <div class="wolves-piece-sprite"></div>
+                </div></div>
+                <div id="wolves-calendar-space-12" class="wolves-calendar-space" style="left: 528px; top: 176px"><div id="wolves-marker-scoring"></div></div>
+                <div id="wolves-calendar-space-13" class="wolves-calendar-space" style="left: 612px; top: 176px"></div>
+                <div id="wolves-calendar-space-14" class="wolves-calendar-space" style="left: 24px; top: 260px"></div>
+                <div id="wolves-calendar-space-15" class="wolves-calendar-space" style="left: 108px; top: 260px"></div>
+                <div id="wolves-calendar-space-16" class="wolves-calendar-space" style="left: 192px; top: 260px"></div>
+                <div id="wolves-calendar-space-17" class="wolves-calendar-space" style="left: 276px; top: 260px"></div>
+                <div id="wolves-calendar-space-18" class="wolves-calendar-space" style="left: 360px; top: 260px"></div>
+                <div id="wolves-calendar-space-19" class="wolves-calendar-space" style="left: 444px; top: 260px"></div>
+                <div id="wolves-calendar-space-20" class="wolves-calendar-space" style="left: 528px; top: 260px"></div>
+                <div id="wolves-calendar-space-21" class="wolves-calendar-space" style="left: 612px; top: 260px"></div>
+                <div id="wolves-calendar-space-22" class="wolves-calendar-space" style="left: 24px; top: 344px"></div>
+                <div id="wolves-calendar-space-23" class="wolves-calendar-space" style="left: 108px; top: 344px"></div>
+                <div id="wolves-calendar-space-24" class="wolves-calendar-space" style="left: 192px; top: 344px"></div>
+                <div id="wolves-calendar-space-25" class="wolves-calendar-space" style="left: 276px; top: 344px"></div>
+                <div id="wolves-calendar-space-26" class="wolves-calendar-space" style="left: 360px; top: 344px"></div>
+                <div id="wolves-calendar-space-27" class="wolves-calendar-space" style="left: 444px; top: 344px"></div>
+                <div id="wolves-calendar-space-28" class="wolves-calendar-space" style="left: 528px; top: 344px"></div>
+                <div id="wolves-calendar-space-29" class="wolves-calendar-space" style="left: 612px; top: 344px"></div>
+            </div>
+
+
+            <div id="wolves-player-container-92130200" class="wolves-player-container" style="order: 0;">
+                <h3 class="wolves-player-name" style="color: #FFFF00">binbin2610</h3>
+                <div class="wolves-tile-container">
+
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="2" data-y="0"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="0" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="2" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="0" data-y="2"></div>
+                </div>
+                <div id="wolves-player-board-92130200" class="wolves-player-board" data-terrain="2">
+
+                    <div class="wolves-space-group wolves-pack-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-speed-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-howl-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-lair-group">
+
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-prey-group">
+
+                        <div class="wolves-player-board-space wolves-prey-space" data-prey-type="3"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-wolf-group">
+
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="wolves-player-container-84042971" class="wolves-player-container">
+                <h3 class="wolves-player-name" style="color: #32CD32">ershazi</h3>
+                <div class="wolves-tile-container">
+
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="0" data-y="0"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="2" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="2" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="1"></div>
+                </div>
+                <div id="wolves-player-board-84042971" class="wolves-player-board" data-terrain="0">
+
+                    <div class="wolves-space-group wolves-pack-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-speed-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-howl-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-lair-group">
+
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-prey-group">
+
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-wolf-group">
+
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="wolves-player-container-92161978" class="wolves-player-container">
+                <h3 class="wolves-player-name" style="color: #70CFEE">2163465425</h3>
+                <div class="wolves-tile-container">
+
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="0"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="1"></div>
+                </div>
+                <div id="wolves-player-board-92161978" class="wolves-player-board" data-terrain="3">
+
+                    <div class="wolves-space-group wolves-pack-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-speed-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-howl-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-lair-group">
+
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-prey-group">
+
+                        <div class="wolves-player-board-space wolves-prey-space" data-prey-type="2"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-wolf-group">
+
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="wolves-player-container-94043278" class="wolves-player-container">
+                <h3 class="wolves-player-name" style="color: #B76327">mayu1989ant</h3>
+                <div class="wolves-tile-container">
+
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="0"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="2" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="0" data-y="2"></div>
+                </div>
+                <div id="wolves-player-board-94043278" class="wolves-player-board" data-terrain="4">
+
+                    <div class="wolves-space-group wolves-pack-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-speed-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-howl-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-lair-group">
+
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-prey-group">
+
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-wolf-group">
+
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="wolves-player-container-83914299" class="wolves-player-container">
+                <h3 class="wolves-player-name" style="color: #976DEE">sjkat17</h3>
+                <div class="wolves-tile-container">
+
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="0"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="1" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="2"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="3" data-y="1"></div>
+                    <div class="wolves-terrain-tile wolves-player-tile" data-x="4" data-y="1"></div>
+                </div>
+                <div id="wolves-player-board-83914299" class="wolves-player-board" data-terrain="1">
+
+                    <div class="wolves-space-group wolves-pack-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-speed-group">
+
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-howl-group">
+
+                        <div class="wolves-player-board-space wolves-den-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                        <div class="wolves-player-board-space wolves-den-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-lair-group">
+
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                        <div class="wolves-player-board-space wolves-lair-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-prey-group">
+
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                        <div class="wolves-player-board-space wolves-prey-space"></div>
+                    </div>
+                    <div class="wolves-space-group wolves-wolf-group">
+
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space hidden"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                        <div class="wolves-player-board-space wolves-wolf-space"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
