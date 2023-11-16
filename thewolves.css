@@ -398,8 +398,8 @@
     pointer-events: none;
 }
 
-.wolves-piece[data-kind="4"] .wolves-piece-selector,
-.wolves-piece[data-kind="5"] .wolves-piece-selector {
+.wolves-hex:not(.wolves-selectable) .wolves-piece[data-kind="4"] .wolves-piece-selector,
+.wolves-hex:not(.wolves-selectable) .wolves-piece[data-kind="5"] .wolves-piece-selector {
     pointer-events: all;
 }
 

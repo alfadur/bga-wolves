@@ -1878,6 +1878,8 @@ define([
         for (const playerId in scoring.scores) {
             this.scoreCtrl[playerId].incValue(parseInt(scoring.scores[playerId]));
         }
+
+        this.updateRegionTooltips();
     },
 
     onScreenWidthChange() {
