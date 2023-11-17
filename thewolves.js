@@ -893,7 +893,7 @@ define([
                 ["action", _("Bonus Action Tokens - can be spent to take additional actions during a player's turn")],
             ];
             for (const [name, text] of statusTooltips) {
-                this.addTooltipToClass(`wolves-status-icon-${name}`, text);
+                this.addTooltipToClass(`wolves-status-icon-${name}`, text, "");
             }
         }
 
@@ -1153,7 +1153,7 @@ define([
                     <div class="wolves-padding"></div>
                     <div class="wolves-region-control-eq">=</div> 
                     <div class="wolves-region-control">${control}</div>
-                    <div class="wolves-region-alphas">(${alphas})</div>
+                    <div class="wolves-region-alphas">/${alphas}</div>
                 </div>`;
 
                 return {control, alphas, total, html};
@@ -1165,7 +1165,7 @@ define([
                 rows.sort((r1, r2) =>
                     r2.total - r1.total);
                 const content = rows.map(r => r.html).join("");
-                const title = _("Region Control (Alpha Wolves)");
+                const title = _("Region Control / Alpha Wolves");
                 const tooltip =
                     `<div class="wolves-region-tooltip">
                         <div>${title}</div>

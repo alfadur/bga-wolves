@@ -250,7 +250,7 @@
     color: #9ac5e5;
     -webkit-text-stroke: 0.5px black;
     font-size: 14px;
-    transform: translateY(-4px);
+    transform: translateY(2px);
 }
 
 .wolves-region-rotated[data-tile="3"],
@@ -461,7 +461,7 @@
 .wolves-piece[data-kind="2"] .wolves-piece-shadow {
     width: 51px;
     height: 21px;
-    left: 35px;
+    left: 34px;
     top: 36px;
     --shadow-angle: 10deg !important;
     --shadow-skew: -35deg !important;
@@ -510,7 +510,7 @@
 }
 
 .wolves-piece-top > .wolves-piece-shadow {
-    --shadow-offset: -60%;
+    --shadow-offset: -60% !important;
 }
 
 .wolves-piece-top[data-kind="0"] > .wolves-piece-shadow {
