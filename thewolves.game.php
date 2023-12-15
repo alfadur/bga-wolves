@@ -31,6 +31,7 @@ class TheWolves extends Table
             G_MOVES_REMAINING => 12,
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
+            G_GIVEN_TIME => 15,
             G_MOON_PHASE => 16
         ]);
     }
@@ -86,6 +87,8 @@ class TheWolves extends Table
         self::setGameStateInitialValue(G_MOVED_WOLVES, 0);
         self::setGameStateInitialValue(G_DISPLACEMENT_WOLF, -1);
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
+        self::setGameStateInitialValue(G_GIVEN_TIME, 0);
+        self::setGameStateInitialValue(G_ACTIONS_TAKEN, 0);
 
         $playerStats = [
             STAT_PLAYER_PREY_HUNTED,
@@ -766,6 +769,16 @@ class TheWolves extends Table
         ];
     }
 
+    function playerBonusTime() {
+        $bonuses_given = $this->getGameStateValue(G_GIVEN_TIME);
+        $actions_taken = $this->getGameStateValue(G_ACTIONS_TAKEN);
+
+        if(($bonuses_given & (1 << $actions_taken)) == 0) {
+            $this->setGameStateValue(G_GIVEN_TIME, $bonuses_given | (1 << $actions_taken));
+            $this->giveExtraTime($this->getActivePlayerId());
+        }
+    }
+
     //////////////////////////////////////////////////////////////////////////////
     //////////// Player actions
     //////////// 
@@ -1014,7 +1027,6 @@ class TheWolves extends Table
             if ($remainingMoves > 0) {
                 $this->gamestate->nextState(TR_MOVE);
             } else {
-                $this->giveExtraTime($playerId);
                 $this->gamestate->nextState(TR_END_MOVE);
             }
         }
@@ -1063,7 +1075,6 @@ class TheWolves extends Table
         if ($remainingMoves > 0) {
             $this->gamestate->nextState(TR_MOVE);
         } else {
-            $this->giveExtraTime($playerId);
             $this->gamestate->nextState(TR_POST_ACTION);
         }
     }
@@ -1142,8 +1153,6 @@ class TheWolves extends Table
             'attributesUpdate' => $attributesUpdate,
             'scoreUpdate' => $scoreUpdate
         ]);
-
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
@@ -1209,7 +1218,6 @@ class TheWolves extends Table
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} places a ${pieceIcon}'), $args);
 
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
@@ -1316,7 +1324,6 @@ class TheWolves extends Table
         }
 
         $this->logIncStat(STAT_PLAYER_DENS_UPGRADED, 1, $playerId);
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
@@ -1427,7 +1434,6 @@ class TheWolves extends Table
 
         self::notifyAllPlayers('update', clienttranslate('${player_name} dominates a ${pieceIcon0} and places a ${pieceIcon1}'), $args);
 
-        $this->giveExtraTime($playerId);
         $this->gamestate->nextState(TR_POST_ACTION);
     }
 
@@ -1559,6 +1565,8 @@ class TheWolves extends Table
     function stPostAction(): void
     {
         $remainingActions = $this->logIncGameStateValue(G_ACTIONS_REMAINING, -1);
+        $this->logIncGameStateValue(G_ACTIONS_TAKEN, 1);
+        $this->playerBonusTime();
         $this->doHunt();
         $noActionsRemaining = $remainingActions === 0;
         $this->gamestate->nextState($noActionsRemaining ? TR_CONFIRM_END : TR_SELECT_ACTION);
@@ -1583,6 +1591,8 @@ class TheWolves extends Table
             $this->giveExtraTime(self::getActivePlayerId());
 
             $this->setGameStateValue(G_ACTIONS_REMAINING, 2);
+            $this->setGameStateValue(G_ACTIONS_TAKEN, 0);
+            $this->setGameStateValue(G_GIVEN_TIME, 0);
             $this->gamestate->nextState(TR_START_TURN);
         }
     }
