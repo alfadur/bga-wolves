@@ -32,7 +32,8 @@ class TheWolves extends Table
             G_MOVED_WOLVES => 13,
             G_DISPLACEMENT_WOLF => 14,
             G_GIVEN_TIME => 15,
-            G_MOON_PHASE => 16
+            G_MOON_PHASE => 16,
+            G_ACTIONS_TAKEN => 17,
         ]);
     }
 
