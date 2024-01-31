@@ -343,7 +343,8 @@ class TheWolves extends Table
                      AND EXISTS (SELECT * FROM pieces 
                         WHERE x = $start[0] AND y = $start[1]
                         GROUP BY owner
-                        HAVING owner <> $sharedPlayerId
+                        HAVING owner IS NULL 
+                            OR owner <> $sharedPlayerId
                             OR COUNT(*) > 1)
                     EOF;
                 $stepChecks[] = "(x = $start[0] AND y = $start[1]$sharingCheck)";
