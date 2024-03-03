@@ -1570,7 +1570,7 @@ class TheWolves extends Table
                 $this->activeNextPlayer();
             }
         }
-        self::incGameStateValue(G_DRAFT_PROGRESS, 1);
+        self::setGameStateValue(G_DRAFT_PROGRESS, $progress + 1);
 
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
