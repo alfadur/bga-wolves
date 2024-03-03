@@ -58,6 +58,7 @@ const G_DISPLACEMENT_WOLF = 'displacement_wolf';
 const G_MOON_PHASE = 'moon_phase';
 const G_GIVEN_TIME = 'bonus_time';
 const G_ACTIONS_TAKEN = 'actions_taken';
+const G_DRAFT_PROGRESS = 'draft_progress';
 
 const TR_DRAFT_CONTINUE = 'draftContinue';
 const TR_DRAFT_END = 'draftEnd';
@@ -75,7 +76,6 @@ const TR_SELECT_ACTION = 'selectAction';
 const TR_CONFIRM_END = 'confirmEnd';
 const TR_START_TURN = 'startTurn';
 const TR_END_GAME = 'endGame';
-const TR_ZOMBIE_PASS = 'zombiePass';
 
 const BOARD_SETUP = [
     2 => [

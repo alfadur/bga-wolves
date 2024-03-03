@@ -34,6 +34,7 @@ class TheWolves extends Table
             G_GIVEN_TIME => 15,
             G_MOON_PHASE => 16,
             G_ACTIONS_TAKEN => 17,
+            G_DRAFT_PROGRESS => 18,
         ]);
     }
 
@@ -90,6 +91,7 @@ class TheWolves extends Table
         self::setGameStateInitialValue(G_MOON_PHASE, 0);
         self::setGameStateInitialValue(G_GIVEN_TIME, 0);
         self::setGameStateInitialValue(G_ACTIONS_TAKEN, 0);
+        self::setGameStateInitialValue(G_DRAFT_PROGRESS, 0);
 
         $playerStats = [
             STAT_PLAYER_PREY_HUNTED,
@@ -1549,18 +1551,27 @@ class TheWolves extends Table
     function stDraftResolution(): void
     {
         $wolvesDrafted = (int)self::getUniqueValueFromDB(
-            "SELECT COUNT(*)/2 FROM pieces WHERE owner IS NOT NULL"
+            "SELECT COUNT(*) FROM pieces WHERE owner IS NOT NULL"
         );
-        $numPlayers = self::getPlayersNumber();
-        $draftCompleted = $wolvesDrafted >= (2 * $numPlayers);
+        $progress = (int)self::getGameStateValue(G_DRAFT_PROGRESS);
 
-        if ($wolvesDrafted % $numPlayers !== 0 && !$draftCompleted) {
-            if ($wolvesDrafted > $numPlayers) {
+        if ($progress === 0 && $wolvesDrafted > 0) {
+            $progress = intdiv($wolvesDrafted, 2);
+        }
+
+        $numPlayers = self::getPlayersNumber();
+
+        $draftCompleted = $progress >= 2 * $numPlayers;
+
+        if ($progress % $numPlayers !== 0 && !$draftCompleted) {
+            if ($progress > $numPlayers) {
                 $this->activePrevPlayer();
             } else {
                 $this->activeNextPlayer();
             }
         }
+        self::incGameStateValue(G_DRAFT_PROGRESS, 1);
+
         $this->gamestate->nextState($draftCompleted ? TR_DRAFT_END : TR_DRAFT_CONTINUE);
     }
 
@@ -1665,26 +1676,13 @@ class TheWolves extends Table
         $statename = $state['name'];
 
         if ($state['type'] === "activeplayer") {
-            switch ($statename) {
-                case 'actionSelection':
-                    $this->gamestate->nextState(TR_ZOMBIE_PASS);
-                    break;
-                default:
-                    $this->undoAction();
-                    break;
-            }
-
-            return;
+            $destination = $statename === 'draftWolves'?
+                ST_DRAFT_RESOLUTION :
+                ST_NEXT_TURN;
+            $this->gamestate->jumpToState($destination);
+        } else {
+            throw new feException("Zombie mode not supported at this game state: $statename");
         }
-
-        if ($state['type'] === "multipleactiveplayer") {
-            // Make sure player is in a non blocking status for role turn
-            $this->gamestate->setPlayerNonMultiactive($active_player, '');
-
-            return;
-        }
-
-        throw new feException("Zombie mode not supported at this game state: " . $statename);
     }
 
     ///////////////////////////////////////////////////////////////////////////////////:
