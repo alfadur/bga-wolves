@@ -1587,9 +1587,10 @@ class TheWolves extends Table
 
     function stNextTurn(): void
     {
-        $currentPhase = $this->regionScoring();
+        $currentPhase = $this->getGameStateValue(G_MOON_PHASE);
+        $nextPhase = $this->regionScoring();
         //Determine if the game should end
-        if ($currentPhase >= count(PHASES)) {
+        if ($nextPhase >= count(PHASES)) {
             $alpha = P_ALPHA;
             $pack = P_PACK;
             self::dbQuery(<<<EOF
@@ -1599,7 +1600,7 @@ class TheWolves extends Table
                 SET player_score_aux = 100 * COALESCE(tokens, 0) + wolves
                 EOF);
             $this->gamestate->nextState(TR_END_GAME);
-        } else {
+        } else if ($nextPhase == $currentPhase) {
             $this->activeNextPlayer();
             $this->giveExtraTime(self::getActivePlayerId());
 
@@ -1607,6 +1608,8 @@ class TheWolves extends Table
             $this->setGameStateValue(G_ACTIONS_TAKEN, 0);
             $this->setGameStateValue(G_GIVEN_TIME, 0);
             $this->gamestate->nextState(TR_START_TURN);
+        } else {
+            $this->gamestate->nextState(TR_CONFIRM_END);
         }
     }
 
@@ -1766,6 +1769,19 @@ class TheWolves extends Table
         self::DbQuery($query);
 
         $this->regionScoring();
+    }
+
+    function ___debugAdvanceCalendar(int $count)
+    {
+        $kind = P_LONE;
+        $kinds = implode(', ',
+            array_fill(0, $count, "($kind)"));
+        self::DbQuery("INSERT into moonlight_board(kind) VALUES $kinds");
+        self::notifyAllPlayers(
+            'message',
+            "$count lone wolves added to calendar",
+            []
+        );
     }
 
     ///////////////////////////////////////////////////////////////////////////////////:
